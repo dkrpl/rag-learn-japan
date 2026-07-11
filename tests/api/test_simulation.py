@@ -29,8 +29,8 @@ def create_mock_simulation_data(db: Session):
         question_type="MULTIPLE_CHOICE",
         skill="VOCABULARY",
         status=QuestionStatus.PUBLISHED,
-        prompt_json='{"text": "Sim Question"}',
-        answer_key_json='{"correct_answer": "A"}',
+        prompt_json={"text": "Sim Question"},
+        answer_key_json={"correct_answer": "A"},
         version_number=1,
     )
     db.add(q)
@@ -44,8 +44,8 @@ def create_mock_simulation_data(db: Session):
         question_type="MULTIPLE_CHOICE",
         skill="VOCABULARY",
         difficulty=1,
-        prompt_json='{"text": "Sim Question"}',
-        answer_key_json='{"correct_answer": "A"}',
+        prompt_json={"text": "Sim Question"},
+        answer_key_json={"correct_answer": "A"},
     )
     db.add(q_rev)
     db.flush()
@@ -80,7 +80,7 @@ def test_learner_simulation_flow(client: TestClient, db: Session, learner_token_
 
     # 2. Start attempt
     res = client.post(f"/api/v1/jlpt-simulations/{sim.id}/attempts", headers=learner_token_headers)
-    assert res.status_code == 200
+    assert res.status_code == 201
     attempt_id = res.json()["id"]
     assert res.json()["status"] == "STARTED"
 
