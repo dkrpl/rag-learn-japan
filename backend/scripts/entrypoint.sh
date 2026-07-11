@@ -4,6 +4,7 @@ set -eu
 if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
   python - <<'PY'
 import os
+import subprocess
 import sys
 import time
 from urllib.parse import quote_plus
@@ -72,9 +73,12 @@ for attempt in range(1, retries + 1):
 else:
     print(f"Database did not become reachable: {last_error}", flush=True)
     sys.exit(1)
-PY
 
-  alembic upgrade head
+subprocess.run(["alembic", "upgrade", "head"], check=True, env=os.environ)
+
+if os.getenv("RUN_SEED_DUMMY", "0") == "1":
+    subprocess.run([sys.executable, "scripts/seed_dummy_data.py"], check=True, env=os.environ)
+PY
 fi
 
 exec "$@"
