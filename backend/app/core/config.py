@@ -1,8 +1,34 @@
+import os
 from pathlib import Path
 from typing import Literal
+from urllib.parse import quote_plus
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _normalize_database_url(value: str) -> str:
+    if value.startswith("mysql://"):
+        return value.replace("mysql://", "mysql+pymysql://", 1)
+    return value
+
+
+def _railway_mysql_url_from_env() -> str:
+    mysql_url = os.getenv("MYSQL_URL", "")
+    if mysql_url:
+        return _normalize_database_url(mysql_url)
+
+    host = os.getenv("MYSQLHOST", "")
+    port = os.getenv("MYSQLPORT", "3306")
+    user = os.getenv("MYSQLUSER", "")
+    password = os.getenv("MYSQLPASSWORD", "")
+    database = os.getenv("MYSQLDATABASE", "")
+    if all((host, port, user, database)):
+        return (
+            f"mysql+pymysql://{quote_plus(user)}:{quote_plus(password)}"
+            f"@{host}:{port}/{quote_plus(database)}"
+        )
+    return ""
 
 
 class Settings(BaseSettings):
@@ -10,7 +36,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     ENVIRONMENT: Literal["local", "test", "staging", "production"] = "local"
 
-    DATABASE_URL: str
+    DATABASE_URL: str = ""
     DB_POOL_SIZE: int = Field(default=10, ge=1, le=100)
     DB_MAX_OVERFLOW: int = Field(default=20, ge=0, le=200)
     DB_POOL_TIMEOUT_SECONDS: int = Field(default=30, ge=1, le=300)
@@ -82,9 +108,11 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
-    def normalize_database_url(cls, value: str) -> str:
-        if isinstance(value, str) and value.startswith("mysql://"):
-            return value.replace("mysql://", "mysql+pymysql://", 1)
+    def normalize_database_url(cls, value: str | None) -> str:
+        if not value:
+            return _railway_mysql_url_from_env()
+        if isinstance(value, str):
+            return _normalize_database_url(value)
         return value
 
     @field_validator("LOG_LEVEL")
@@ -97,6 +125,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_deployment_security(self) -> "Settings":
+        if not self.DATABASE_URL:
+            raise ValueError("DATABASE_URL, MYSQL_URL, or MYSQLHOST/MYSQLUSER/MYSQLPASSWORD/MYSQLDATABASE must be set")
         if self.ENVIRONMENT in {"staging", "production"}:
             if self.SECRET_KEY.startswith("CHANGE_THIS") or "super_secret" in self.SECRET_KEY.lower():
                 raise ValueError("SECRET_KEY must be replaced for staging/production")
