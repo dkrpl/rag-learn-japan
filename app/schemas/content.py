@@ -55,7 +55,8 @@ class AudioAssetResponse(LifecycleResponse):
 
     @model_validator(mode="after")
     def enforce_transcript_visibility(self) -> "AudioAssetResponse":
-        self.transcript_available = bool(self.transcript)
+        if self.transcript:
+            self.transcript_available = True
         if self.__class__ is AudioAssetResponse and not self.transcript_visible:
             self.transcript = None
             self.translation = None

@@ -30,6 +30,7 @@ def create_mock_simulation_data(db: Session):
         skill="VOCABULARY",
         status=QuestionStatus.PUBLISHED,
         prompt_json='{"text": "Sim Question"}',
+        answer_key_json='{"correct_answer": "A"}',
         version_number=1,
     )
     db.add(q)
