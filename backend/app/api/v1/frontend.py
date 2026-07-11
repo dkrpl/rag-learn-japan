@@ -9,8 +9,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user
@@ -18,6 +19,9 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.models.ai_jobs import GenerationJob, JobStatus, JobType
 from app.models.curriculum import Course, Lesson, Level, Unit
+from app.models.learning import SessionMode
+from app.models.material import MaterialDocument
+from app.models.progress import XPTransaction
 from app.models.user import User
 from app.schemas.ai_jobs import GenerationJobResponse
 from app.schemas.curriculum import LessonContentResponse
@@ -79,6 +83,37 @@ class AiQuestionJobCreate(BaseModel):
     prompt: str | None = Field(default=None, max_length=4000)
 
     model_config = ConfigDict(extra="forbid")
+
+
+class AppMaterialSummary(BaseModel):
+    id: str
+    lesson_id: str
+    title: str
+    original_filename: str
+    page_count: int
+    extracted_text_preview: str
+
+
+class MaterialAiQuestionJobCreate(BaseModel):
+    question_count: int = Field(default=10, ge=1, le=30)
+    skill: str = Field(default="READING", max_length=32)
+    difficulty: int = Field(default=1, ge=1, le=5)
+    prompt: str | None = Field(default=None, max_length=4000)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class StartJobSessionRequest(BaseModel):
+    mode: SessionMode = SessionMode.PRACTICE
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    user_id: str
+    name: str | None = None
+    total_xp: int
 
 
 def _raise_learning_error(exc: learning_service.LearningServiceError) -> None:
@@ -148,6 +183,53 @@ def _can_dispatch_ai_worker() -> tuple[bool, str | None]:
         return False, f"AI worker broker is unavailable: {exc}"
 
 
+def _material_summary(material: MaterialDocument) -> AppMaterialSummary:
+    return AppMaterialSummary(
+        id=material.id,
+        lesson_id=material.lesson_id,
+        title=material.title,
+        original_filename=material.original_filename,
+        page_count=material.page_count,
+        extracted_text_preview=material.extracted_text[:500],
+    )
+
+
+def _get_visible_material(db: Session, material_id: str) -> MaterialDocument:
+    material = (
+        db.query(MaterialDocument)
+        .join(Lesson, MaterialDocument.lesson_id == Lesson.id)
+        .join(Unit, Lesson.unit_id == Unit.id)
+        .join(Course, Unit.course_id == Course.id)
+        .join(Level, Course.level_id == Level.id)
+        .filter(
+            MaterialDocument.id == material_id,
+            Lesson.is_published.is_(True),
+            Lesson.is_archived.is_(False),
+            Unit.is_published.is_(True),
+            Unit.is_archived.is_(False),
+            Course.is_published.is_(True),
+            Course.is_archived.is_(False),
+            Level.is_published.is_(True),
+            Level.is_archived.is_(False),
+        )
+        .first()
+    )
+    if material is None:
+        raise HTTPException(status_code=404, detail="Material not found")
+    return material
+
+
+def _question_ids_from_job(job: GenerationJob) -> list[str]:
+    if not job.raw_response:
+        return []
+    try:
+        payload = json.loads(job.raw_response)
+    except json.JSONDecodeError:
+        return []
+    ids = payload.get("created_question_ids") if isinstance(payload, dict) else None
+    return [str(question_id) for question_id in ids] if isinstance(ids, list) else []
+
+
 @router.get("/me", response_model=UserResponse, summary="Get the signed-in user")
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
@@ -196,6 +278,22 @@ def get_catalog(db: Session = Depends(get_db), current_user: User = Depends(get_
 @router.get("/lessons/{lesson_id}", response_model=LessonContentResponse, summary="Get one lesson with content")
 def get_lesson(lesson_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return _lesson_content(_get_published_lesson(db, lesson_id))
+
+
+@router.get(
+    "/lessons/{lesson_id}/materials",
+    response_model=list[AppMaterialSummary],
+    summary="Get PDFs uploaded by admin for a lesson",
+)
+def get_lesson_materials(lesson_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    _get_published_lesson(db, lesson_id)
+    materials = (
+        db.query(MaterialDocument)
+        .filter(MaterialDocument.lesson_id == lesson_id)
+        .order_by(MaterialDocument.created_at.desc(), MaterialDocument.id)
+        .all()
+    )
+    return [_material_summary(material) for material in materials]
 
 
 @router.post(
@@ -332,6 +430,60 @@ def create_ai_question_job(
     return job
 
 
+@router.post(
+    "/materials/{material_id}/ai-question-jobs",
+    response_model=GenerationJobResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Generate questions from an admin-uploaded PDF",
+)
+def create_material_ai_question_job(
+    material_id: str,
+    payload: MaterialAiQuestionJobCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    material = _get_visible_material(db, material_id)
+    job_payload = {
+        "lesson_id": material.lesson_id,
+        "material_id": material.id,
+        "material_title": material.title,
+        "question_type": "MULTIPLE_CHOICE",
+        "skill": payload.skill,
+        "count": payload.question_count,
+        "difficulty": payload.difficulty,
+        "additional_notes": payload.prompt,
+        "source_material": material.extracted_text,
+        "auto_publish": True,
+    }
+    job = GenerationJob(
+        job_type=JobType.QUESTION_GENERATION,
+        status=JobStatus.PENDING,
+        prompt_json=json.dumps(job_payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True),
+        target_id=material.lesson_id,
+        created_by=current_user.id,
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    broker_ready, broker_error = _can_dispatch_ai_worker()
+    if not broker_ready:
+        job.status = JobStatus.FAILED
+        job.error_message = broker_error
+        db.commit()
+        db.refresh(job)
+        return job
+
+    try:
+        generate_questions_task.delay(job.id)
+    except Exception as exc:
+        job.status = JobStatus.FAILED
+        job.error_message = f"AI worker dispatch failed: {exc}"
+        db.commit()
+        db.refresh(job)
+    return job
+
+
 @router.get(
     "/ai-question-jobs/{job_id}",
     response_model=GenerationJobResponse,
@@ -350,3 +502,63 @@ def get_ai_question_job(job_id: str, db: Session = Depends(get_db), current_user
     if job is None:
         raise HTTPException(status_code=404, detail="AI question job not found")
     return job
+
+
+@router.post(
+    "/ai-question-jobs/{job_id}/sessions",
+    response_model=LearningSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Start a session from questions created by an AI job",
+)
+def start_ai_job_session(
+    job_id: str,
+    payload: StartJobSessionRequest | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    job = (
+        db.query(GenerationJob)
+        .filter(
+            GenerationJob.id == job_id,
+            GenerationJob.created_by == current_user.id,
+            GenerationJob.job_type == JobType.QUESTION_GENERATION,
+        )
+        .first()
+    )
+    if job is None:
+        raise HTTPException(status_code=404, detail="AI question job not found")
+    if job.status != JobStatus.COMPLETED:
+        raise HTTPException(status_code=409, detail="AI question job is not completed")
+    question_ids = _question_ids_from_job(job)
+    try:
+        return learning_service.start_question_session(
+            db,
+            user=current_user,
+            question_ids=question_ids,
+            lesson_id=job.target_id or "",
+            limit=len(question_ids),
+            mode=(payload or StartJobSessionRequest()).mode,
+        )
+    except learning_service.LearningServiceError as exc:
+        _raise_learning_error(exc)
+
+
+@router.get("/leaderboard", response_model=list[LeaderboardEntry], summary="Get XP leaderboard")
+def get_leaderboard(
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    rows = (
+        db.query(User.id, User.name, func.coalesce(func.sum(XPTransaction.amount), 0).label("total_xp"))
+        .join(XPTransaction, XPTransaction.user_id == User.id)
+        .filter(User.is_active.is_(True))
+        .group_by(User.id, User.name)
+        .order_by(func.coalesce(func.sum(XPTransaction.amount), 0).desc(), User.created_at.asc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        LeaderboardEntry(rank=index, user_id=row.id, name=row.name, total_xp=int(row.total_xp or 0))
+        for index, row in enumerate(rows, start=1)
+    ]

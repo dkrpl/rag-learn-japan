@@ -6,6 +6,7 @@ Usage:
 
 from __future__ import annotations
 
+import hashlib
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +19,7 @@ from app.core import security  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
 from app.models.content import AudioAsset  # noqa: E402
 from app.models.curriculum import Lesson  # noqa: E402
+from app.models.material import MaterialDocument  # noqa: E402
 from app.models.question import Question, QuestionRevision, QuestionStatus, QuestionType, SkillType  # noqa: E402
 from app.models.simulation import JlptSimulation, JlptSimulationQuestion, JlptSimulationSection  # noqa: E402
 from app.models.user import User, UserRole  # noqa: E402
@@ -204,12 +206,49 @@ def _upsert_questions_and_simulation() -> dict[str, int]:
         db.close()
 
 
+def _upsert_material_document() -> dict[str, int]:
+    db = SessionLocal()
+    try:
+        lesson = db.query(Lesson).order_by(Lesson.created_at.asc()).first()
+        if lesson is None:
+            raise RuntimeError("No lesson found after N5 seed")
+        admin = db.query(User).filter(User.email == "admin@example.com").first()
+        extracted_text = (
+            "Materi Salam Dasar N5. Konnichiwa berarti halo atau selamat siang. "
+            "Ohayou gozaimasu berarti selamat pagi. Konbanwa berarti selamat malam. "
+            "Arigatou gozaimasu berarti terima kasih. Gunakan salam sesuai waktu dan situasi."
+        )
+        checksum = hashlib.sha256(extracted_text.encode("utf-8")).hexdigest()
+        material = db.query(MaterialDocument).filter(MaterialDocument.checksum == checksum).first()
+        values = {
+            "lesson_id": lesson.id,
+            "title": "Demo PDF Salam Dasar",
+            "original_filename": "demo-salam-dasar.pdf",
+            "content_type": "application/pdf",
+            "file_size_bytes": len(extracted_text.encode("utf-8")),
+            "checksum": checksum,
+            "page_count": 1,
+            "extracted_text": extracted_text,
+            "created_by_id": admin.id if admin else None,
+        }
+        if material is None:
+            db.add(MaterialDocument(**values))
+        else:
+            for field, value in values.items():
+                setattr(material, field, value)
+        db.commit()
+        return {"materials": 1}
+    finally:
+        db.close()
+
+
 def seed_dummy_data() -> dict[str, int]:
     seed_n5(dry_run=False)
     _upsert_user(email="admin@example.com", role=UserRole.ADMINISTRATOR, name="Demo Admin")
     _upsert_user(email="learner@example.com", role=UserRole.LEARNER, name="Demo Learner")
     counts = _upsert_questions_and_simulation()
-    return {"users": 2, **counts}
+    material_counts = _upsert_material_document()
+    return {"users": 2, **counts, **material_counts}
 
 
 def main() -> None:

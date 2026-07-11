@@ -78,30 +78,76 @@ Kalau header ini tidak dikirim, response yang benar adalah `401 Authentication r
 4. Ambil detail lesson:
    `GET /api/v1/app/lessons/{lesson_id}`
 
-5. Mulai latihan:
-   `POST /api/v1/app/lessons/{lesson_id}/sessions`
+5. Ambil materi PDF yang di-upload admin:
+   `GET /api/v1/app/lessons/{lesson_id}/materials`
 
-6. Ambil soal session:
+6. Generate soal dari PDF:
+   `POST /api/v1/app/materials/{material_id}/ai-question-jobs`
+
+7. Poll status AI job:
+   `GET /api/v1/app/ai-question-jobs/{job_id}`
+
+8. Kalau job sudah `COMPLETED`, mulai sesi dari soal hasil AI:
+   `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
+
+9. Ambil soal session:
    `GET /api/v1/app/sessions/{session_id}/questions`
 
-7. Submit jawaban:
+10. Submit jawaban:
    `POST /api/v1/app/sessions/{session_id}/answers`
 
-8. Complete session:
+11. Complete session:
    `POST /api/v1/app/sessions/{session_id}/complete`
 
-9. Dashboard:
+12. Dashboard:
    `GET /api/v1/app/dashboard`
+
+13. Leaderboard:
+   `GET /api/v1/app/leaderboard`
+
+## Latihan Biasa Tanpa PDF
+
+Kalau user tidak memilih materi PDF, frontend tetap bisa memulai latihan dari question bank lesson:
+
+1. Mulai latihan:
+   `POST /api/v1/app/lessons/{lesson_id}/sessions`
+
+2. Ambil soal session:
+   `GET /api/v1/app/sessions/{session_id}/questions`
+
+3. Submit jawaban:
+   `POST /api/v1/app/sessions/{session_id}/answers`
+
+4. Complete session:
+   `POST /api/v1/app/sessions/{session_id}/complete`
 
 ## Generate Soal Dengan AI
 
 Frontend tidak perlu memakai endpoint admin.
 
-1. Buat job:
-   `POST /api/v1/app/lessons/{lesson_id}/ai-question-jobs`
+Generate dari materi PDF admin:
 
-2. Poll status:
-   `GET /api/v1/app/ai-question-jobs/{job_id}`
+```http
+POST /api/v1/app/materials/{material_id}/ai-question-jobs
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "question_count": 10,
+  "skill": "READING",
+  "difficulty": 1,
+  "prompt": "Fokus pada pemahaman arti kalimat."
+}
+```
+
+Generate dari lesson secara umum juga masih tersedia:
+`POST /api/v1/app/lessons/{lesson_id}/ai-question-jobs`
+
+Poll status:
+`GET /api/v1/app/ai-question-jobs/{job_id}`
+
+Setelah status `COMPLETED`, buat session:
+`POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
 
 Jika Redis/Celery belum hidup, job akan cepat menjadi `FAILED` dengan `error_message`.
 Untuk menjalankan AI sungguhan, jalankan Redis + worker Celery, lalu set:

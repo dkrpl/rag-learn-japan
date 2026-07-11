@@ -8,6 +8,7 @@ from app.models.auth import PasswordResetToken, RefreshToken
 from app.models.content import AudioAsset, ExampleSentence, GrammarPoint, Kanji, Reading, Vocabulary
 from app.models.curriculum import Course, Lesson, LessonSection, Level, Unit
 from app.models.learning import LearningSession, LearningSessionQuestion
+from app.models.material import MaterialDocument
 from app.models.progress import ReviewSchedule, UserLessonProgress, UserMastery, UserMistake, XPTransaction
 from app.models.question import Question, QuestionReview
 from app.models.simulation import (

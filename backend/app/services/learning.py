@@ -293,6 +293,54 @@ def start_targeted_session(
         raise
 
 
+def start_question_session(
+    db: Session,
+    *,
+    user: User,
+    question_ids: list[str],
+    lesson_id: str,
+    limit: int = 30,
+    mode: SessionMode = SessionMode.PRACTICE,
+) -> LearningSession:
+    _published_lesson(db, lesson_id)
+    unique_ids = list(dict.fromkeys(question_ids))[:limit]
+    if not unique_ids:
+        raise LearningServiceError("No eligible questions are available", status_code=409, code="NO_QUESTIONS")
+    questions = (
+        db.query(Question)
+        .filter(
+            Question.id.in_(unique_ids),
+            Question.lesson_id == lesson_id,
+            Question.status == QuestionStatus.PUBLISHED,
+        )
+        .all()
+    )
+    by_id = {question.id: question for question in questions}
+    ordered = [by_id[question_id] for question_id in unique_ids if question_id in by_id]
+    if not ordered:
+        raise LearningServiceError(
+            "No eligible published questions are available", status_code=409, code="NO_QUESTIONS"
+        )
+    try:
+        _assert_no_duplicate_active_session(
+            db,
+            user_id=user.id,
+            source=SessionSource.LESSON,
+            lesson_id=lesson_id,
+        )
+        return _create_session(
+            db,
+            user=user,
+            questions=ordered,
+            lesson_id=lesson_id,
+            mode=mode,
+            source=SessionSource.LESSON,
+        )
+    except Exception:
+        db.rollback()
+        raise
+
+
 _SECRET_PROMPT_KEYS = {
     "answer_key",
     "answer_key_json",

@@ -274,6 +274,57 @@
         }
       }
     },
+    "/api/v1/app/lessons/{lesson_id}/materials": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Get PDFs uploaded by admin for a lesson",
+        "operationId": "frontend-get_lesson_materials-api-v1-app-lessons-lesson_id-materials",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "lesson_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lesson Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppMaterialSummary"
+                  },
+                  "title": "Response Frontend-Get Lesson Materials-Api-V1-App-Lessons-Lesson Id-Materials"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/app/lessons/{lesson_id}/sessions": {
       "post": {
         "tags": [
@@ -623,6 +674,63 @@
         }
       }
     },
+    "/api/v1/app/materials/{material_id}/ai-question-jobs": {
+      "post": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Generate questions from an admin-uploaded PDF",
+        "operationId": "frontend-create_material_ai_question_job-api-v1-app-materials-material_id-ai-question-jobs",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Material Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialAiQuestionJobCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/app/ai-question-jobs/{job_id}": {
       "get": {
         "tags": [
@@ -653,6 +761,124 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GenerationJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/app/ai-question-jobs/{job_id}/sessions": {
+      "post": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Start a session from questions created by an AI job",
+        "operationId": "frontend-start_ai_job_session-api-v1-app-ai-question-jobs-job_id-sessions",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StartJobSessionRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningSessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/app/leaderboard": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Get XP leaderboard",
+        "operationId": "frontend-get_leaderboard-api-v1-app-leaderboard",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LeaderboardEntry"
+                  },
+                  "title": "Response Frontend-Get Leaderboard-Api-V1-App-Leaderboard"
                 }
               }
             }
@@ -835,6 +1061,44 @@
           "sequence"
         ],
         "title": "AppLessonSummary"
+      },
+      "AppMaterialSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "lesson_id": {
+            "type": "string",
+            "title": "Lesson Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "original_filename": {
+            "type": "string",
+            "title": "Original Filename"
+          },
+          "page_count": {
+            "type": "integer",
+            "title": "Page Count"
+          },
+          "extracted_text_preview": {
+            "type": "string",
+            "title": "Extracted Text Preview"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "lesson_id",
+          "title",
+          "original_filename",
+          "page_count",
+          "extracted_text_preview"
+        ],
+        "title": "AppMaterialSummary"
       },
       "AppUnitSummary": {
         "properties": {
@@ -1578,6 +1842,40 @@
         ],
         "title": "KanjiResponse"
       },
+      "LeaderboardEntry": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "total_xp": {
+            "type": "integer",
+            "title": "Total Xp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rank",
+          "user_id",
+          "total_xp"
+        ],
+        "title": "LeaderboardEntry"
+      },
       "LearningSessionCreate": {
         "properties": {
           "lesson_id": {
@@ -2008,6 +2306,45 @@
         ],
         "title": "LoginRequest"
       },
+      "MaterialAiQuestionJobCreate": {
+        "properties": {
+          "question_count": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Question Count",
+            "default": 10
+          },
+          "skill": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Skill",
+            "default": "READING"
+          },
+          "difficulty": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Difficulty",
+            "default": 1
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MaterialAiQuestionJobCreate"
+      },
       "QuestionResponseLearner": {
         "properties": {
           "id": {
@@ -2381,6 +2718,17 @@
           "LISTENING"
         ],
         "title": "SkillType"
+      },
+      "StartJobSessionRequest": {
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/SessionMode",
+            "default": "PRACTICE"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "StartJobSessionRequest"
       },
       "SubmitAnswerRequest": {
         "properties": {

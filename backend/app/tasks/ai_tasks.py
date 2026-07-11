@@ -20,6 +20,56 @@ def _job_config(job: GenerationJob) -> dict[str, Any]:
         return {"additional_notes": job.prompt_json}
 
 
+def _generation_prompt(config: dict[str, Any], raw_prompt: str) -> str:
+    count = int(config.get("question_count") or config.get("count") or 5)
+    question_type = config.get("question_type") or QuestionType.MULTIPLE_CHOICE.value
+    skill = config.get("skill") or SkillType.READING.value
+    difficulty = int(config.get("difficulty") or 1)
+    notes = config.get("additional_notes") or "Tidak ada catatan tambahan."
+    source_material = config.get("source_material")
+
+    source_block = (
+        f"SUMBER MATERI PDF:\n{source_material}"
+        if source_material
+        else f"KONFIGURASI JOB:\n{raw_prompt}"
+    )
+    return f"""
+Kamu adalah pembuat soal bahasa Jepang untuk aplikasi kursus.
+
+TUGAS:
+Buat {count} soal berdasarkan sumber materi yang diberikan.
+
+BATASAN:
+- Gunakan hanya informasi dari sumber materi.
+- Jangan membuat fakta baru di luar sumber materi.
+- Level kesulitan: {difficulty}.
+- Skill target: {skill}.
+- Tipe soal utama: {question_type}.
+- Catatan admin: {notes}
+
+FORMAT OUTPUT:
+Kembalikan HANYA JSON array. Setiap item harus berbentuk:
+{{
+  "question_type": "{question_type}",
+  "skill": "{skill}",
+  "difficulty": {difficulty},
+  "prompt_json": {{
+    "text": "teks pertanyaan",
+    "options": [
+      {{"id": "a", "text": "opsi A"}},
+      {{"id": "b", "text": "opsi B"}},
+      {{"id": "c", "text": "opsi C"}},
+      {{"id": "d", "text": "opsi D"}}
+    ]
+  }},
+  "answer_key_json": {{"correct_option_id": "a"}},
+  "explanation_json": {{"text": "penjelasan singkat berdasarkan sumber materi"}}
+}}
+
+{source_block}
+""".strip()
+
+
 def _coerce_prompt(raw: dict[str, Any]) -> dict[str, Any]:
     prompt = raw.get("prompt_json") or raw.get("prompt")
     if isinstance(prompt, dict):
@@ -120,6 +170,11 @@ def _create_questions_from_ai_response(
         db.add(question)
         db.flush()
         snapshot_question(db, question, actor_id=job.created_by)
+        if config.get("auto_publish"):
+            question.status = QuestionStatus.PUBLISHED
+            question.reviewed_by = job.created_by
+            question.published_at = datetime.now(timezone.utc)
+            snapshot_question(db, question, actor_id=job.created_by)
         created_questions.append(question)
     return created_questions
 
@@ -147,7 +202,7 @@ def generate_questions_task(self, job_id: str):
             raise ValueError("Lesson not found")
 
         config = _job_config(job)
-        content, metadata = get_ai_provider().generate_questions(job.prompt_json)
+        content, metadata = get_ai_provider().generate_questions(_generation_prompt(config, job.prompt_json))
         try:
             created_questions = _create_questions_from_ai_response(
                 db=db,
@@ -162,7 +217,14 @@ def generate_questions_task(self, job_id: str):
             raise RuntimeError(f"Validation error: {exc}") from exc
 
         job.status = JobStatus.COMPLETED
-        job.raw_response = content
+        job.raw_response = json.dumps(
+            {
+                "ai_response": content,
+                "created_question_ids": [question.id for question in created_questions],
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
         job.tokens_used = metadata.get("tokens_used", 0)
         job.completed_at = datetime.now(timezone.utc)
         job.error_message = None

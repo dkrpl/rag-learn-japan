@@ -46,6 +46,7 @@ def register_routers(app: FastAPI) -> None:
     from app.api.v1.admin import ai_jobs as admin_ai_jobs
     from app.api.v1.admin import content as admin_content
     from app.api.v1.admin import curriculum as admin_curriculum
+    from app.api.v1.admin import materials as admin_materials
     from app.api.v1.admin import questions as admin_questions
     from app.api.v1.admin import simulation as admin_simulation
     from app.api.v1.admin import users as admin_users
@@ -80,6 +81,12 @@ def register_routers(app: FastAPI) -> None:
         admin_questions.router,
         prefix="/api/v1/admin/questions",
         tags=["Admin Questions"],
+        include_in_schema=False,
+    )
+    app.include_router(
+        admin_materials.router,
+        prefix="/api/v1/admin/materials",
+        tags=["Admin Materials"],
         include_in_schema=False,
     )
     app.include_router(
