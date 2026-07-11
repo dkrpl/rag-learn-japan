@@ -70,9 +70,7 @@ class UserMistake(CustomBase):
 
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     question_id = Column(String(36), ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
-    question_revision_id = Column(
-        String(36), ForeignKey("question_revisions.id", ondelete="SET NULL"), nullable=True
-    )
+    question_revision_id = Column(String(36), ForeignKey("question_revisions.id", ondelete="SET NULL"), nullable=True)
     mistake_count = Column(Integer, default=1, nullable=False)
     is_resolved = Column(Boolean, default=False, nullable=False)
     last_failed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)

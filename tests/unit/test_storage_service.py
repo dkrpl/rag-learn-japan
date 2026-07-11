@@ -121,4 +121,3 @@ def test_s3_compatible_storage_upload_and_presigned_playback(tmp_path, monkeypat
     assert stored.storage_key.startswith("managed/audio/")
     assert fake_client.uploads[0][1:3] == ("nihongo-test", stored.storage_key)
     assert storage.playback_url(stored.storage_key).endswith("?ttl=600")
-

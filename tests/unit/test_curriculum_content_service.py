@@ -110,4 +110,3 @@ def test_import_dry_run_rolls_back_new_content(db):
     assert result["dry_run"] is True
     assert result["created"]["vocabularies"] == 1
     assert db.query(Vocabulary).count() == 0
-

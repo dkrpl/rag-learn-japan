@@ -192,9 +192,7 @@ def validate_publish(resource: Publishable) -> None:
         raise PublicationValidationError("unit parent course and level must be published")
     if isinstance(resource, Lesson):
         if not (
-            _published(resource.unit)
-            and _published(resource.unit.course)
-            and _published(resource.unit.course.level)
+            _published(resource.unit) and _published(resource.unit.course) and _published(resource.unit.course.level)
         ):
             raise PublicationValidationError("lesson parent unit, course, and level must be published")
         if not resource.learning_objective or not resource.learning_objective.strip():

@@ -264,10 +264,14 @@ def start_targeted_session(
     unique_ids = list(dict.fromkeys(question_ids))[:limit]
     if not unique_ids:
         raise LearningServiceError("No eligible questions are available", status_code=409, code="NO_QUESTIONS")
-    questions = db.query(Question).filter(
-        Question.id.in_(unique_ids),
-        Question.status == QuestionStatus.PUBLISHED,
-    ).all()
+    questions = (
+        db.query(Question)
+        .filter(
+            Question.id.in_(unique_ids),
+            Question.status == QuestionStatus.PUBLISHED,
+        )
+        .all()
+    )
     by_id = {question.id: question for question in questions}
     ordered = [by_id[question_id] for question_id in unique_ids if question_id in by_id]
     if not ordered:
@@ -351,9 +355,7 @@ def serialize_session_questions(session: LearningSession) -> list[SessionQuestio
             difficulty=revision.difficulty,
             prompt_json=_randomized_prompt(revision.prompt_json, session_question_id=session_question.id),
         )
-        reveal_result = session_question.is_answered and (
-            session.mode == SessionMode.PRACTICE or reveal_exam
-        )
+        reveal_result = session_question.is_answered and (session.mode == SessionMode.PRACTICE or reveal_exam)
         responses.append(
             SessionQuestionResponse(
                 id=session_question.id,

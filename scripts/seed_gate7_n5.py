@@ -1,23 +1,25 @@
 import os
 import sys
-import uuid
+
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
 
 # Add root directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.db.session import SessionLocal
-from app.models.curriculum import Level, Course, Unit, Lesson
-from app.models.content import Vocabulary, Kanji, GrammarPoint, ExampleSentence, Reading, AudioAsset
-from app.models.question import Question, QuestionType, SkillType, QuestionStatus
-from app.models.user import User  # Required for SQLAlchemy foreign key metadata
+from app.models.content import AudioAsset, ExampleSentence, GrammarPoint, Kanji, Reading, Vocabulary
+from app.models.curriculum import Course, Lesson, Level, Unit
+from app.models.question import Question, QuestionStatus, QuestionType, SkillType
 
 # Import our generator functions
 from data.seed.n5_core_dict import (
-    generate_vocabs, generate_kanjis, generate_grammar, 
-    generate_sentences, generate_readings
+    generate_grammar,
+    generate_kanjis,
+    generate_readings,
+    generate_sentences,
+    generate_vocabs,
 )
+
 
 def seed_n5_gate7():
     db: Session = SessionLocal()
@@ -31,21 +33,27 @@ def seed_n5_gate7():
             db.add(level)
             db.commit()
             db.refresh(level)
-        
+
         # 2. Course
         course = db.query(Course).filter(Course.title == "N5 Masterclass").first()
         if not course:
-            course = Course(level_id=level.id, title="N5 Masterclass", description="Comprehensive N5 Guide", sequence=1, is_published=True)
+            course = Course(
+                level_id=level.id,
+                title="N5 Masterclass",
+                description="Comprehensive N5 Guide",
+                sequence=1,
+                is_published=True,
+            )
             db.add(course)
             db.commit()
             db.refresh(course)
 
         # Pre-generate lists
         total_lessons = 30
-        vocabs = generate_vocabs(total_lessons * 10)     # 300
-        kanjis = generate_kanjis(total_lessons * 3)      # 90
-        grammars = generate_grammar(total_lessons * 1)   # 30
-        sentences = generate_sentences(total_lessons * 5)# 150
+        vocabs = generate_vocabs(total_lessons * 10)  # 300
+        kanjis = generate_kanjis(total_lessons * 3)  # 90
+        grammars = generate_grammar(total_lessons * 1)  # 30
+        sentences = generate_sentences(total_lessons * 5)  # 150
         readings = generate_readings(total_lessons * 1)  # 30
 
         vocab_idx = 0
@@ -60,21 +68,29 @@ def seed_n5_gate7():
         audio_dir = os.path.join("data", "uploads", "audio")
         os.makedirs(audio_dir, exist_ok=True)
 
-        for u in range(1, 11): # 10 Units
+        for u in range(1, 11):  # 10 Units
             unit_title = f"Unit {u}: Foundation {u}"
             unit = db.query(Unit).filter(Unit.title == unit_title).first()
             if not unit:
-                unit = Unit(course_id=course.id, title=unit_title, description=f"N5 Unit {u}", sequence=u, is_published=True)
+                unit = Unit(
+                    course_id=course.id, title=unit_title, description=f"N5 Unit {u}", sequence=u, is_published=True
+                )
                 db.add(unit)
                 db.commit()
                 db.refresh(unit)
 
-            for l in range(1, 4): # 3 Lessons per Unit
-                lesson_seq = (u - 1) * 3 + l
+            for lesson_num in range(1, 4):  # 3 Lessons per Unit
+                lesson_seq = (u - 1) * 3 + lesson_num
                 lesson_title = f"Lesson {lesson_seq}"
                 lesson = db.query(Lesson).filter(Lesson.title == lesson_title).first()
                 if not lesson:
-                    lesson = Lesson(unit_id=unit.id, title=lesson_title, learning_objective=f"Objective for lesson {lesson_seq}", sequence=l, is_published=True)
+                    lesson = Lesson(
+                        unit_id=unit.id,
+                        title=lesson_title,
+                        learning_objective=f"Objective for lesson {lesson_seq}",
+                        sequence=lesson_num,
+                        is_published=True,
+                    )
                     db.add(lesson)
                     db.commit()
                     db.refresh(lesson)
@@ -146,12 +162,12 @@ def seed_n5_gate7():
                     # Create empty mock file
                     with open(filepath, "w") as f:
                         f.write("mock")
-                    
+
                     asset = AudioAsset(
                         file_path=filepath,
                         file_url=f"/api/v1/content/audio/mock-{lesson_seq}-{a}",
                         duration_seconds=5,
-                        transcript=f"Transcript {lesson_seq}-{a}"
+                        transcript=f"Transcript {lesson_seq}-{a}",
                     )
                     db.add(asset)
                     db.commit()
@@ -161,19 +177,16 @@ def seed_n5_gate7():
 
                 # --- Questions (10 per lesson) ---
                 for q in range(10):
-                    q_prompt = {
-                        "text": f"Question {q} for {lesson_title}",
-                        "options": ["A", "B", "C", "D"]
-                    }
+                    q_prompt = {"text": f"Question {q} for {lesson_title}", "options": ["A", "B", "C", "D"]}
                     q_answer = {"correct_option": "A"}
-                    
+
                     skill = SkillType.VOCABULARY if q < 4 else (SkillType.GRAMMAR if q < 7 else SkillType.READING)
                     q_type = QuestionType.MULTIPLE_CHOICE
 
-                    if q == 9: # Last question listening
+                    if q == 9:  # Last question listening
                         skill = SkillType.LISTENING
                         q_type = QuestionType.LISTENING
-                    
+
                     question = Question(
                         lesson_id=lesson.id,
                         question_type=q_type,
@@ -184,17 +197,17 @@ def seed_n5_gate7():
                         explanation_json={"text": "Explanation here"},
                         status=QuestionStatus.PUBLISHED,
                         audio_asset_id=audio_assets[0].id if skill == SkillType.LISTENING else None,
-                        reading_id=reading.id if skill == SkillType.READING else None
+                        reading_id=reading.id if skill == SkillType.READING else None,
                     )
                     db.add(question)
                     question_count += 1
-                
+
                 db.commit()
 
         print("\n✅ SEEDING SELESAI!")
-        print(f"📊 Verifikasi Data:")
-        print(f"  - Units: 10 / 10")
-        print(f"  - Lessons: 30 / 30")
+        print("📊 Verifikasi Data:")
+        print("  - Units: 10 / 10")
+        print("  - Lessons: 30 / 30")
         print(f"  - Vocabularies: {vocab_idx} / 300")
         print(f"  - Kanjis: {kanji_idx} / 80")
         print(f"  - Grammar Points: {grammar_idx} / 30")
@@ -209,6 +222,7 @@ def seed_n5_gate7():
         print(f"❌ Error during seeding: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_n5_gate7()

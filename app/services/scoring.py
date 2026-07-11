@@ -69,9 +69,7 @@ def _normalize_blank_answers(value: Any, field: str) -> dict[str, str]:
         if not isinstance(item, dict):
             raise ScoringError(f"{field} entries must be objects")
         blank_id = _non_empty_string(item.get("blank_id"), f"{field}.blank_id")
-        option_id = _non_empty_string(
-            item.get("option_id", item.get("selected_option_id")), f"{field}.option_id"
-        )
+        option_id = _non_empty_string(item.get("option_id", item.get("selected_option_id")), f"{field}.option_id")
         if blank_id in result:
             raise ScoringError(f"{field} contains a duplicate blank_id")
         result[blank_id] = option_id

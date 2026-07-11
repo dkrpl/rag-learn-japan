@@ -1,18 +1,17 @@
-import sys
 import os
+import sys
 import uuid
-import asyncio
 
 # Ensure project root is in PYTHONPATH
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
-from app.models.simulation import JlptSimulation, JlptSimulationSection, JlptSimulationQuestion
-from app.models.question import Question, QuestionStatus
 
 # Ensure all models are registered
-import app.db.base 
+from app.db.session import SessionLocal
+from app.models.question import Question, QuestionStatus
+from app.models.simulation import JlptSimulation, JlptSimulationQuestion, JlptSimulationSection
+
 
 def seed_simulation(db: Session):
     print("Mencari soal N5 yang sudah diterbitkan...")
@@ -20,7 +19,7 @@ def seed_simulation(db: Session):
     if len(questions) < 5:
         print(f"Peringatan: Soal N5 tidak mencukupi. Ditemukan: {len(questions)}")
         # We will use what we have for MVP
-        
+
     print("Menghapus simulasi N5 lama (jika ada)...")
     db.query(JlptSimulation).filter(JlptSimulation.level == "N5").delete()
     db.commit()
@@ -32,19 +31,19 @@ def seed_simulation(db: Session):
         description="Simulasi penuh dengan 3 seksi: Kosakata, Tata Bahasa, dan Mendengarkan.",
         level="N5",
         passing_score=80,
-        is_published=True
+        is_published=True,
     )
     db.add(sim)
-    
+
     sections_def = [
         {"title": "Vocabulary & Kanji", "type": "VOCABULARY_KANJI", "duration": 25},
         {"title": "Grammar & Reading", "type": "GRAMMAR_READING", "duration": 50},
-        {"title": "Listening", "type": "LISTENING", "duration": 30}
+        {"title": "Listening", "type": "LISTENING", "duration": 30},
     ]
-    
+
     q_index = 0
     total_q = len(questions)
-    
+
     for idx, s_def in enumerate(sections_def):
         sec = JlptSimulationSection(
             id=str(uuid.uuid4()),
@@ -53,11 +52,11 @@ def seed_simulation(db: Session):
             section_type=s_def["type"],
             sequence=idx + 1,
             duration_minutes=s_def["duration"],
-            passing_score=19
+            passing_score=19,
         )
         db.add(sec)
         db.flush()
-        
+
         # Bagi rata jumlah soal yang ada ke setiap seksi
         if total_q > 0:
             share = max(1, total_q // 3)
@@ -65,21 +64,19 @@ def seed_simulation(db: Session):
             if idx == 2:
                 q_list = questions[q_index:]
             else:
-                q_list = questions[q_index:q_index+share]
-                
+                q_list = questions[q_index : q_index + share]
+
             for order, q in enumerate(q_list):
                 sq = JlptSimulationQuestion(
-                    id=str(uuid.uuid4()),
-                    section_id=sec.id,
-                    question_id=q.id,
-                    order_number=order + 1
+                    id=str(uuid.uuid4()), section_id=sec.id, question_id=q.id, order_number=order + 1
                 )
                 db.add(sq)
-                
+
             q_index += share
 
     db.commit()
     print("✅ Berhasil membuat simulasi N5.")
+
 
 if __name__ == "__main__":
     db = SessionLocal()

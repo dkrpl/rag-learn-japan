@@ -151,13 +151,7 @@ def record_session_completion(
         return
 
     now = now or datetime.now(timezone.utc)
-    locked_user = (
-        db.query(User)
-        .filter(User.id == user.id)
-        .populate_existing()
-        .with_for_update()
-        .one()
-    )
+    locked_user = db.query(User).filter(User.id == user.id).populate_existing().with_for_update().one()
     update_streak(db, locked_user, now=now)
 
     total_xp = 0
@@ -233,13 +227,17 @@ def record_session_completion(
 
 def dashboard_overview(db: Session, *, user: User, now: datetime | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
-    total_xp = db.query(func.coalesce(func.sum(XPTransaction.amount), 0)).filter(
-        XPTransaction.user_id == user.id
-    ).scalar()
-    lessons_completed = db.query(UserLessonProgress).filter(
-        UserLessonProgress.user_id == user.id,
-        UserLessonProgress.status == LessonStatus.COMPLETED,
-    ).count()
+    total_xp = (
+        db.query(func.coalesce(func.sum(XPTransaction.amount), 0)).filter(XPTransaction.user_id == user.id).scalar()
+    )
+    lessons_completed = (
+        db.query(UserLessonProgress)
+        .filter(
+            UserLessonProgress.user_id == user.id,
+            UserLessonProgress.status == LessonStatus.COMPLETED,
+        )
+        .count()
+    )
     answered, correct = (
         db.query(
             func.count(LearningSessionQuestion.id),
@@ -253,14 +251,22 @@ def dashboard_overview(db: Session, *, user: User, now: datetime | None = None) 
         )
         .one()
     )
-    reviews_due = db.query(ReviewSchedule).filter(
-        ReviewSchedule.user_id == user.id,
-        ReviewSchedule.next_review_date <= now,
-    ).count()
-    unresolved_mistakes = db.query(UserMistake).filter(
-        UserMistake.user_id == user.id,
-        UserMistake.is_resolved.is_(False),
-    ).count()
+    reviews_due = (
+        db.query(ReviewSchedule)
+        .filter(
+            ReviewSchedule.user_id == user.id,
+            ReviewSchedule.next_review_date <= now,
+        )
+        .count()
+    )
+    unresolved_mistakes = (
+        db.query(UserMistake)
+        .filter(
+            UserMistake.user_id == user.id,
+            UserMistake.is_resolved.is_(False),
+        )
+        .count()
+    )
     return {
         "total_xp": int(total_xp or 0),
         "current_streak": user.current_streak or 0,
@@ -276,14 +282,22 @@ def dashboard_overview(db: Session, *, user: User, now: datetime | None = None) 
 
 def recommendations(db: Session, *, user: User, now: datetime | None = None) -> list[dict]:
     now = now or datetime.now(timezone.utc)
-    due_count = db.query(ReviewSchedule).filter(
-        ReviewSchedule.user_id == user.id,
-        ReviewSchedule.next_review_date <= now,
-    ).count()
-    mistake_count = db.query(UserMistake).filter(
-        UserMistake.user_id == user.id,
-        UserMistake.is_resolved.is_(False),
-    ).count()
+    due_count = (
+        db.query(ReviewSchedule)
+        .filter(
+            ReviewSchedule.user_id == user.id,
+            ReviewSchedule.next_review_date <= now,
+        )
+        .count()
+    )
+    mistake_count = (
+        db.query(UserMistake)
+        .filter(
+            UserMistake.user_id == user.id,
+            UserMistake.is_resolved.is_(False),
+        )
+        .count()
+    )
     weakest = (
         db.query(UserMastery)
         .filter(UserMastery.user_id == user.id)
@@ -292,9 +306,7 @@ def recommendations(db: Session, *, user: User, now: datetime | None = None) -> 
     )
     result: list[dict] = []
     if due_count:
-        result.append(
-            {"kind": "REVIEW", "reason": "Spaced-repetition items are due", "question_count": due_count}
-        )
+        result.append({"kind": "REVIEW", "reason": "Spaced-repetition items are due", "question_count": due_count})
     if mistake_count:
         result.append(
             {"kind": "MISTAKE", "reason": "Unresolved mistakes need practice", "question_count": mistake_count}

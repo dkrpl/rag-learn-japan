@@ -146,9 +146,7 @@ def validate_question_payload(
             answer_items = answer_key_json.get("answers")
             if isinstance(answer_items, list):
                 answer_map = {
-                    item.get("blank_id"): item.get("option_id")
-                    for item in answer_items
-                    if isinstance(item, dict)
+                    item.get("blank_id"): item.get("option_id") for item in answer_items if isinstance(item, dict)
                 }
             elif isinstance(answer_items, dict):
                 answer_map = answer_items
@@ -207,8 +205,10 @@ def validate_question_payload(
             _validate_single_choice(prompt_json, answer_key_json)
         else:
             accepted = answer_key_json.get("accepted_readings")
-            if not isinstance(accepted, list) or not accepted or not all(
-                isinstance(item, str) and item.strip() for item in accepted
+            if (
+                not isinstance(accepted, list)
+                or not accepted
+                or not all(isinstance(item, str) and item.strip() for item in accepted)
             ):
                 raise QuestionWorkflowError(
                     "Kanji reading requires correct_option_id or accepted_readings", code="INVALID_ANSWER_KEY"
@@ -286,10 +286,14 @@ def _ensure_not_duplicate(db: Session, question: Question, *, exclude_id: str | 
 
 
 def snapshot_question(db: Session, question: Question, *, actor_id: str | None) -> QuestionRevision:
-    existing = db.query(QuestionRevision).filter(
-        QuestionRevision.question_id == question.id,
-        QuestionRevision.version_number == question.version_number,
-    ).first()
+    existing = (
+        db.query(QuestionRevision)
+        .filter(
+            QuestionRevision.question_id == question.id,
+            QuestionRevision.version_number == question.version_number,
+        )
+        .first()
+    )
     if existing:
         return existing
     revision = QuestionRevision(

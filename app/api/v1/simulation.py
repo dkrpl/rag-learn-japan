@@ -21,11 +21,7 @@ router = APIRouter()
 def _published_simulation_query(db: Session):
     return (
         db.query(JlptSimulation)
-        .options(
-            selectinload(JlptSimulation.sections).selectinload(
-                JlptSimulationSection.questions
-            )
-        )
+        .options(selectinload(JlptSimulation.sections).selectinload(JlptSimulationSection.questions))
         .filter(
             JlptSimulation.is_published.is_(True),
             JlptSimulation.is_archived.is_(False),
@@ -70,9 +66,7 @@ def get_simulation_details(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    simulation = _published_simulation_query(db).filter(
-        JlptSimulation.id == simulation_id
-    ).first()
+    simulation = _published_simulation_query(db).filter(JlptSimulation.id == simulation_id).first()
     if simulation is None:
         raise HTTPException(status_code=404, detail="Simulation not found")
     return simulation

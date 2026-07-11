@@ -32,7 +32,6 @@ from app.db.session import SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models.user import User, UserRole  # noqa: E402
 
-
 if engine.dialect.name == "sqlite":
 
     @event.listens_for(engine, "connect")

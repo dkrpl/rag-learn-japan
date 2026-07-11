@@ -90,9 +90,7 @@ class LearningSessionQuestion(CustomBase):
 
     session_id = Column(String(36), ForeignKey("learning_sessions.id", ondelete="CASCADE"), nullable=False)
     question_id = Column(String(36), ForeignKey("questions.id", ondelete="RESTRICT"), nullable=False)
-    question_revision_id = Column(
-        String(36), ForeignKey("question_revisions.id", ondelete="RESTRICT"), nullable=False
-    )
+    question_revision_id = Column(String(36), ForeignKey("question_revisions.id", ondelete="RESTRICT"), nullable=False)
 
     order_number = Column(Integer, nullable=False)
     is_answered = Column(Boolean, default=False, nullable=False)

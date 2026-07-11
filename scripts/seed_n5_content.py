@@ -303,9 +303,7 @@ def seed_n5(*, dry_run: bool = False) -> dict[str, int]:
 
         for values in manifest["readings"]:
             resource = (
-                db.query(Reading)
-                .filter(Reading.lesson_id == lesson.id, Reading.title == values["title"])
-                .first()
+                db.query(Reading).filter(Reading.lesson_id == lesson.id, Reading.title == values["title"]).first()
             )
             materialized = {**values, "lesson_id": lesson.id, "level_id": level.id}
             if resource is None:

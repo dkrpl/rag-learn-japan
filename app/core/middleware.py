@@ -88,7 +88,10 @@ class RequestBodyLimitMiddleware:
             await send(
                 {
                     "type": "http.response.body",
-                    "body": b'{"status":"error","error":{"code":"PAYLOAD_TOO_LARGE","message":"Request body is too large","details":[]}}',
+                    "body": (
+                        b'{"status":"error","error":{"code":"PAYLOAD_TOO_LARGE",'
+                        b'"message":"Request body is too large","details":[]}}'
+                    ),
                 }
             )
             return

@@ -50,12 +50,7 @@ def list_skill_mastery(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return (
-        db.query(UserMastery)
-        .filter(UserMastery.user_id == current_user.id)
-        .order_by(UserMastery.skill.asc())
-        .all()
-    )
+    return db.query(UserMastery).filter(UserMastery.user_id == current_user.id).order_by(UserMastery.skill.asc()).all()
 
 
 @router.get(

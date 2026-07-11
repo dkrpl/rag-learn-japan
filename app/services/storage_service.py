@@ -421,8 +421,8 @@ AudioStorage = LocalAudioStorage | S3AudioStorage
 
 def get_audio_storage(backend: str | None = None) -> AudioStorage:
     selected_backend = (
-        backend or os.getenv("AUDIO_STORAGE_BACKEND") or settings.AUDIO_STORAGE_PROVIDER or "local"
-    ).strip().lower()
+        (backend or os.getenv("AUDIO_STORAGE_BACKEND") or settings.AUDIO_STORAGE_PROVIDER or "local").strip().lower()
+    )
     if selected_backend == "local":
         return LocalAudioStorage()
     if selected_backend in {"s3", "s3-compatible", "minio"}:

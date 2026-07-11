@@ -98,17 +98,11 @@ def _public_model(schema: type[Any], resource: Any) -> Any:
 def _lesson_content(lesson: Lesson) -> LessonContentResponse:
     sections = [section for section in lesson.sections if _is_visible(section)]
     vocabularies = [
-        _public_model(VocabularyResponse, vocabulary)
-        for vocabulary in lesson.vocabularies
-        if _is_visible(vocabulary)
+        _public_model(VocabularyResponse, vocabulary) for vocabulary in lesson.vocabularies if _is_visible(vocabulary)
     ]
     kanjis = [kanji for kanji in lesson.kanjis if _is_visible(kanji)]
     grammar_points = [grammar for grammar in lesson.grammar_points if _is_visible(grammar)]
-    readings = [
-        _public_model(ReadingResponse, reading)
-        for reading in lesson.readings
-        if _is_visible(reading)
-    ]
+    readings = [_public_model(ReadingResponse, reading) for reading in lesson.readings if _is_visible(reading)]
 
     # Example sentences are reusable and linked through vocabulary/grammar.
     # Deduplicate when one sentence is linked to both types of material.
@@ -258,4 +252,3 @@ def get_published_lesson(lesson_id: str, db: Session = Depends(get_db)):
 @router.get("/lessons/{lesson_id}/content", response_model=LessonContentResponse)
 def get_published_lesson_content(lesson_id: str, db: Session = Depends(get_db)):
     return _lesson_content(_get_published_lesson(db, lesson_id))
-

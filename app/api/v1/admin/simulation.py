@@ -33,11 +33,7 @@ publisher_only = RoleChecker([UserRole.REVIEWER, UserRole.ADMINISTRATOR])
 def _query_simulation(db: Session, simulation_id: str, *, lock: bool = False):
     query = (
         db.query(JlptSimulation)
-        .options(
-            selectinload(JlptSimulation.sections).selectinload(
-                JlptSimulationSection.questions
-            )
-        )
+        .options(selectinload(JlptSimulation.sections).selectinload(JlptSimulationSection.questions))
         .filter(JlptSimulation.id == simulation_id)
     )
     if lock:
@@ -88,11 +84,7 @@ def _replace_sections(
     simulation: JlptSimulation,
     section_inputs: list[JlptSimulationSectionCreate],
 ) -> None:
-    question_ids = [
-        item.question_id
-        for section_input in section_inputs
-        for item in section_input.questions
-    ]
+    question_ids = [item.question_id for section_input in section_inputs for item in section_input.questions]
     if len(question_ids) != len(set(question_ids)):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -100,10 +92,7 @@ def _replace_sections(
         )
 
     questions = (
-        db.query(Question)
-        .options(selectinload(Question.revisions))
-        .filter(Question.id.in_(question_ids))
-        .all()
+        db.query(Question).options(selectinload(Question.revisions)).filter(Question.id.in_(question_ids)).all()
         if question_ids
         else []
     )
@@ -172,9 +161,7 @@ def list_simulations(
     query = db.query(JlptSimulation).options(selectinload(JlptSimulation.sections))
     if not include_archived:
         query = query.filter(JlptSimulation.is_archived.is_(False))
-    simulations = (
-        query.order_by(JlptSimulation.created_at.desc()).offset(offset).limit(limit).all()
-    )
+    simulations = query.order_by(JlptSimulation.created_at.desc()).offset(offset).limit(limit).all()
     return [_list_item(simulation) for simulation in simulations]
 
 
@@ -224,9 +211,7 @@ def update_simulation(
         raise HTTPException(status_code=409, detail="Unpublish the simulation before editing")
     if simulation.is_archived:
         raise HTTPException(status_code=409, detail="Archived simulations cannot be edited")
-    if db.query(UserSimulationAttempt.id).filter(
-        UserSimulationAttempt.simulation_id == simulation.id
-    ).first():
+    if db.query(UserSimulationAttempt.id).filter(UserSimulationAttempt.simulation_id == simulation.id).first():
         raise HTTPException(
             status_code=409,
             detail="A simulation with attempts is immutable; archive it and create a new version",

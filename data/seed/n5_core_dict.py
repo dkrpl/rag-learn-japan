@@ -28,7 +28,7 @@ VOCAB_BASES = [
     ("本", "ほん", "hon", "Book"),
     ("水", "みず", "mizu", "Water"),
     ("車", "くるま", "kuruma", "Car"),
-    ("電車", "でんしゃ", "densha", "Train")
+    ("電車", "でんしゃ", "densha", "Train"),
 ]
 
 KANJI_BASES = [
@@ -46,7 +46,7 @@ KANJI_BASES = [
     ("二", "ニ, ジ", "ふた, ふた.つ, ふたた.び", "Two", 2),
     ("三", "サン, ゾウ", "み, み.つ, みっ.つ", "Three", 3),
     ("四", "シ", "よ, よ.つ, よっ.つ, よん", "Four", 5),
-    ("五", "ゴ", "いつ, いつ.つ", "Five", 4)
+    ("五", "ゴ", "いつ, いつ.つ", "Five", 4),
 ]
 
 GRAMMAR_BASES = [
@@ -59,7 +59,7 @@ GRAMMAR_BASES = [
     ("NをV", "N を Verb", "Object marker", "Particle indicating direct object."),
     ("Nが", "N が", "Subject marker", "Particle indicating subject."),
     ("〜から〜まで", "〜から 〜まで", "From ~ to ~", "Indicates starting and ending points."),
-    ("Vたい", "Verb-たい", "Want to Verb", "Indicates desire to perform an action.")
+    ("Vたい", "Verb-たい", "Want to Verb", "Indicates desire to perform an action."),
 ]
 
 SENTENCE_BASES = [
@@ -72,26 +72,38 @@ SENTENCE_BASES = [
     ("日本語を勉強します。", "Nihongo o benkyou shimasu.", "I study Japanese."),
     ("猫がいます。", "Neko ga imasu.", "There is a cat."),
     ("学校はどこですか。", "Gakkou wa doko desu ka.", "Where is the school?"),
-    ("今、何時ですか。", "Ima, nanji desu ka.", "What time is it now?")
+    ("今、何時ですか。", "Ima, nanji desu ka.", "What time is it now?"),
 ]
 
 READING_BASES = [
     (
         "私の家族",
         "私の家族は4人です。父と母と姉と私です。父は会社員です。母は先生です。姉は大学生です。私は高校生です。私達は東京に住んでいます。",
-        "My family has 4 people. My father, mother, older sister, and me. My father is an office worker. My mother is a teacher. My older sister is a university student. I am a high school student. We live in Tokyo."
+        (
+            "My family has 4 people. My father, mother, older sister, and me. "
+            "My father is an office worker. My mother is a teacher. "
+            "My older sister is a university student. I am a high school student. We live in Tokyo."
+        ),
     ),
     (
         "休日の予定",
         "明日は日曜日です。私は友達と映画を見に行きます。その後、レストランで昼ごはんを食べます。午後はデパートで買い物をします。とても楽しみです。",
-        "Tomorrow is Sunday. I will go see a movie with my friend. After that, we will eat lunch at a restaurant. In the afternoon, we will go shopping at a department store. I am looking forward to it."
+        (
+            "Tomorrow is Sunday. I will go see a movie with my friend. "
+            "After that, we will eat lunch at a restaurant. In the afternoon, "
+            "we will go shopping at a department store. I am looking forward to it."
+        ),
     ),
     (
         "日本語の勉強",
         "私は毎日日本語を勉強しています。漢字は難しいですが、面白いです。週末はアニメを見て日本語を聞きます。いつか日本に行きたいです。",
-        "I study Japanese every day. Kanji is difficult, but interesting. On weekends, I watch anime and listen to Japanese. I want to go to Japan someday."
-    )
+        (
+            "I study Japanese every day. Kanji is difficult, but interesting. "
+            "On weekends, I watch anime and listen to Japanese. I want to go to Japan someday."
+        ),
+    ),
 ]
+
 
 def generate_vocabs(count):
     res = []
@@ -99,13 +111,9 @@ def generate_vocabs(count):
         base = VOCAB_BASES[i % len(VOCAB_BASES)]
         mult = (i // len(VOCAB_BASES)) + 1
         suffix = f" {mult}" if mult > 1 else ""
-        res.append({
-            "word": base[0] + suffix,
-            "kana": base[1],
-            "romaji": base[2],
-            "meaning": base[3] + suffix
-        })
+        res.append({"word": base[0] + suffix, "kana": base[1], "romaji": base[2], "meaning": base[3] + suffix})
     return res
+
 
 def generate_kanjis(count):
     res = []
@@ -113,14 +121,17 @@ def generate_kanjis(count):
         base = KANJI_BASES[i % len(KANJI_BASES)]
         mult = (i // len(KANJI_BASES)) + 1
         suffix = str(mult) if mult > 1 else ""
-        res.append({
-            "character": base[0] + suffix,
-            "onyomi": base[1],
-            "kunyomi": base[2],
-            "meaning": base[3] + suffix,
-            "stroke_count": base[4]
-        })
+        res.append(
+            {
+                "character": base[0] + suffix,
+                "onyomi": base[1],
+                "kunyomi": base[2],
+                "meaning": base[3] + suffix,
+                "stroke_count": base[4],
+            }
+        )
     return res
+
 
 def generate_grammar(count):
     res = []
@@ -128,13 +139,9 @@ def generate_grammar(count):
         base = GRAMMAR_BASES[i % len(GRAMMAR_BASES)]
         mult = (i // len(GRAMMAR_BASES)) + 1
         suffix = f" {mult}" if mult > 1 else ""
-        res.append({
-            "title": base[0] + suffix,
-            "structure": base[1],
-            "meaning": base[2],
-            "explanation": base[3]
-        })
+        res.append({"title": base[0] + suffix, "structure": base[1], "meaning": base[2], "explanation": base[3]})
     return res
+
 
 def generate_sentences(count):
     res = []
@@ -142,12 +149,9 @@ def generate_sentences(count):
         base = SENTENCE_BASES[i % len(SENTENCE_BASES)]
         mult = (i // len(SENTENCE_BASES)) + 1
         suffix = f" ({mult})" if mult > 1 else ""
-        res.append({
-            "japanese": base[0] + suffix,
-            "romaji": base[1],
-            "indonesian": base[2] + suffix
-        })
+        res.append({"japanese": base[0] + suffix, "romaji": base[1], "indonesian": base[2] + suffix})
     return res
+
 
 def generate_readings(count):
     res = []
@@ -155,9 +159,5 @@ def generate_readings(count):
         base = READING_BASES[i % len(READING_BASES)]
         mult = (i // len(READING_BASES)) + 1
         suffix = f" {mult}" if mult > 1 else ""
-        res.append({
-            "title": base[0] + suffix,
-            "content": base[1],
-            "translation": base[2]
-        })
+        res.append({"title": base[0] + suffix, "content": base[1], "translation": base[2]})
     return res

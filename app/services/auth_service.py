@@ -286,9 +286,7 @@ class AuthService:
         stored_hash = user.password_hash if user is not None else _dummy_password_hash()
         password_valid = security.verify_password(password, stored_hash)
         email_verification_missing = (
-            user is not None
-            and settings.ENVIRONMENT in {"staging", "production"}
-            and user.email_verified_at is None
+            user is not None and settings.ENVIRONMENT in {"staging", "production"} and user.email_verified_at is None
         )
         if user is None or not password_valid or not user.is_active:
             self.rate_limiter.record_failure(canonical_email, ip_address)

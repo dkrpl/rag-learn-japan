@@ -166,4 +166,3 @@ def test_audio_upload_rejects_mime_spoofing(client, admin_token_headers):
         headers=admin_token_headers,
     )
     assert invalid_mime.status_code == spoofed_mp3.status_code == 422
-

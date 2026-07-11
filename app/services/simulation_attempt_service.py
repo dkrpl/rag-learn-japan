@@ -23,9 +23,7 @@ class SimulationAttemptService:
             db.query(UserSimulationAttempt)
             .options(
                 selectinload(UserSimulationAttempt.simulation),
-                selectinload(UserSimulationAttempt.attempt_sections).selectinload(
-                    UserSimulationAttemptSection.section
-                ),
+                selectinload(UserSimulationAttempt.attempt_sections).selectinload(UserSimulationAttemptSection.section),
                 selectinload(UserSimulationAttempt.attempt_sections)
                 .selectinload(UserSimulationAttemptSection.attempt_questions)
                 .selectinload(UserSimulationAttemptQuestion.question_revision),

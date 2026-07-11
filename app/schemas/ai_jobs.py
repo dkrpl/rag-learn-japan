@@ -1,8 +1,11 @@
-from pydantic import BaseModel
-from typing import Optional, Any
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
 from app.models.ai_jobs import JobStatus, JobType
 from app.models.question import QuestionType, SkillType
+
 
 class GenerationJobCreate(BaseModel):
     lesson_id: str
@@ -13,9 +16,11 @@ class GenerationJobCreate(BaseModel):
     prompt_version: str = "v1"
     additional_notes: Optional[str] = None
 
+
 class AudioJobCreate(BaseModel):
     transcript: str
     lesson_id: Optional[str] = None
+
 
 class GenerationJobResponse(BaseModel):
     id: str

@@ -10,10 +10,13 @@ def create_published_hierarchy(client, admin_headers, *, lesson_title="Salam Das
     )
     assert level.status_code == 201, level.text
     level_id = level.json()["id"]
-    assert client.post(
-        f"/api/v1/admin/curriculum/levels/{level_id}/publish",
-        headers=admin_headers,
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/admin/curriculum/levels/{level_id}/publish",
+            headers=admin_headers,
+        ).status_code
+        == 200
+    )
 
     course = client.post(
         "/api/v1/admin/curriculum/courses",
@@ -22,10 +25,13 @@ def create_published_hierarchy(client, admin_headers, *, lesson_title="Salam Das
     )
     assert course.status_code == 201, course.text
     course_id = course.json()["id"]
-    assert client.post(
-        f"/api/v1/admin/curriculum/courses/{course_id}/publish",
-        headers=admin_headers,
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/admin/curriculum/courses/{course_id}/publish",
+            headers=admin_headers,
+        ).status_code
+        == 200
+    )
 
     unit = client.post(
         "/api/v1/admin/curriculum/units",
@@ -34,10 +40,13 @@ def create_published_hierarchy(client, admin_headers, *, lesson_title="Salam Das
     )
     assert unit.status_code == 201, unit.text
     unit_id = unit.json()["id"]
-    assert client.post(
-        f"/api/v1/admin/curriculum/units/{unit_id}/publish",
-        headers=admin_headers,
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/admin/curriculum/units/{unit_id}/publish",
+            headers=admin_headers,
+        ).status_code
+        == 200
+    )
 
     lesson = client.post(
         "/api/v1/admin/curriculum/lessons",
@@ -62,10 +71,13 @@ def create_published_hierarchy(client, admin_headers, *, lesson_title="Salam Das
         headers=admin_headers,
     )
     assert section.status_code == 201, section.text
-    assert client.post(
-        f"/api/v1/admin/curriculum/lessons/{lesson_id}/publish",
-        headers=admin_headers,
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/admin/curriculum/lessons/{lesson_id}/publish",
+            headers=admin_headers,
+        ).status_code
+        == 200
+    )
     return {
         "level_id": level_id,
         "course_id": course_id,
@@ -184,4 +196,3 @@ def test_cannot_publish_empty_lesson(client, admin_token_headers):
     )
     assert response.status_code == 422
     assert "published content" in response.json()["error"]["message"]
-

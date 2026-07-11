@@ -7,4 +7,3 @@ The module name is retained because the application already imports
 from app.api.v1.audio import router
 
 __all__ = ["router"]
-

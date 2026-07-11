@@ -1,5 +1,6 @@
 import json
 import os
+
 from app.main import app
 
 os.makedirs("docs", exist_ok=True)
