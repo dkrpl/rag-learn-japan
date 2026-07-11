@@ -36,7 +36,7 @@ def upgrade() -> None:
     op.create_table(
         "grammar_points",
         sa.Column("title", sa.String(length=255), nullable=False),
-        sa.Column("structure", sa.Text(), nullable=False),
+        sa.Column("structure", sa.String(length=255), nullable=False),
         sa.Column("meaning", sa.Text(), nullable=False),
         sa.Column("explanation", sa.Text(), nullable=True),
         sa.Column("id", sa.String(length=36), nullable=False),

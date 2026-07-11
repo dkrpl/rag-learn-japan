@@ -143,7 +143,7 @@ class GrammarPoint(PublicationMixin, CustomBase):
     )
 
     title = Column(String(255), nullable=False)
-    structure = Column(Text, nullable=False)
+    structure = Column(String(255), nullable=False)
     meaning = Column(Text, nullable=False)
     explanation = Column(Text, nullable=True)
     usage_notes = Column(Text, nullable=True)
@@ -156,7 +156,6 @@ class GrammarPoint(PublicationMixin, CustomBase):
 class ExampleSentence(PublicationMixin, CustomBase):
     __tablename__ = "example_sentences"
     __table_args__ = (
-        UniqueConstraint("japanese", "indonesian", name="uq_example_sentences_text_translation"),
         Index("ix_example_sentences_level_visibility", "level_id", "is_published", "is_archived"),
     )
 
