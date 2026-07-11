@@ -43,12 +43,13 @@ if engine.dialect.name == "sqlite":
 
 from sqlalchemy import text  # noqa: E402
 
+
 @pytest.fixture(scope="function", autouse=True)
 def reset_database(request):
     if request.node.get_closest_marker("no_db_reset"):
         yield
         return
-        
+
     if engine.dialect.name == "mysql":
         with engine.begin() as conn:
             conn.execute(text("SET FOREIGN_KEY_CHECKS=0;"))
@@ -56,7 +57,7 @@ def reset_database(request):
             conn.execute(text("SET FOREIGN_KEY_CHECKS=1;"))
     else:
         Base.metadata.drop_all(bind=engine)
-        
+
     Base.metadata.create_all(bind=engine)
     yield
 
