@@ -81,6 +81,16 @@ Server akan berjalan di `http://127.0.0.1:8000`.
 Swagger utama hanya menampilkan kontrak frontend yang simpel: `Auth` dan `/api/v1/app/*`.
 Endpoint admin/internal tetap ada, tetapi disembunyikan dari Swagger agar integrasi frontend tidak bercampur dengan endpoint back-office.
 
+## Catatan Deploy Railway
+
+Jika database Railway pernah memakai migration lama dan log menampilkan:
+
+```text
+Can't locate revision identified by '69e963bb7b7b'
+```
+
+Redeploy kode terbaru ini. Migration `69e963bb7b7b` sudah disediakan kembali sebagai anchor kompatibilitas, lalu Alembic akan menaikkan database ke head `000000000001`. Tidak perlu reset database Railway untuk error ini.
+
 ## 📚 Panduan Tim Frontend (Web / Mobile)
 
 Bagi tim yang akan mengintegrasikan aplikasi *Frontend* dengan *Backend* ini, kami telah menyiapkan dokumentasi super komprehensif di dalam direktori `backend/docs/`! 
