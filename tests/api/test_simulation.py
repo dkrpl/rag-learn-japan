@@ -40,6 +40,10 @@ def create_mock_simulation_data(db: Session):
         id=str(uuid.uuid4()),
         question_id=q.id,
         version_number=1,
+        lesson_id=lesson.id,
+        question_type="MULTIPLE_CHOICE",
+        skill="VOCABULARY",
+        difficulty=1,
         prompt_json='{"text": "Sim Question"}',
         answer_key_json='{"correct_answer": "A"}',
     )
