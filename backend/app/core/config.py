@@ -80,6 +80,13 @@ class Settings(BaseSettings):
             raise ValueError("configuration list cannot be empty")
         return cleaned
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        if isinstance(value, str) and value.startswith("mysql://"):
+            return value.replace("mysql://", "mysql+pymysql://", 1)
+        return value
+
     @field_validator("LOG_LEVEL")
     @classmethod
     def normalize_log_level(cls, value: str) -> str:
