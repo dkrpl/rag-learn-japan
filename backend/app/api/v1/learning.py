@@ -7,17 +7,17 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
+from app.models.ai_jobs import GenerationJob, JobStatus, JobType
 from app.models.user import User
+from app.schemas.ai_jobs import GenerationJobResponse
 from app.schemas.learning import (
-    LearningSessionCreate,
     AdaptiveEvaluationCreate,
+    LearningSessionCreate,
     LearningSessionResponse,
     SessionQuestionResponse,
     SubmitAnswerRequest,
     SubmitAnswerResponse,
 )
-from app.schemas.ai_jobs import GenerationJobResponse
-from app.models.ai_jobs import GenerationJob, JobType, JobStatus
 from app.services import learning as learning_service
 from app.tasks.ai_tasks import generate_adaptive_evaluation_task
 

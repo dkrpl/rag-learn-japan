@@ -137,12 +137,14 @@ Kamu adalah AI Tutor JLPT dan Mesin Evaluasi Otomatis.
 TUGAS: Evaluasi perkembangan belajar siswa pada materi ini dengan membuat kuis dinamis.
 
 SYARAT MUTLAK (Data RAG):
-Kamu HANYA BOLEH menggunakan kosakata, kanji, dan tata bahasa dari daftar kurikulum resmi berikut ini untuk menyusun kuis:
+Kamu HANYA BOLEH menggunakan kosakata, kanji, dan tata bahasa dari daftar kurikulum resmi 
+berikut ini untuk menyusun kuis:
 - Vocab: {vocab_context}
 - Kanji: {kanji_context}
 - Grammar: {grammar_context}
 
-INSTRUKSI: Buatkan {count} soal Multiple Choice tingkat N5 yang menargetkan materi di atas untuk mengevaluasi pemahaman siswa secara komprehensif.
+INSTRUKSI: Buatkan {count} soal Multiple Choice tingkat N5 yang menargetkan materi di atas 
+untuk mengevaluasi pemahaman siswa secara komprehensif.
 Keluarkan output HANYA dalam format JSON Array sesuai schema sistem.
         """
 
