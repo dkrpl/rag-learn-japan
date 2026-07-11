@@ -119,7 +119,7 @@ def generate_adaptive_evaluation_task(self, job_id: str):
         lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
         if not lesson:
             return {"status": "error", "message": "Lesson not found"}
-            
+
         vocab_list = [v.word for v in lesson.vocabularies] if lesson.vocabularies else []
         kanji_list = [k.character for k in lesson.kanjis] if lesson.kanjis else []
         grammar_list = [g.pattern for g in lesson.grammar_points] if lesson.grammar_points else []
@@ -131,19 +131,19 @@ def generate_adaptive_evaluation_task(self, job_id: str):
         # RAG Prompt Augmentation
         base_prompt = json.loads(job.prompt_json) if job.prompt_json else {}
         count = base_prompt.get("question_count", 5)
-        
+
         rag_prompt = f"""
 Kamu adalah AI Tutor JLPT dan Mesin Evaluasi Otomatis.
 TUGAS: Evaluasi perkembangan belajar siswa pada materi ini dengan membuat kuis dinamis.
 
 SYARAT MUTLAK (Data RAG):
-Kamu HANYA BOLEH menggunakan kosakata, kanji, dan tata bahasa dari daftar kurikulum resmi 
+Kamu HANYA BOLEH menggunakan kosakata, kanji, dan tata bahasa dari daftar kurikulum resmi
 berikut ini untuk menyusun kuis:
 - Vocab: {vocab_context}
 - Kanji: {kanji_context}
 - Grammar: {grammar_context}
 
-INSTRUKSI: Buatkan {count} soal Multiple Choice tingkat N5 yang menargetkan materi di atas 
+INSTRUKSI: Buatkan {count} soal Multiple Choice tingkat N5 yang menargetkan materi di atas
 untuk mengevaluasi pemahaman siswa secara komprehensif.
 Keluarkan output HANYA dalam format JSON Array sesuai schema sistem.
         """
