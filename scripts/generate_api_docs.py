@@ -6,7 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.main import app
+from app.main import app  # noqa: E402
+
 OPENAPI_PATH = ROOT / "docs" / "openapi.json"
 ENDPOINTS_PATH = ROOT / "docs" / "ENDPOINTS.md"
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "options", "head"}
