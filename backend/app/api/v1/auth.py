@@ -129,7 +129,12 @@ def logout(
         _raise_service_error(exc)
 
 
-@router.post("/logout-all", response_model=AuthMessageResponse, summary="Revoke all login sessions")
+@router.post(
+    "/logout-all",
+    response_model=AuthMessageResponse,
+    summary="Revoke all login sessions",
+    include_in_schema=False,
+)
 def logout_all(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -141,7 +146,12 @@ def logout_all(
         _raise_service_error(exc)
 
 
-@router.post("/forgot-password", response_model=AuthMessageResponse, summary="Request a password reset")
+@router.post(
+    "/forgot-password",
+    response_model=AuthMessageResponse,
+    summary="Request a password reset",
+    include_in_schema=False,
+)
 def forgot_password(
     request_in: ForgotPasswordRequest,
     request: Request,
@@ -159,7 +169,12 @@ def forgot_password(
     return AuthMessageResponse(message="If the account exists, password reset instructions will be sent")
 
 
-@router.post("/reset-password", response_model=AuthMessageResponse, summary="Reset a password")
+@router.post(
+    "/reset-password",
+    response_model=AuthMessageResponse,
+    summary="Reset a password",
+    include_in_schema=False,
+)
 def reset_password(request_in: ResetPasswordRequest, db: Session = Depends(get_db)) -> AuthMessageResponse:
     try:
         AuthService(db).reset_password(raw_token=request_in.token, new_password=request_in.new_password)
@@ -168,7 +183,12 @@ def reset_password(request_in: ResetPasswordRequest, db: Session = Depends(get_d
         _raise_service_error(exc)
 
 
-@router.post("/verify-email", response_model=AuthMessageResponse, summary="Verify an email address")
+@router.post(
+    "/verify-email",
+    response_model=AuthMessageResponse,
+    summary="Verify an email address",
+    include_in_schema=False,
+)
 def verify_email(request_in: VerifyEmailRequest, db: Session = Depends(get_db)) -> AuthMessageResponse:
     try:
         AuthService(db).verify_email(raw_token=request_in.token)
@@ -181,6 +201,7 @@ def verify_email(request_in: VerifyEmailRequest, db: Session = Depends(get_db)) 
     "/resend-verification",
     response_model=AuthMessageResponse,
     summary="Request another verification email",
+    include_in_schema=False,
 )
 def resend_verification(
     request_in: ResendVerificationRequest,

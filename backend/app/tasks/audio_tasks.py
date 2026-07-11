@@ -36,9 +36,14 @@ def generate_tts_task(self, job_id: str):
         # Create AudioAsset
         asset = AudioAsset(
             file_url=result["file_url"],
+            file_path=result.get("file_path"),
+            storage_backend=result.get("storage_backend", "local"),
+            storage_key=result.get("storage_key"),
+            content_type=result.get("content_type", "audio/mpeg"),
             transcript=result["transcript"],
             duration_seconds=result["duration_seconds"],
             checksum=result["checksum"],
+            is_published=False,
             created_by_id=job.created_by,
         )
         db.add(asset)

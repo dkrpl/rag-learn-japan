@@ -1,10 +1,12 @@
 import hashlib
-import os
 import uuid
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 # pyrefly: ignore [missing-import]
 from gtts import gTTS
+
+from app.core.config import settings
 
 
 class BaseTTSProvider(ABC):
@@ -14,23 +16,29 @@ class BaseTTSProvider(ABC):
         pass
 
 
-class MockTTSProvider(BaseTTSProvider):
+class DisabledTTSProvider(BaseTTSProvider):
     def generate_audio(self, text: str, lang: str = "ja") -> dict:
-        # Use gTTS to generate actual audio (free)
+        raise RuntimeError("TTS provider is disabled. Set TTS_PROVIDER=gtts for local TTS generation.")
+
+
+class GTTSProvider(BaseTTSProvider):
+    def generate_audio(self, text: str, lang: str = "ja") -> dict:
         tts = gTTS(text=text, lang=lang)
         filename = f"{uuid.uuid4()}.mp3"
 
-        # Save to local uploads folder
-        save_path = os.path.join("uploads", "audio", filename)
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        save_path = Path(settings.AUDIO_STORAGE_PATH) / filename
+        save_path.parent.mkdir(parents=True, exist_ok=True)
         tts.save(save_path)
 
-        # Calculate Checksum
-        with open(save_path, "rb") as f:
+        with save_path.open("rb") as f:
             checksum = hashlib.md5(f.read()).hexdigest()
 
         return {
-            "file_url": f"/uploads/audio/{filename}",
+            "file_url": f"/api/v1/audio/{filename}",
+            "file_path": str(save_path),
+            "storage_backend": "local",
+            "storage_key": filename,
+            "content_type": "audio/mpeg",
             "duration_seconds": max(1, len(text) // 5),  # Mock duration calculation
             "checksum": checksum,
             "transcript": text,
@@ -38,4 +46,6 @@ class MockTTSProvider(BaseTTSProvider):
 
 
 def get_tts_provider() -> BaseTTSProvider:
-    return MockTTSProvider()
+    if settings.TTS_PROVIDER == "gtts":
+        return GTTSProvider()
+    return DisabledTTSProvider()

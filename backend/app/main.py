@@ -42,7 +42,7 @@ async def lifespan(_: FastAPI):
 
 
 def register_routers(app: FastAPI) -> None:
-    from app.api.v1 import auth, content, curriculum, learning, progress, reviews, simulation, system, users
+    from app.api.v1 import auth, content, curriculum, frontend, learning, progress, reviews, simulation, system, users
     from app.api.v1.admin import ai_jobs as admin_ai_jobs
     from app.api.v1.admin import content as admin_content
     from app.api.v1.admin import curriculum as admin_curriculum
@@ -50,25 +50,52 @@ def register_routers(app: FastAPI) -> None:
     from app.api.v1.admin import simulation as admin_simulation
     from app.api.v1.admin import users as admin_users
 
-    app.include_router(system.router, prefix="/api/v1", tags=["System"])
+    app.include_router(system.router, prefix="/api/v1", tags=["System"], include_in_schema=False)
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
-    app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
-    app.include_router(curriculum.router, prefix="/api/v1/curriculum", tags=["Curriculum"])
-    app.include_router(content.router, prefix="/api/v1", tags=["Audio"])
-    app.include_router(learning.router, prefix="/api/v1/learning-sessions", tags=["Learning Sessions"])
-    app.include_router(progress.router, prefix="/api/v1/progress", tags=["Progress"])
-    app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["Reviews"])
-    app.include_router(admin_curriculum.router, prefix="/api/v1/admin/curriculum", tags=["Admin Curriculum"])
-    app.include_router(admin_content.router, prefix="/api/v1/admin/content", tags=["Admin Content"])
-    app.include_router(admin_questions.router, prefix="/api/v1/admin/questions", tags=["Admin Questions"])
-    app.include_router(admin_ai_jobs.router, prefix="/api/v1/admin/generation-jobs", tags=["Admin AI Jobs"])
-    app.include_router(admin_users.router, prefix="/api/v1/admin/users", tags=["Admin Users"])
+    app.include_router(frontend.router, prefix="/api/v1/app", tags=["Frontend"])
+    app.include_router(users.router, prefix="/api/v1/users", tags=["Users"], include_in_schema=False)
+    app.include_router(curriculum.router, prefix="/api/v1/curriculum", tags=["Curriculum"], include_in_schema=False)
+    app.include_router(content.router, prefix="/api/v1", tags=["Audio"], include_in_schema=False)
+    app.include_router(
+        learning.router,
+        prefix="/api/v1/learning-sessions",
+        tags=["Learning Sessions"],
+        include_in_schema=False,
+    )
+    app.include_router(progress.router, prefix="/api/v1/progress", tags=["Progress"], include_in_schema=False)
+    app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["Reviews"], include_in_schema=False)
+    app.include_router(
+        admin_curriculum.router,
+        prefix="/api/v1/admin/curriculum",
+        tags=["Admin Curriculum"],
+        include_in_schema=False,
+    )
+    app.include_router(
+        admin_content.router,
+        prefix="/api/v1/admin/content",
+        tags=["Admin Content"],
+        include_in_schema=False,
+    )
+    app.include_router(
+        admin_questions.router,
+        prefix="/api/v1/admin/questions",
+        tags=["Admin Questions"],
+        include_in_schema=False,
+    )
+    app.include_router(
+        admin_ai_jobs.router,
+        prefix="/api/v1/admin/generation-jobs",
+        tags=["Admin AI Jobs"],
+        include_in_schema=False,
+    )
+    app.include_router(admin_users.router, prefix="/api/v1/admin/users", tags=["Admin Users"], include_in_schema=False)
     app.include_router(
         admin_simulation.router,
         prefix="/api/v1/admin/jlpt-simulations",
         tags=["Admin JLPT Simulations"],
+        include_in_schema=False,
     )
-    app.include_router(simulation.router, prefix="/api/v1", tags=["JLPT Simulations"])
+    app.include_router(simulation.router, prefix="/api/v1", tags=["JLPT Simulations"], include_in_schema=False)
 
     # Operational aliases follow the PRD and stay outside the versioned contract.
     app.add_api_route("/health", system.check_health, methods=["GET"], include_in_schema=False)

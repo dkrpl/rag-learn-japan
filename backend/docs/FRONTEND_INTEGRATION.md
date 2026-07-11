@@ -1,39 +1,122 @@
 # Frontend Integration Guide
 
-Dokumen ini adalah panduan singkat bagi Frontend Engineer untuk melakukan pemanggilan ke backend.
+Swagger utama sekarang sengaja kecil. Untuk frontend kursus, gunakan hanya:
 
-## Alur Dasar Belajar (Learning Flow)
-1. **Pilih Lesson**: Ambil dari `GET /api/v1/curriculum/lessons/{id}`
-2. **Mulai Session**: Buat session dengan `POST /api/v1/learning-sessions/start` dan berikan `lesson_id` beserta `mode="PRACTICE"`. Backend akan merespons dengan `session_id`.
-3. **Minta Soal**: Panggil `GET /api/v1/learning-sessions/{session_id}/questions` untuk memuat soal ke state aplikasi frontend. (Ingat, ini tidak mengandung `is_correct` untuk alasan keamanan).
-4. **Submisi Jawaban**: Saat User klik submit, kirim ke `POST /api/v1/learning-sessions/{session_id}/answers` beserta id soal dan `user_answer_json`. Backend akan mengembalikan `is_correct`. (Tampilkan UI Merah / Hijau berdasarkan respons ini).
-5. **Selesaikan Session**: Panggil `POST /api/v1/learning-sessions/{session_id}/complete`.
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+- Semua endpoint di `/api/v1/app/*`
 
-## Alur Evaluasi Adaptif (AI RAG)
-Jika Anda menyediakan tombol "Generate Quiz" atau "Evaluasi Materi Ini" pada halaman detail *Lesson*:
-1. **Trigger AI**: Panggil `POST /api/v1/learning-sessions/adaptive` dengan *payload* `lesson_id` dan `question_count`.
-2. **Polling Job**: Backend akan mengembalikan status `PENDING` dengan `id` job (GenerationJobResponse). Tampilkan *Loading Screen* dan *polling* `GET /api/v1/admin/ai_jobs/{id}` (jika rute learner belum dipisah, gunakan *state* lokal, atau implementasikan rute GET status pada v2) hingga status menjadi `COMPLETED`. 
-   > *Catatan: Untuk MVP, soal yang dihasilkan akan langsung masuk ke database.*
+Endpoint `/api/v1/admin/*`, `/api/v1/curriculum/*`, `/api/v1/learning-sessions/*`,
+dan endpoint detail lain tetap hidup untuk back-office/test, tetapi disembunyikan dari Swagger utama.
 
-## Audio
+## Autentikasi Wajib
 
-1. URL Audio dikembalikan di metadata berformat relatif atau absolut (tergantung konfigurasi).
-2. Panggil URL secara normal di `src` tag `<audio>`. Token JWT tidak dibutuhkan untuk _streaming audio_ ke browser, selama URL tersebut memuat ID Publik.
+Semua endpoint `/api/v1/app/*` wajib memakai access token dari login. Token tidak dibaca dari body atau cookie.
 
----
+1. Login:
 
-## Alur Ujian Simulasi JLPT (Simulation Flow)
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
 
-Simulasi JLPT memiliki perlindungan _Timer_ pada tingkat server.
+{
+  "email": "learner@example.com",
+  "password": "Password123"
+}
+```
 
-1. **Lihat Daftar Simulasi**: `GET /api/v1/jlpt-simulations`
-2. **Mulai Ujian (*Start Attempt*)**: `POST /api/v1/jlpt-simulations/{sim_id}/attempts`. Ini akan membuat catatan attempt, namun **waktu pengerjaan (timer) belum berjalan**.
-3. **Mulai Seksi (*Start Section*)**: Panggil `POST /api/v1/jlpt-simulation-attempts/{attempt_id}/start-section`. 
-   > ⚠️ **PERHATIAN**: Timer seksi secara resmi berdetak setelah panggilan ini berhasil! Anda akan menerima daftar soal (`questions`) khusus untuk seksi tersebut tanpa *kunci jawaban*.
-4. **Pilih Jawaban**: Klien menyimpan respons sementara, kemudian setiap selesai memilih/tiap hitungan menit, panggil: 
-   `POST /api/v1/jlpt-simulation-attempts/{attempt_id}/answers`
-   *(Tidak seperti Learning Session, Rute ini TIDAK mengevaluasi BENAR/SALAH melainkan hanya mengunci input User ke Database).*
-5. **Selesaikan Seksi**: Jika _Learner_ menyerahkan diri (*submit awal*) atau waktu lokal klien habis, panggil `POST /api/v1/jlpt-simulation-attempts/{attempt_id}/complete-section`.
-   *(Penting: Backend akan menolak jawaban Anda jika waktu telah melebihi durasi resmi seksi + 30 detik toleransi server delay).*
-6. **Lanjut Seksi Berikutnya**: Ulangi langkah ke-3 (Start Section) hingga seluruh seksi (Vocabulary, Grammar, Listening) habis.
-7. **Selesaikan Ujian (*Final Submit*)**: `POST /api/v1/jlpt-simulation-attempts/{attempt_id}/complete`. Backend kemudian akan mengkalkulasi skor, ambang batas *passing grade* per seksi, analisis kemampuan, dan kelemahan. Hasilnya bisa dibaca secara langsung dari keluaran respons ini.
+2. Ambil `access_token` dari response.
+
+3. Kirim token di setiap request `/api/v1/app/*`:
+
+```http
+GET /api/v1/app/me
+Authorization: Bearer <access_token>
+```
+
+Contoh frontend:
+
+```ts
+const loginRes = await fetch(`${API_URL}/api/v1/auth/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: "learner@example.com",
+    password: "Password123",
+  }),
+});
+
+const { access_token } = await loginRes.json();
+
+const meRes = await fetch(`${API_URL}/api/v1/app/me`, {
+  headers: { Authorization: `Bearer ${access_token}` },
+});
+```
+
+Di Swagger, klik tombol **Authorize**, lalu paste nilai `access_token` saja.
+Untuk request manual seperti Postman/fetch/cURL, header lengkapnya tetap:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+Kalau header ini tidak dikirim, response yang benar adalah `401 Authentication required`.
+
+## Alur Frontend Utama
+
+1. Login:
+   `POST /api/v1/auth/login`
+
+2. Ambil user:
+   `GET /api/v1/app/me`
+
+3. Ambil katalog kursus lengkap:
+   `GET /api/v1/app/catalog`
+
+4. Ambil detail lesson:
+   `GET /api/v1/app/lessons/{lesson_id}`
+
+5. Mulai latihan:
+   `POST /api/v1/app/lessons/{lesson_id}/sessions`
+
+6. Ambil soal session:
+   `GET /api/v1/app/sessions/{session_id}/questions`
+
+7. Submit jawaban:
+   `POST /api/v1/app/sessions/{session_id}/answers`
+
+8. Complete session:
+   `POST /api/v1/app/sessions/{session_id}/complete`
+
+9. Dashboard:
+   `GET /api/v1/app/dashboard`
+
+## Generate Soal Dengan AI
+
+Frontend tidak perlu memakai endpoint admin.
+
+1. Buat job:
+   `POST /api/v1/app/lessons/{lesson_id}/ai-question-jobs`
+
+2. Poll status:
+   `GET /api/v1/app/ai-question-jobs/{job_id}`
+
+Jika Redis/Celery belum hidup, job akan cepat menjadi `FAILED` dengan `error_message`.
+Untuk menjalankan AI sungguhan, jalankan Redis + worker Celery, lalu set:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=...
+```
+
+## Bentuk Jawaban
+
+Gunakan `question.question_type` dari response question:
+
+- `MULTIPLE_CHOICE`, `LISTENING_MULTIPLE_CHOICE`: `{"selected_option_id":"a"}`
+- `TRUE_FALSE`: `{"value":true}`
+- `READING_COMPREHENSION`: `{"selected_option_ids":["b"]}`
+
+Backend tidak pernah mengirim answer key sebelum jawaban dikirim, jadi frontend aman dari answer leak.

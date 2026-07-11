@@ -46,6 +46,10 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+backend/.pytest_tmp/
+backend/.ruff_cache/
+backend/data/seed/generated/
+backend/data/uploads/audio/[0-9a-f][0-9a-f]/
 cover/
 
 # IDEs
