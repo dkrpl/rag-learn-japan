@@ -155,9 +155,7 @@ class GrammarPoint(PublicationMixin, CustomBase):
 
 class ExampleSentence(PublicationMixin, CustomBase):
     __tablename__ = "example_sentences"
-    __table_args__ = (
-        Index("ix_example_sentences_level_visibility", "level_id", "is_published", "is_archived"),
-    )
+    __table_args__ = (Index("ix_example_sentences_level_visibility", "level_id", "is_published", "is_archived"),)
 
     japanese = Column(Text, nullable=False)
     romaji = Column(Text, nullable=True)
