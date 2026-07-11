@@ -11,6 +11,7 @@ Terdapat pemisahan akses rute API yang jelas:
 2. **Learning Engine**: Sesi belajar (*Practice* & *Exam*) dengan perlindungan kebocoran kunci jawaban.
 3. **Progress Engine**: Sistem XP, Streak, Mastery (penguasaan skill), dan Mistake Book.
 4. **AI & Audio Generator**: *Background workers* untuk membuat soal secara otomatis (Gemini API) dan membuat berkas MP3 dari narasi teks (TTS).
+5. **Adaptive Evaluation (RAG)**: Mesin kuis dinamis untuk *Learner* yang di-*generate* secara *real-time* oleh AI dengan batasan ketat berdasarkan kurikulum resmi (silabus Admin).
 
 ## Rate Limiting
 

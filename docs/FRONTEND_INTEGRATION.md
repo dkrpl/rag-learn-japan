@@ -9,6 +9,12 @@ Dokumen ini adalah panduan singkat bagi Frontend Engineer untuk melakukan pemang
 4. **Submisi Jawaban**: Saat User klik submit, kirim ke `POST /api/v1/learning-sessions/{session_id}/answers` beserta id soal dan `user_answer_json`. Backend akan mengembalikan `is_correct`. (Tampilkan UI Merah / Hijau berdasarkan respons ini).
 5. **Selesaikan Session**: Panggil `POST /api/v1/learning-sessions/{session_id}/complete`.
 
+## Alur Evaluasi Adaptif (AI RAG)
+Jika Anda menyediakan tombol "Generate Quiz" atau "Evaluasi Materi Ini" pada halaman detail *Lesson*:
+1. **Trigger AI**: Panggil `POST /api/v1/learning-sessions/adaptive` dengan *payload* `lesson_id` dan `question_count`.
+2. **Polling Job**: Backend akan mengembalikan status `PENDING` dengan `id` job (GenerationJobResponse). Tampilkan *Loading Screen* dan *polling* `GET /api/v1/admin/ai_jobs/{id}` (jika rute learner belum dipisah, gunakan *state* lokal, atau implementasikan rute GET status pada v2) hingga status menjadi `COMPLETED`. 
+   > *Catatan: Untuk MVP, soal yang dihasilkan akan langsung masuk ke database.*
+
 ## Audio
 
 1. URL Audio dikembalikan di metadata berformat relatif atau absolut (tergantung konfigurasi).

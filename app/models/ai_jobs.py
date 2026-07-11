@@ -17,6 +17,7 @@ class JobStatus(str, enum.Enum):
 class JobType(str, enum.Enum):
     QUESTION_GENERATION = "QUESTION_GENERATION"
     TTS_GENERATION = "TTS_GENERATION"
+    ADAPTIVE_EVALUATION_GENERATION = "ADAPTIVE_EVALUATION_GENERATION"
 
 
 class GenerationJob(CustomBase):

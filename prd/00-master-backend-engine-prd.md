@@ -459,6 +459,14 @@ Backend menyediakan audio dan daftar aset gambar.
 12. Reviewer menyetujui, menolak, atau meminta revisi.
 13. Soal yang disetujui dapat dipublikasikan.
 
+### 12.5 Evaluasi Otomatis dengan RAG
+
+1. Learner meminta "Kuis Evaluasi" untuk sebuah *Lesson* tertentu.
+2. Backend (RAG Pipeline) menarik silabus resmi dari *database* (Kosakata, Kanji, dan Tata Bahasa khusus *Lesson* tersebut) yang telah diinput Admin.
+3. Backend menyuntikkan silabus resmi ini sebagai konteks (RAG) ke dalam *prompt* AI.
+4. AI meng-generate soal unik secara dinamis yang *strict* hanya menggunakan materi dari silabus tersebut.
+5. Soal disajikan kepada Learner sebagai sesi kuis evaluasi *real-time*.
+
 ---
 
 ## 13. Persyaratan Fungsional

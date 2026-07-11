@@ -1,6 +1,39 @@
 {
   "components": {
     "schemas": {
+      "AdaptiveEvaluationCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "lesson_id": {
+            "maxLength": 36,
+            "minLength": 1,
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "question_count": {
+            "default": 5,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Question Count",
+            "type": "integer"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "lesson_id"
+        ],
+        "title": "AdaptiveEvaluationCreate",
+        "type": "object"
+      },
       "AttemptQuestionResponse": {
         "properties": {
           "id": {
@@ -2298,7 +2331,8 @@
       "JobType": {
         "enum": [
           "QUESTION_GENERATION",
-          "TTS_GENERATION"
+          "TTS_GENERATION",
+          "ADAPTIVE_EVALUATION_GENERATION"
         ],
         "title": "JobType",
         "type": "string"
@@ -15572,6 +15606,52 @@
           }
         ],
         "summary": "Start a lesson practice or exam session",
+        "tags": [
+          "Learning Sessions"
+        ]
+      }
+    },
+    "/api/v1/learning-sessions/adaptive": {
+      "post": {
+        "operationId": "createAdaptiveEvaluation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdaptiveEvaluationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Trigger RAG-based personalized evaluation",
         "tags": [
           "Learning Sessions"
         ]

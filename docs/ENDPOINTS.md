@@ -220,6 +220,7 @@ Authentication uses `Authorization: Bearer <access_token>` unless an endpoint is
 | Method | Path | Auth | Summary |
 |:---|:---|:---|:---|
 | `POST` | `/api/v1/learning-sessions` | Bearer | Start a lesson practice or exam session |
+| `POST` | `/api/v1/learning-sessions/adaptive` | Bearer | Trigger RAG-based personalized evaluation |
 | `GET` | `/api/v1/learning-sessions/{session_id}` | Bearer | Get an owned learning session |
 | `POST` | `/api/v1/learning-sessions/{session_id}/answers` | Bearer | Submit one deterministic answer by session-question ID |
 | `POST` | `/api/v1/learning-sessions/{session_id}/cancel` | Bearer | Idempotently cancel an active session |
