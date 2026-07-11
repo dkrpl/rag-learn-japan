@@ -1,10 +1,10 @@
 from app.core.config import settings
 
-CELERY_BROKER_URL = settings.REDIS_URL
-CELERY_RESULT_BACKEND = settings.REDIS_URL
+broker_url = settings.REDIS_URL
+result_backend = settings.REDIS_URL
 
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TIMEZONE = "Asia/Jakarta"
-CELERY_ENABLE_UTC = True
+task_serializer = "json"
+result_serializer = "json"
+accept_content = ["json"]
+timezone = "Asia/Jakarta"
+enable_utc = True
