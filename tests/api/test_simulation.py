@@ -30,7 +30,7 @@ def create_mock_simulation_data(db: Session):
         skill="VOCABULARY",
         status=QuestionStatus.PUBLISHED,
         prompt_json={"text": "Sim Question"},
-        answer_key_json={"correct_answer": "A"},
+        answer_key_json={"correct_option_id": "A"},
         version_number=1,
     )
     db.add(q)
@@ -45,7 +45,7 @@ def create_mock_simulation_data(db: Session):
         skill="VOCABULARY",
         difficulty=1,
         prompt_json={"text": "Sim Question"},
-        answer_key_json={"correct_answer": "A"},
+        answer_key_json={"correct_option_id": "A"},
     )
     db.add(q_rev)
     db.flush()
@@ -92,7 +92,7 @@ def test_learner_simulation_flow(client: TestClient, db: Session, learner_token_
     # 4. Submit correct answer
     ans_res = client.post(
         f"/api/v1/jlpt-simulation-attempts/{attempt_id}/answers",
-        json={"question_id": q.id, "answer_data": {"choice": "A"}},
+        json={"question_id": q.id, "answer_data": {"selected_option_id": "A"}},
         headers=learner_token_headers,
     )
     assert ans_res.status_code == 200
@@ -128,8 +128,8 @@ def test_simulation_timer_expired(client: TestClient, db: Session, learner_token
     # 3. Submit answer should fail
     ans_res = client.post(
         f"/api/v1/jlpt-simulation-attempts/{attempt_id}/answers",
-        json={"question_id": q.id, "answer_data": {"choice": "A"}},
+        json={"question_id": q.id, "answer_data": {"selected_option_id": "A"}},
         headers=learner_token_headers,
     )
-    assert ans_res.status_code == 400
-    assert "Time expired" in ans_res.json()["error"]["message"]
+    assert ans_res.status_code == 409
+    assert "time has expired" in ans_res.json()["error"]["message"]
