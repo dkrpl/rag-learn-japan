@@ -81,7 +81,7 @@ def create_app() -> FastAPI:
     openapi_url = "/openapi.json" if settings.ENABLE_API_DOCS else None
     app = FastAPI(
         title=settings.PROJECT_NAME,
-        description="Production backend for the Nihongo learning platform.",
+        description="Production backend for the RAG Learn Japan platform.",
         version=settings.VERSION,
         openapi_url=openapi_url,
         docs_url=docs_url,

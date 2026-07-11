@@ -1,6 +1,6 @@
-# Nihongo Learning Workspace (Monorepo)
+# RAG Learn Japan Workspace (Monorepo)
 
-Proyek ini adalah repositori *monorepo* yang menaungi *backend* dan *frontend* untuk platform belajar bahasa Jepang (Nihongo Learn).
+Proyek ini adalah repositori *monorepo* yang menaungi *backend* dan *frontend* untuk platform RAG Learn Japan.
 
 - **`backend/`**: Dibangun dengan FastAPI, SQLAlchemy, dan MySQL.
 - **`frontend/`**: Tempat untuk meletakkan aplikasi *client* (Web/Mobile).

@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Nihongo Learning API"
+    PROJECT_NAME: str = "RAG Learn Japan API"
     VERSION: str = "1.0.0"
     ENVIRONMENT: Literal["local", "test", "staging", "production"] = "local"
 
