@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "level": {
+    "code": "N5",
+    "name": "JLPT N5",
+    "description": "Dasar bahasa Jepang untuk pemelajar pemula.",
+    "sequence": 1
+  },
+  "course": {
+    "title": "Fondasi Bahasa Jepang N5",
+    "slug": "fondasi-bahasa-jepang-n5",
+    "description": "Kursus pengantar yang dapat dikembangkan melalui API admin.",
+    "sequence": 1
+  },
+  "unit": {
+    "title": "Salam dan Perkenalan",
+    "slug": "salam-dan-perkenalan",
+    "description": "Memahami salam dasar dan memperkenalkan diri.",
+    "sequence": 1
+  },
+  "lesson": {
+    "title": "Salam Dasar",
+    "slug": "salam-dasar",
+    "summary": "Salam yang sering dipakai pada pertemuan sehari-hari.",
+    "learning_objective": "Pemelajar dapat memilih dan menggunakan salam dasar sesuai konteks.",
+    "estimated_minutes": 15,
+    "passing_score": 70,
+    "sequence": 1
+  },
+  "sections": [
+    {
+      "section_type": "article",
+      "title": "Kapan salam digunakan",
+      "content": "「おはようございます」は pagi hari, 「こんにちは」は siang hari, dan 「こんばんは」は malam hari.",
+      "sequence": 1
+    }
+  ],
+  "vocabularies": [
+    {
+      "word": "おはようございます",
+      "kana": "おはようございます",
+      "romaji": "ohayou gozaimasu",
+      "meaning": "Selamat pagi",
+      "part_of_speech": "ungkapan",
+      "notes": "Bentuk sopan.",
+      "sequence": 1
+    },
+    {
+      "word": "こんにちは",
+      "kana": "こんにちは",
+      "romaji": "konnichiwa",
+      "meaning": "Selamat siang / halo",
+      "part_of_speech": "ungkapan",
+      "notes": "Umumnya digunakan pada siang hari.",
+      "sequence": 2
+    },
+    {
+      "word": "こんばんは",
+      "kana": "こんばんは",
+      "romaji": "konbanwa",
+      "meaning": "Selamat malam",
+      "part_of_speech": "ungkapan",
+      "notes": "Salam saat bertemu pada malam hari.",
+      "sequence": 3
+    },
+    {
+      "word": "私",
+      "kana": "わたし",
+      "romaji": "watashi",
+      "meaning": "Saya",
+      "part_of_speech": "pronomina",
+      "notes": "Bentuk netral dan sopan.",
+      "sequence": 4
+    }
+  ],
+  "kanjis": [
+    {
+      "character": "私",
+      "onyomi": "シ",
+      "kunyomi": "わたし、わたくし",
+      "meaning": "Saya; pribadi",
+      "radical": "禾",
+      "stroke_count": 7,
+      "sequence": 1
+    },
+    {
+      "character": "日",
+      "onyomi": "ニチ、ジツ",
+      "kunyomi": "ひ、か",
+      "meaning": "Hari; matahari",
+      "radical": "日",
+      "stroke_count": 4,
+      "sequence": 2
+    }
+  ],
+  "grammar_points": [
+    {
+      "title": "A は B です",
+      "structure": "[topik] は [informasi] です",
+      "meaning": "A adalah B",
+      "explanation": "Partikel は menandai topik. Dalam fungsi ini, は dibaca wa.",
+      "usage_notes": "です membuat pernyataan terdengar sopan.",
+      "sequence": 1
+    }
+  ],
+  "example_sentences": [
+    {
+      "japanese": "私はアニです。",
+      "romaji": "Watashi wa Ani desu.",
+      "indonesian": "Saya Ani.",
+      "vocabulary_word": "私",
+      "grammar_title": "A は B です"
+    },
+    {
+      "japanese": "こんにちは。",
+      "romaji": "Konnichiwa.",
+      "indonesian": "Selamat siang.",
+      "vocabulary_word": "こんにちは"
+    }
+  ],
+  "readings": [
+    {
+      "title": "Perkenalan Ani",
+      "content": "こんにちは。私はアニです。インドネシア人です。よろしくお願いします。",
+      "furigana": "こんにちは。わたしはアニです。インドネシアじんです。よろしくおねがいします。",
+      "translation": "Halo. Saya Ani. Saya orang Indonesia. Senang berkenalan dengan Anda.",
+      "difficulty": 1,
+      "sequence": 1
+    }
+  ],
+  "audio_fixture": {
+    "title": "Audio pemeriksaan pipeline (nonspeech)",
+    "transcript": "［音声動作確認用トーン］",
+    "translation": "[Nada untuk memeriksa fungsi audio]",
+    "speaker": "synthetic-fixture",
+    "duration_seconds": 1
+  }
+}

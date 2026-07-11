@@ -1,0 +1,102 @@
+name: nihongo-production
+
+x-app-environment: &app-environment
+  ENVIRONMENT: production
+  DATABASE_URL: mysql+pymysql://nihongo:${DB_PASSWORD:?DB_PASSWORD is required}@db:3306/nihongo
+  REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
+  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+  CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS JSON array is required}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:?ALLOWED_HOSTS JSON array is required}
+  AUDIO_STORAGE_PATH: /app/data/uploads/audio
+  AUDIO_PUBLIC_BASE_URL: ${AUDIO_PUBLIC_BASE_URL:-}
+  AI_PROVIDER: ${AI_PROVIDER:-disabled}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
+  TTS_PROVIDER: ${TTS_PROVIDER:-disabled}
+  ENABLE_API_DOCS: ${ENABLE_API_DOCS:-true}
+  ENABLE_METRICS: "true"
+  WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: nihongo
+      MYSQL_USER: nihongo
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [backend]
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [backend]
+
+  migrate:
+    build: .
+    restart: "no"
+    environment: *app-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    networks: [backend]
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment: *app-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes:
+      - audio_data:/app/data/uploads/audio
+    expose: ["8000"]
+    ports:
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${API_PORT:-8000}:8000"
+    networks: [backend]
+
+  worker:
+    build: .
+    restart: unless-stopped
+    environment: *app-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes:
+      - audio_data:/app/data/uploads/audio
+    command:
+      ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=INFO", "--concurrency=${CELERY_CONCURRENCY:-2}"]
+    networks: [backend]
+
+volumes:
+  mysql_data:
+  redis_data:
+  audio_data:
+
+networks:
+  backend:
+    driver: bridge

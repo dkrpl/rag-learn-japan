@@ -1,0 +1,78 @@
+name: nihongo-staging
+
+x-app-environment: &app-environment
+  ENVIRONMENT: staging
+  DATABASE_URL: mysql+pymysql://nihongo:${DB_PASSWORD:-nihongo_dev_password}@db:3306/nihongo_staging
+  REDIS_URL: redis://redis:6379/0
+  SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY to at least 32 random characters}
+  CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000"]}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-["localhost","127.0.0.1"]}
+  AUDIO_STORAGE_PATH: /app/data/uploads/audio
+  AI_PROVIDER: ${AI_PROVIDER:-disabled}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  TTS_PROVIDER: ${TTS_PROVIDER:-disabled}
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-local_staging_root_password}
+      MYSQL_DATABASE: nihongo_staging
+      MYSQL_USER: nihongo
+      MYSQL_PASSWORD: ${DB_PASSWORD:-nihongo_dev_password}
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes: ["staging_mysql:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["staging_redis:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    build: .
+    environment: *app-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment: *app-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes: ["staging_audio:/app/data/uploads/audio"]
+    ports: ["8000:8000"]
+
+  worker:
+    build: .
+    restart: unless-stopped
+    environment: *app-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes: ["staging_audio:/app/data/uploads/audio"]
+    command: ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+
+volumes:
+  staging_mysql:
+  staging_redis:
+  staging_audio:
