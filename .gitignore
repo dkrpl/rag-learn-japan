@@ -1,11 +1,16 @@
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Python environments
+backend/venv/
+backend/env/
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+frontend/.env.*
+frontend/dist/
+frontend/build/
 
 # Python
 __pycache__/

@@ -1,8 +1,11 @@
-# Nihongo Learning API
+# Nihongo Learning Workspace (Monorepo)
 
-API Backend untuk platform belajar bahasa Jepang. Dibangun dengan FastAPI, SQLAlchemy, dan MySQL.
+Proyek ini adalah repositori *monorepo* yang menaungi *backend* dan *frontend* untuk platform belajar bahasa Jepang (Nihongo Learn).
 
-## Prasyarat (Local Development)
+- **`backend/`**: Dibangun dengan FastAPI, SQLAlchemy, dan MySQL.
+- **`frontend/`**: Tempat untuk meletakkan aplikasi *client* (Web/Mobile).
+
+## Prasyarat (Local Development Backend)
 
 - Python 3.10 atau lebih baru
 - MySQL Server (Native, XAMPP, atau Laragon) berjalan di port 3306
@@ -18,10 +21,11 @@ API Backend untuk platform belajar bahasa Jepang. Dibangun dengan FastAPI, SQLAl
    ```
 
 ### 2. Setup Virtual Environment (venv)
-Buka terminal/command prompt di dalam root direktori proyek ini, lalu jalankan:
+Buka terminal/command prompt, masuk ke dalam folder `backend`, lalu buat *environment*:
 
 **Windows:**
 ```bash
+cd backend
 python -m venv venv
 venv\Scripts\activate
 ```
@@ -65,23 +69,24 @@ Server akan berjalan di `http://127.0.0.1:8000`.
 
 ## 📚 Panduan Tim Frontend (Web / Mobile)
 
-Bagi tim yang akan mengintegrasikan aplikasi *Frontend* dengan *Backend* ini, kami telah menyiapkan dokumentasi super komprehensif di dalam direktori `docs/`! 
+Bagi tim yang akan mengintegrasikan aplikasi *Frontend* dengan *Backend* ini, kami telah menyiapkan dokumentasi super komprehensif di dalam direktori `backend/docs/`! 
 Silakan baca urutan berikut agar Anda paham cara berinteraksi dengan API ini:
 
-1. **[Gambaran Umum API (Arsitektur)](docs/API_OVERVIEW.md)**: Pahami *endpoint* yang tersedia, perbedaan *Public* vs *Admin* API, _Rate Limiting_, serta **Breaking Change Policy**.
-2. **[Cara Autentikasi JWT](docs/AUTHENTICATION.md)**: Pelajari cara mendapatkan Token saat Login, dan cara menyematkannya di *Header Authorization*.
-3. **[Frontend Integration Guide (Penting)](docs/FRONTEND_INTEGRATION.md)**: Dokumen paling penting yang mengupas tuntas alur teknis sesi belajar (*Practice/Exam*), ujian **Simulasi JLPT N5**, pengambilan soal, hingga pengumpulan jawaban yang aman tanpa *Answer Leak*.
-4. **[Question Types Schema](docs/QUESTION_TYPES.md)**: Penjelasan mengenai bentuk-bentuk JSON yang dinamis untuk tiap tipe pertanyaan (Pilihan Ganda, Benar/Salah, *Matching*).
-5. **[Standarisasi Kode Error](docs/ERROR_CODES.md)**: Daftar makna status HTTP (*400, 401, 403, 404*) yang dikembalikan sistem.
-6. **[Changelog (Catatan Rilis)](docs/CHANGELOG.md)**: Melacak penambahan fitur baru pada API dari rilis ke rilis.
-7. **[Known Limitations](docs/KNOWN_LIMITATIONS.md)**: Panduan mengenai beberapa keterbatasan MVP yang belum selesai saat peluncuran versi awal.
+1. **[Gambaran Umum API (Arsitektur)](backend/docs/API_OVERVIEW.md)**: Pahami *endpoint* yang tersedia, perbedaan *Public* vs *Admin* API, _Rate Limiting_, serta **Breaking Change Policy**.
+2. **[Cara Autentikasi JWT](backend/docs/AUTHENTICATION.md)**: Pelajari cara mendapatkan Token saat Login, dan cara menyematkannya di *Header Authorization*.
+3. **[Frontend Integration Guide (Penting)](backend/docs/FRONTEND_INTEGRATION.md)**: Dokumen paling penting yang mengupas tuntas alur teknis sesi belajar (*Practice/Exam*), ujian **Simulasi JLPT N5**, pengambilan soal, hingga pengumpulan jawaban yang aman tanpa *Answer Leak*.
+4. **[Question Types Schema](backend/docs/QUESTION_TYPES.md)**: Penjelasan mengenai bentuk-bentuk JSON yang dinamis untuk tiap tipe pertanyaan (Pilihan Ganda, Benar/Salah, *Matching*).
+5. **[Standarisasi Kode Error](backend/docs/ERROR_CODES.md)**: Daftar makna status HTTP (*400, 401, 403, 404*) yang dikembalikan sistem.
+6. **[Changelog (Catatan Rilis)](backend/docs/CHANGELOG.md)**: Melacak penambahan fitur baru pada API dari rilis ke rilis.
+7. **[Known Limitations](backend/docs/KNOWN_LIMITATIONS.md)**: Panduan mengenai beberapa keterbatasan MVP yang belum selesai saat peluncuran versi awal.
 
 **Impor ke Postman:**
-Jika Anda ingin mengetes API langsung menggunakan *Postman*, cukup jalankan skrip `python scripts/export_openapi.py` pada root proyek, kemudian impor file hasil cetakannya (`docs/openapi.json`) ke dalam *Postman Collection* Anda!
+Jika Anda ingin mengetes API langsung menggunakan *Postman*, cukup jalankan skrip `python scripts/export_openapi.py` di dalam folder `backend`, kemudian impor file hasil cetakannya (`backend/docs/openapi.json`) ke dalam *Postman Collection* Anda!
 
 
 ## Pengujian (Testing)
-Untuk menjalankan pengujian otomatis:
+Untuk menjalankan pengujian otomatis, pastikan Anda berada di dalam folder `backend`:
 ```bash
+cd backend
 pytest
 ```
