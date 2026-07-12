@@ -1,6 +1,6 @@
 # Deployment Backend
 
-Dokumen ini menjelaskan deployment API, Celery worker, MySQL, Redis, dan storage audio. Frontend tidak termasuk deployment ini.
+Dokumen ini menjelaskan deployment API, Celery worker, MySQL, Redis, dan storage PDF material. Frontend tidak termasuk deployment ini.
 
 ## Topologi Minimum
 
@@ -8,15 +8,15 @@ Dokumen ini menjelaskan deployment API, Celery worker, MySQL, Redis, dan storage
 - Worker durable: container `worker`.
 - Database: MySQL 8.4 dengan `utf8mb4`.
 - Broker/result backend: Redis 7.4 dengan persistence.
-- Audio: volume persisten atau object storage S3-compatible.
+- PDF material: volume persisten yang dipakai API dan worker.
 - Reverse proxy/load balancer: TLS termination, request limit, dan rate limiting perimeter.
 
 ## Persiapan Environment
 
 1. Salin `.env.example` menjadi file environment yang dikelola secret manager.
 2. Ganti `SECRET_KEY`, password MySQL, password Redis, CORS origin, dan allowed host.
-3. Pilih `AUDIO_STORAGE_PROVIDER=local` untuk satu host persisten atau `s3` untuk deployment multi-instance.
-4. Biarkan `AI_PROVIDER=disabled` dan `TTS_PROVIDER=disabled` sampai credential provider tersedia.
+3. Set `MATERIAL_STORAGE_PATH` ke volume persisten.
+4. Biarkan `AI_PROVIDER=disabled` sampai credential provider tersedia.
 5. Jangan menyimpan file environment production di repository.
 
 Secret dapat dibuat dengan:
@@ -62,7 +62,7 @@ docker compose -f docker-compose.production.yml exec -T db \
   mysqldump -unihongo -p nihongo > backup-$(date +%Y%m%d-%H%M%S).sql
 ```
 
-Backup wajib dienkripsi, mempunyai retention policy, dan diuji melalui restore rehearsal berkala. Object storage/volume audio harus dibackup terpisah.
+Backup wajib dienkripsi, mempunyai retention policy, dan diuji melalui restore rehearsal berkala. Volume material PDF harus dibackup terpisah.
 
 ## Rollback
 
@@ -70,11 +70,11 @@ Backup wajib dienkripsi, mempunyai retention policy, dan diuji melalui restore r
 2. Jalankan image aplikasi sebelumnya.
 3. Gunakan `alembic downgrade <revision>` hanya jika migration tersebut secara eksplisit dinyatakan reversible dan backup tersedia.
 4. Restore backup jika rollback schema tidak aman.
-5. Verifikasi `/health`, `/ready`, auth, curriculum, learning, dan audio sebelum membuka traffic.
+5. Verifikasi `/health`, `/ready`, auth, curriculum, material PDF, learning, dan leaderboard sebelum membuka traffic.
 
 ## Scaling
 
 - Tambah replica API di belakang load balancer.
 - Tambah worker Celery berdasarkan panjang queue dan latency job.
 - Gunakan object storage ketika API/worker berjalan pada lebih dari satu host.
-- Jangan menggunakan filesystem container ephemeral untuk aset audio production.
+- Jangan menggunakan filesystem container ephemeral untuk material PDF production.

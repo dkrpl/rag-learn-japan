@@ -8,8 +8,8 @@ Swagger utama sekarang sengaja kecil. Untuk frontend kursus, gunakan hanya:
 - `POST /api/v1/auth/logout`
 - Semua endpoint di `/api/v1/app/*`
 
-Endpoint `/api/v1/admin/*`, `/api/v1/curriculum/*`, `/api/v1/learning-sessions/*`,
-dan endpoint detail lain tetap hidup untuk back-office/test, tetapi disembunyikan dari Swagger utama.
+Endpoint `/api/v1/admin/*`, `/api/v1/curriculum/*`, `/api/v1/learning-sessions/*`, dan `/api/v1/users/*`
+tetap ada untuk back-office/test/kompatibilitas, tetapi bukan kontrak utama MVP frontend.
 
 ## Autentikasi Wajib
 
@@ -72,8 +72,10 @@ Kalau header ini tidak dikirim, response yang benar adalah `401 Authentication r
 2. Ambil user:
    `GET /api/v1/app/me`
 
-3. Ambil katalog kursus lengkap:
+3. Ambil katalog kursus:
    `GET /api/v1/app/catalog`
+
+   Frontend memakai status lesson: `locked`, `unlocked`, atau `completed`.
 
 4. Ambil detail lesson:
    `GET /api/v1/app/lessons/{lesson_id}`
@@ -81,45 +83,32 @@ Kalau header ini tidak dikirim, response yang benar adalah `401 Authentication r
 5. Ambil materi PDF yang di-upload admin:
    `GET /api/v1/app/lessons/{lesson_id}/materials`
 
-6. Generate soal dari PDF:
+6. Tampilkan PDF viewer dari `file_url` material:
+   `GET /api/v1/app/materials/{material_id}/file`
+
+7. Generate soal dari PDF:
    `POST /api/v1/app/materials/{material_id}/ai-question-jobs`
 
-7. Poll status AI job:
+8. Poll status AI job:
    `GET /api/v1/app/ai-question-jobs/{job_id}`
 
-8. Kalau job sudah `COMPLETED`, mulai sesi dari soal hasil AI:
+9. Kalau job sudah `COMPLETED`, mulai sesi dari soal hasil AI:
    `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
 
-9. Ambil soal session:
+10. Ambil soal session:
    `GET /api/v1/app/sessions/{session_id}/questions`
 
-10. Submit jawaban:
+11. Submit jawaban:
    `POST /api/v1/app/sessions/{session_id}/answers`
 
-11. Complete session:
+12. Complete session:
    `POST /api/v1/app/sessions/{session_id}/complete`
 
-12. Dashboard:
+13. Dashboard:
    `GET /api/v1/app/dashboard`
 
-13. Leaderboard:
+14. Leaderboard:
    `GET /api/v1/app/leaderboard`
-
-## Latihan Biasa Tanpa PDF
-
-Kalau user tidak memilih materi PDF, frontend tetap bisa memulai latihan dari question bank lesson:
-
-1. Mulai latihan:
-   `POST /api/v1/app/lessons/{lesson_id}/sessions`
-
-2. Ambil soal session:
-   `GET /api/v1/app/sessions/{session_id}/questions`
-
-3. Submit jawaban:
-   `POST /api/v1/app/sessions/{session_id}/answers`
-
-4. Complete session:
-   `POST /api/v1/app/sessions/{session_id}/complete`
 
 ## Generate Soal Dengan AI
 
@@ -134,14 +123,10 @@ Content-Type: application/json
 
 {
   "question_count": 10,
-  "skill": "READING",
   "difficulty": 1,
   "prompt": "Fokus pada pemahaman arti kalimat."
 }
 ```
-
-Generate dari lesson secara umum juga masih tersedia:
-`POST /api/v1/app/lessons/{lesson_id}/ai-question-jobs`
 
 Poll status:
 `GET /api/v1/app/ai-question-jobs/{job_id}`
@@ -159,10 +144,17 @@ GEMINI_API_KEY=...
 
 ## Bentuk Jawaban
 
-Gunakan `question.question_type` dari response question:
+MVP frontend hanya perlu mendukung pilihan ganda reading:
 
-- `MULTIPLE_CHOICE`, `LISTENING_MULTIPLE_CHOICE`: `{"selected_option_id":"a"}`
-- `TRUE_FALSE`: `{"value":true}`
-- `READING_COMPREHENSION`: `{"selected_option_ids":["b"]}`
+- `MULTIPLE_CHOICE`: `{"selected_option_id":"a"}`
 
 Backend tidak pernah mengirim answer key sebelum jawaban dikirim, jadi frontend aman dari answer leak.
+
+## Fitur Yang Tidak Dipakai MVP Frontend
+
+- SRS/review schedule.
+- Mistake review khusus.
+- JLPT simulation.
+- TTS/audio/listening.
+- Admin manual question bank dan review workflow.
+- Generate soal bebas dari lesson tanpa PDF.

@@ -204,7 +204,7 @@ def _create_session(
     db.add(session)
     db.flush()
     for order_number, question in enumerate(selected, start=1):
-        revision = snapshot_question(db, question, actor_id=question.reviewed_by or question.created_by)
+        revision = snapshot_question(db, question, actor_id=question.created_by)
         db.add(
             LearningSessionQuestion(
                 session_id=session.id,
@@ -251,48 +251,6 @@ def start_lesson_session(db: Session, payload: LearningSessionCreate, user: User
         raise
 
 
-def start_targeted_session(
-    db: Session,
-    *,
-    user: User,
-    question_ids: list[str],
-    source: SessionSource,
-    limit: int = 10,
-) -> LearningSession:
-    if source not in {SessionSource.REVIEW, SessionSource.MISTAKE}:
-        raise LearningServiceError("Invalid targeted session source", code="INVALID_SESSION_SOURCE")
-    unique_ids = list(dict.fromkeys(question_ids))[:limit]
-    if not unique_ids:
-        raise LearningServiceError("No eligible questions are available", status_code=409, code="NO_QUESTIONS")
-    questions = (
-        db.query(Question)
-        .filter(
-            Question.id.in_(unique_ids),
-            Question.status == QuestionStatus.PUBLISHED,
-        )
-        .all()
-    )
-    by_id = {question.id: question for question in questions}
-    ordered = [by_id[question_id] for question_id in unique_ids if question_id in by_id]
-    if not ordered:
-        raise LearningServiceError(
-            "No eligible published questions are available", status_code=409, code="NO_QUESTIONS"
-        )
-    try:
-        _assert_no_duplicate_active_session(db, user_id=user.id, source=source, lesson_id=None)
-        return _create_session(
-            db,
-            user=user,
-            questions=ordered,
-            lesson_id=None,
-            mode=SessionMode.PRACTICE,
-            source=source,
-        )
-    except Exception:
-        db.rollback()
-        raise
-
-
 def start_question_session(
     db: Session,
     *,
@@ -301,20 +259,22 @@ def start_question_session(
     lesson_id: str,
     limit: int = 30,
     mode: SessionMode = SessionMode.PRACTICE,
+    owner_user_id: str | None = None,
+    allowed_statuses: set[QuestionStatus] | None = None,
 ) -> LearningSession:
     _published_lesson(db, lesson_id)
     unique_ids = list(dict.fromkeys(question_ids))[:limit]
     if not unique_ids:
         raise LearningServiceError("No eligible questions are available", status_code=409, code="NO_QUESTIONS")
-    questions = (
-        db.query(Question)
-        .filter(
-            Question.id.in_(unique_ids),
-            Question.lesson_id == lesson_id,
-            Question.status == QuestionStatus.PUBLISHED,
-        )
-        .all()
+    allowed_statuses = allowed_statuses or {QuestionStatus.PUBLISHED}
+    query = db.query(Question).filter(
+        Question.id.in_(unique_ids),
+        Question.lesson_id == lesson_id,
+        Question.status.in_(allowed_statuses),
     )
+    if owner_user_id is not None:
+        query = query.filter(Question.created_by == owner_user_id)
+    questions = query.all()
     by_id = {question.id: question for question in questions}
     ordered = [by_id[question_id] for question_id in unique_ids if question_id in by_id]
     if not ordered:
@@ -396,8 +356,6 @@ def serialize_session_questions(session: LearningSession) -> list[SessionQuestio
         question = QuestionResponseLearner(
             id=session_question.question_id,
             lesson_id=revision.lesson_id,
-            reading_id=revision.reading_id,
-            audio_asset_id=revision.audio_asset_id,
             question_type=revision.question_type,
             skill=revision.skill,
             difficulty=revision.difficulty,

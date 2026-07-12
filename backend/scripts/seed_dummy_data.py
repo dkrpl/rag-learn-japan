@@ -1,4 +1,4 @@
-"""Seed local demo data for the full MVP API surface.
+"""Seed local demo data for the PDF reading-comprehension MVP.
 
 Usage:
     python scripts/seed_dummy_data.py
@@ -17,238 +17,151 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.core import security  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
-from app.models.content import AudioAsset  # noqa: E402
-from app.models.curriculum import Lesson  # noqa: E402
+from app.models.curriculum import Course, Lesson, LessonSection, Level, Unit  # noqa: E402
 from app.models.material import MaterialDocument  # noqa: E402
-from app.models.question import Question, QuestionRevision, QuestionStatus, QuestionType, SkillType  # noqa: E402
-from app.models.simulation import JlptSimulation, JlptSimulationQuestion, JlptSimulationSection  # noqa: E402
 from app.models.user import User, UserRole  # noqa: E402
-from scripts.seed_n5_content import seed_n5  # noqa: E402
+from app.services.pdf_material import store_pdf_material  # noqa: E402
 
 DEMO_PASSWORD = "Password123"
 
 
-def _upsert_user(*, email: str, role: UserRole, name: str) -> None:
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.email == email).first()
-        values = {
-            "password_hash": security.get_password_hash(DEMO_PASSWORD),
-            "name": name,
-            "role": role,
-            "is_active": True,
-            "email_verified_at": datetime.now(timezone.utc),
-            "timezone": "Asia/Jakarta",
-            "target_level": "N5",
-        }
-        if user is None:
-            db.add(User(email=email, **values))
-        else:
-            for field, value in values.items():
-                setattr(user, field, value)
-        db.commit()
-    finally:
-        db.close()
-
-
-def _question_payloads(audio_asset_id: str | None) -> list[dict]:
-    return [
-        {
-            "question_type": QuestionType.MULTIPLE_CHOICE,
-            "skill": SkillType.VOCABULARY,
-            "prompt_json": {
-                "text": "Apa arti kata こんにちは?",
-                "options": [{"id": "a", "text": "Halo"}, {"id": "b", "text": "Selamat tidur"}],
-            },
-            "answer_key_json": {"correct_option_id": "a"},
-            "explanation_json": {"text": "こんにちは digunakan untuk menyapa pada siang hari."},
-        },
-        {
-            "question_type": QuestionType.TRUE_FALSE,
-            "skill": SkillType.GRAMMAR,
-            "prompt_json": {"text": "Partikel は dapat menandai topik kalimat."},
-            "answer_key_json": {"value": True},
-            "explanation_json": {"text": "は sering dipakai sebagai topic marker."},
-        },
-        {
-            "question_type": QuestionType.READING_COMPREHENSION,
-            "skill": SkillType.READING,
-            "prompt_json": {
-                "text": "たなかさんは がくせいです。 Siapa Tanaka-san?",
-                "options": [{"id": "a", "text": "Guru"}, {"id": "b", "text": "Siswa"}],
-            },
-            "answer_key_json": {"correct_option_ids": ["b"]},
-            "explanation_json": {"text": "がくせい berarti siswa."},
-        },
-        {
-            "question_type": QuestionType.LISTENING_MULTIPLE_CHOICE,
-            "skill": SkillType.LISTENING,
-            "audio_asset_id": audio_asset_id,
-            "prompt_json": {
-                "text": "Dengarkan audio. Pilih sapaan yang terdengar.",
-                "options": [{"id": "a", "text": "こんにちは"}, {"id": "b", "text": "ありがとう"}],
-            },
-            "answer_key_json": {"correct_option_id": "a"},
-            "explanation_json": {"text": "Fixture audio dipakai untuk memvalidasi alur listening."},
-        },
+def _text_pdf_bytes(text: str) -> bytes:
+    escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    stream = f"BT /F1 12 Tf 72 720 Td ({escaped}) Tj ET".encode("latin-1", errors="replace")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream",
     ]
+    output = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for index, obj in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{index} 0 obj\n".encode() + obj + b"\nendobj\n")
+    xref_offset = len(output)
+    output.extend(f"xref\n0 {len(objects) + 1}\n".encode())
+    output.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n \n".encode())
+    output.extend(
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode()
+    )
+    return bytes(output)
 
 
-def _upsert_questions_and_simulation() -> dict[str, int]:
+def _upsert_user(db, *, email: str, role: UserRole, name: str) -> User:
+    user = db.query(User).filter(User.email == email).first()
+    values = {
+        "password_hash": security.get_password_hash(DEMO_PASSWORD),
+        "name": name,
+        "role": role,
+        "is_active": True,
+        "email_verified_at": datetime.now(timezone.utc),
+        "timezone": "Asia/Jakarta",
+        "target_level": "N5",
+    }
+    if user is None:
+        user = User(email=email, **values)
+        db.add(user)
+    else:
+        for field, value in values.items():
+            setattr(user, field, value)
+    db.flush()
+    return user
+
+
+def seed_dummy_data() -> dict[str, int]:
     db = SessionLocal()
     try:
-        lesson = db.query(Lesson).order_by(Lesson.created_at.asc()).first()
+        admin = _upsert_user(db, email="admin@example.com", role=UserRole.ADMINISTRATOR, name="Demo Admin")
+        _upsert_user(db, email="learner@example.com", role=UserRole.LEARNER, name="Demo Learner")
+
+        level = db.query(Level).filter(Level.code == "N5").first()
+        if level is None:
+            level = Level(code="N5", name="JLPT N5", sequence=1)
+            db.add(level)
+        level.is_published = True
+        level.is_archived = False
+        level.published_at = datetime.now(timezone.utc)
+        db.flush()
+
+        course = db.query(Course).filter(Course.level_id == level.id, Course.title == "Dokkai N5").first()
+        if course is None:
+            course = Course(level_id=level.id, title="Dokkai N5", sequence=1)
+            db.add(course)
+        course.description = "Kursus pemahaman membaca bahasa Jepang berbasis PDF."
+        course.is_published = True
+        course.is_archived = False
+        course.published_at = datetime.now(timezone.utc)
+        db.flush()
+
+        unit = db.query(Unit).filter(Unit.course_id == course.id, Unit.title == "Salam Dasar").first()
+        if unit is None:
+            unit = Unit(course_id=course.id, title="Salam Dasar", sequence=1)
+            db.add(unit)
+        unit.is_published = True
+        unit.is_archived = False
+        unit.published_at = datetime.now(timezone.utc)
+        db.flush()
+
+        lesson = db.query(Lesson).filter(Lesson.unit_id == unit.id, Lesson.title == "Membaca Salam Dasar").first()
         if lesson is None:
-            raise RuntimeError("No lesson found after N5 seed")
-
-        audio = (
-            db.query(AudioAsset)
-            .filter(AudioAsset.is_published.is_(True))
-            .order_by(AudioAsset.created_at.asc())
-            .first()
-        )
-        questions: list[Question] = []
-        for index, payload in enumerate(_question_payloads(audio.id if audio else None), start=1):
-            if payload["skill"] == SkillType.LISTENING and not payload.get("audio_asset_id"):
-                continue
-            prompt_text = payload["prompt_json"]["text"]
-            question = (
-                db.query(Question)
-                .filter(Question.lesson_id == lesson.id, Question.prompt_json["text"].as_string() == prompt_text)
-                .first()
-            )
-            values = {
-                "lesson_id": lesson.id,
-                "reading_id": None,
-                "audio_asset_id": payload.get("audio_asset_id"),
-                "question_type": payload["question_type"],
-                "skill": payload["skill"],
-                "difficulty": 1,
-                "prompt_json": payload["prompt_json"],
-                "answer_key_json": payload["answer_key_json"],
-                "explanation_json": payload["explanation_json"],
-                "status": QuestionStatus.PUBLISHED,
-                "is_ai_generated": False,
-                "version_number": 1,
-                "published_at": datetime.now(timezone.utc),
-            }
-            if question is None:
-                question = Question(**values)
-                db.add(question)
-            else:
-                for field, value in values.items():
-                    setattr(question, field, value)
-            db.flush()
-
-            revision = (
-                db.query(QuestionRevision)
-                .filter(QuestionRevision.question_id == question.id, QuestionRevision.version_number == 1)
-                .first()
-            )
-            revision_values = {
-                "question_id": question.id,
-                "version_number": 1,
-                "lesson_id": question.lesson_id,
-                "reading_id": question.reading_id,
-                "audio_asset_id": question.audio_asset_id,
-                "question_type": question.question_type,
-                "skill": question.skill,
-                "difficulty": question.difficulty,
-                "prompt_json": question.prompt_json,
-                "answer_key_json": question.answer_key_json,
-                "explanation_json": question.explanation_json,
-            }
-            if revision is None:
-                db.add(QuestionRevision(**revision_values))
-            else:
-                for field, value in revision_values.items():
-                    setattr(revision, field, value)
-            questions.append(question)
-
-        simulation = db.query(JlptSimulation).filter(JlptSimulation.title == "Demo JLPT N5").first()
-        if simulation is None:
-            simulation = JlptSimulation(
-                title="Demo JLPT N5",
-                description="Dummy simulation for local testing.",
-                level="N5",
-            )
-            db.add(simulation)
-        simulation.passing_score = 80
-        simulation.is_published = True
-        simulation.is_archived = False
-        simulation.published_at = datetime.now(timezone.utc)
+            lesson = Lesson(unit_id=unit.id, title="Membaca Salam Dasar", sequence=1)
+            db.add(lesson)
+        lesson.summary = "Baca materi PDF singkat, lalu uji pemahaman dengan quiz AI."
+        lesson.learning_objective = "Learner memahami arti salam dasar bahasa Jepang dari materi bacaan."
+        lesson.passing_score = 70
+        lesson.is_published = True
+        lesson.is_archived = False
+        lesson.published_at = datetime.now(timezone.utc)
         db.flush()
 
         section = (
-            db.query(JlptSimulationSection)
-            .filter(JlptSimulationSection.simulation_id == simulation.id, JlptSimulationSection.sequence == 1)
+            db.query(LessonSection)
+            .filter(LessonSection.lesson_id == lesson.id, LessonSection.sequence == 1)
             .first()
         )
         if section is None:
-            section = JlptSimulationSection(
-                simulation_id=simulation.id,
-                title="Vocabulary, Grammar, Reading, Listening",
-                section_type="MIXED",
-                sequence=1,
-                duration_minutes=25,
-                passing_score=19,
-            )
+            section = LessonSection(lesson_id=lesson.id, title="Instruksi", sequence=1)
             db.add(section)
-        db.flush()
+        section.content = "Baca PDF materi, lalu tekan tombol Uji Pemahaman Saya."
+        section.is_published = True
+        section.is_archived = False
+        section.published_at = datetime.now(timezone.utc)
 
-        db.query(JlptSimulationQuestion).filter(JlptSimulationQuestion.section_id == section.id).delete()
-        for order, question in enumerate(questions, start=1):
-            db.add(JlptSimulationQuestion(section_id=section.id, question_id=question.id, order_number=order))
-
-        db.commit()
-        return {"questions": len(questions), "simulations": 1}
-    finally:
-        db.close()
-
-
-def _upsert_material_document() -> dict[str, int]:
-    db = SessionLocal()
-    try:
-        lesson = db.query(Lesson).order_by(Lesson.created_at.asc()).first()
-        if lesson is None:
-            raise RuntimeError("No lesson found after N5 seed")
-        admin = db.query(User).filter(User.email == "admin@example.com").first()
         extracted_text = (
             "Materi Salam Dasar N5. Konnichiwa berarti halo atau selamat siang. "
             "Ohayou gozaimasu berarti selamat pagi. Konbanwa berarti selamat malam. "
             "Arigatou gozaimasu berarti terima kasih. Gunakan salam sesuai waktu dan situasi."
         )
-        checksum = hashlib.sha256(extracted_text.encode("utf-8")).hexdigest()
+        pdf_bytes = _text_pdf_bytes(extracted_text)
+        checksum = hashlib.sha256(pdf_bytes).hexdigest()
         material = db.query(MaterialDocument).filter(MaterialDocument.checksum == checksum).first()
         values = {
             "lesson_id": lesson.id,
             "title": "Demo PDF Salam Dasar",
             "original_filename": "demo-salam-dasar.pdf",
             "content_type": "application/pdf",
-            "file_size_bytes": len(extracted_text.encode("utf-8")),
+            "file_size_bytes": len(pdf_bytes),
             "checksum": checksum,
+            "storage_key": store_pdf_material(pdf_bytes, checksum),
             "page_count": 1,
             "extracted_text": extracted_text,
-            "created_by_id": admin.id if admin else None,
+            "created_by_id": admin.id,
         }
         if material is None:
             db.add(MaterialDocument(**values))
         else:
             for field, value in values.items():
                 setattr(material, field, value)
+
         db.commit()
-        return {"materials": 1}
+        return {"users": 2, "levels": 1, "courses": 1, "units": 1, "lessons": 1, "materials": 1}
     finally:
         db.close()
-
-
-def seed_dummy_data() -> dict[str, int]:
-    seed_n5(dry_run=False)
-    _upsert_user(email="admin@example.com", role=UserRole.ADMINISTRATOR, name="Demo Admin")
-    _upsert_user(email="learner@example.com", role=UserRole.LEARNER, name="Demo Learner")
-    counts = _upsert_questions_and_simulation()
-    material_counts = _upsert_material_document()
-    return {"users": 2, **counts, **material_counts}
 
 
 def main() -> None:

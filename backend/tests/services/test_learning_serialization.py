@@ -18,7 +18,7 @@ def _session(mode=SessionMode.PRACTICE, status=SessionStatus.ACTIVE, answered=Fa
         version_number=1,
         lesson_id="lesson-1",
         question_type=QuestionType.MULTIPLE_CHOICE,
-        skill=SkillType.VOCABULARY,
+        skill=SkillType.READING,
         difficulty=1,
         prompt_json={
             "text": "Choose",

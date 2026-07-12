@@ -20,8 +20,7 @@ os.environ["CORS_ORIGINS"] = '["http://testserver"]'
 os.environ["ALLOWED_HOSTS"] = '["testserver","localhost","127.0.0.1"]'
 os.environ["ENABLE_METRICS"] = "false"
 os.environ["AI_PROVIDER"] = "disabled"
-os.environ["TTS_PROVIDER"] = "disabled"
-os.environ["AUDIO_STORAGE_PATH"] = str(TEST_ROOT / "audio")
+os.environ["MATERIAL_STORAGE_PATH"] = str(TEST_ROOT / "materials")
 
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import event  # noqa: E402

@@ -3,14 +3,6 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.schemas.content import (
-    ExampleSentenceResponse,
-    GrammarPointResponse,
-    KanjiResponse,
-    ReadingResponse,
-    VocabularyResponse,
-)
-
 
 def _reject_unsafe_control_characters(value: Any) -> Any:
     if isinstance(value, str):
@@ -42,6 +34,12 @@ class LifecycleResponse(BaseModel):
     archived_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class LifecycleActionResponse(BaseModel):
+    id: str
+    resource_type: str
+    state: str
 
 
 class LevelCreate(InputSchema):
@@ -192,21 +190,7 @@ class LessonContentResponse(BaseModel):
 
     lesson: LessonResponse
     sections: list[LessonSectionResponse] = Field(default_factory=list)
-    vocabularies: list[VocabularyResponse] = Field(default_factory=list)
-    kanjis: list[KanjiResponse] = Field(default_factory=list)
-    grammar_points: list[GrammarPointResponse] = Field(default_factory=list)
-    example_sentences: list[ExampleSentenceResponse] = Field(default_factory=list)
-    readings: list[ReadingResponse] = Field(default_factory=list)
 
 
 class LessonDetailResponse(LessonResponse):
     sections: list[LessonSectionResponse] = Field(default_factory=list)
-    vocabularies: list[VocabularyResponse] = Field(default_factory=list)
-    kanjis: list[KanjiResponse] = Field(default_factory=list)
-    grammar_points: list[GrammarPointResponse] = Field(default_factory=list)
-    example_sentences: list[ExampleSentenceResponse] = Field(default_factory=list)
-    readings: list[ReadingResponse] = Field(default_factory=list)
-
-
-class LessonContentLinkRequest(InputSchema):
-    sequence: int = Field(default=0, ge=0)

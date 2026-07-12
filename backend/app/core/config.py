@@ -62,34 +62,13 @@ class Settings(BaseSettings):
     ENABLE_METRICS: bool = True
     LOG_LEVEL: str = "INFO"
 
-    AUDIO_STORAGE_PROVIDER: Literal["local", "s3"] = "local"
-    AUDIO_STORAGE_PATH: Path = Path("data/uploads/audio")
-    AUDIO_PUBLIC_BASE_URL: str = ""
-    AUDIO_MAX_UPLOAD_BYTES: int = Field(default=10 * 1024 * 1024, ge=1024)
-    AUDIO_ALLOWED_MIME_TYPES: list[str] = [
-        "audio/mpeg",
-        "audio/mp3",
-        "audio/wav",
-        "audio/x-wav",
-        "audio/ogg",
-        "audio/webm",
-    ]
-    S3_BUCKET_NAME: str = ""
-    S3_ENDPOINT_URL: str = ""
-    S3_REGION: str = "auto"
-    S3_ACCESS_KEY_ID: str = ""
-    S3_SECRET_ACCESS_KEY: str = ""
-    S3_PRESIGNED_URL_EXPIRE_SECONDS: int = Field(default=900, ge=60, le=86400)
+    MATERIAL_STORAGE_PATH: Path = Path("data/uploads/materials")
 
     AI_PROVIDER: Literal["gemini", "disabled"] = "disabled"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.5-flash"
     AI_REQUEST_TIMEOUT_SECONDS: int = Field(default=60, ge=5, le=300)
     AI_MAX_RETRIES: int = Field(default=3, ge=0, le=10)
-
-    TTS_PROVIDER: Literal["google_cloud", "gtts", "disabled"] = "disabled"
-    GOOGLE_TTS_LANGUAGE_CODE: str = "ja-JP"
-    GOOGLE_TTS_VOICE_NAME: str = "ja-JP-Neural2-B"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -136,12 +115,6 @@ class Settings(BaseSettings):
                 raise ValueError("ALLOWED_HOSTS cannot use wildcard in staging/production")
         if self.AI_PROVIDER == "gemini" and not self.GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY is required when AI_PROVIDER=gemini")
-        if self.AUDIO_STORAGE_PROVIDER == "s3":
-            required = [self.S3_BUCKET_NAME, self.S3_ACCESS_KEY_ID, self.S3_SECRET_ACCESS_KEY]
-            if not all(required):
-                raise ValueError("S3 bucket and credentials are required when AUDIO_STORAGE_PROVIDER=s3")
-        if self.ENVIRONMENT == "production" and self.TTS_PROVIDER == "gtts":
-            raise ValueError("gTTS is development-only; use google_cloud or disabled in production")
         return self
 
 

@@ -1,37 +1,32 @@
 # Nihongo Learn API Overview
 
 ## Arsitektur Utama
-Nihongo Learn API dibangun menggunakan **FastAPI** (Python) dengan **SQLAlchemy** sebagai ORM. 
-Terdapat pemisahan akses rute API yang jelas:
-- **Public API** (`/api/v1/...`): Digunakan oleh Learner (Mobile / Web App).
-- **Admin API** (`/api/v1/admin/...`): Digunakan oleh Content Editor dan Administrator.
 
-## Fitur Utama
-1. **Curriculum Engine**: Hirarki Level > Course > Unit > Lesson > Section.
-2. **Learning Engine**: Sesi belajar (*Practice* & *Exam*) dengan perlindungan kebocoran kunci jawaban.
-3. **Progress Engine**: Sistem XP, Streak, Mastery (penguasaan skill), dan Mistake Book.
-4. **AI & Audio Generator**: *Background workers* untuk membuat soal secara otomatis (Gemini API) dan membuat berkas MP3 dari narasi teks (TTS).
-5. **Adaptive Evaluation (RAG)**: Mesin kuis dinamis untuk *Learner* yang di-*generate* secara *real-time* oleh AI dengan batasan ketat berdasarkan kurikulum resmi (silabus Admin).
+Backend menggunakan FastAPI, SQLAlchemy, Alembic, MySQL, Redis, dan Celery. Kontrak frontend sengaja dibuat kecil:
 
-## Rate Limiting
+- Public auth: `/api/v1/auth/*`
+- Frontend MVP: `/api/v1/app/*`
+- Back-office admin: `/api/v1/admin/*`, disembunyikan dari Swagger utama.
 
-- **Login**: `5 request / menit` per IP.
-- **Generate AI Question**: `10 request / menit` per User ID.
-Jika melebihi batas, server mengembalikan status `429 Too Many Requests`.
+## Fitur MVP
 
----
+1. Curriculum: `Level -> Course -> Unit -> Lesson -> Section`.
+2. Material PDF: admin upload PDF ke lesson, backend menyimpan file dan teks hasil ekstraksi.
+3. AI Question Job: user generate soal dari PDF admin.
+4. Learning Session: user mengerjakan soal pilihan ganda reading.
+5. Progress: jawaban divalidasi backend, skor lulus memberi XP dan menyelesaikan lesson.
+6. Leaderboard: ranking berdasarkan total XP.
 
-## Kebijakan Pembaruan Tak Terduga (Breaking Change Policy)
+## Kontrak Frontend
 
-Proyek ini telah membekukan kontrak `v1` (Versi 1) per rilis MVP perdana. 
-Pihak Frontend Engineering disarankan bertaut (*bind*) secara penuh pada path `/api/v1/`.
+Frontend cukup mengikuti `backend/docs/FRONTEND_INTEGRATION.md` dan `backend/docs/ENDPOINTS.md`. Swagger utama juga hanya menampilkan `Auth` dan `Frontend`.
 
-1. **Jaminan Stabilitas (*No Breaking Change on v1*)**: Parameter permintaan (Request Payload), Skema Envelop Respons, Parameter Autentikasi, dan Lokasi Endpoint pada `v1` **tidak akan diubah secara radikal** selama *lifecycle* versi ini. Field baru hanya akan ditambahkan secara eksklusif (opsional).
-2. **Peralihan Versi (*Version Migration*)**: Jika terdapat perubahan drastis di kemudian hari (contoh, perubahan total arsitektur evaluasi ujian), backend akan memperkenalkan `v2` (contoh: `/api/v2/`) sementara membiarkan `v1` menyala dengan peringatan *Deprecation Header*.
+## Auth
 
-## Autentikasi
-Menggunakan **JWT (JSON Web Tokens)** Bearer Authentication. 
-Silakan lihat panduan detailnya di `AUTHENTICATION.md`.
+Semua endpoint `/api/v1/app/*` memakai header:
 
-## Response Format
-Hampir seluruh respons API dibungkus secara murni sesuai skema data (Kecuali yang ditolak akan mengembalikan format spesifik exception FastAPI / HttpException).
+```text
+Authorization: Bearer <access_token>
+```
+
+Jika header tidak dikirim, response yang benar adalah `401 Authentication required`.

@@ -7,9 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models.content import ExampleSentence
 from app.models.curriculum import Course, Lesson, Level, Unit
-from app.schemas.content import ExampleSentenceResponse, ReadingResponse, VocabularyResponse
 from app.schemas.curriculum import (
     CourseResponse,
     LessonContentResponse,
@@ -83,56 +81,9 @@ def _is_visible(resource: Any) -> bool:
     return bool(resource.is_published and not resource.is_archived)
 
 
-def _visible_audio_or_none(resource: Any) -> Any | None:
-    audio = getattr(resource, "audio", None)
-    return audio if audio is not None and _is_visible(audio) else None
-
-
-def _public_model(schema: type[Any], resource: Any) -> Any:
-    values = {column.name: getattr(resource, column.name) for column in resource.__table__.columns}
-    if hasattr(resource, "audio"):
-        values["audio"] = _visible_audio_or_none(resource)
-    return schema.model_validate(values)
-
-
 def _lesson_content(lesson: Lesson) -> LessonContentResponse:
     sections = [section for section in lesson.sections if _is_visible(section)]
-    vocabularies = [
-        _public_model(VocabularyResponse, vocabulary) for vocabulary in lesson.vocabularies if _is_visible(vocabulary)
-    ]
-    kanjis = [kanji for kanji in lesson.kanjis if _is_visible(kanji)]
-    grammar_points = [grammar for grammar in lesson.grammar_points if _is_visible(grammar)]
-    readings = [_public_model(ReadingResponse, reading) for reading in lesson.readings if _is_visible(reading)]
-
-    # Example sentences are reusable and linked through vocabulary/grammar.
-    # Deduplicate when one sentence is linked to both types of material.
-    examples_by_id: dict[str, ExampleSentence] = {}
-    for vocabulary in lesson.vocabularies:
-        if not _is_visible(vocabulary):
-            continue
-        for sentence in vocabulary.example_sentences:
-            if _is_visible(sentence):
-                examples_by_id[sentence.id] = sentence
-    for grammar in lesson.grammar_points:
-        if not _is_visible(grammar):
-            continue
-        for sentence in grammar.example_sentences:
-            if _is_visible(sentence):
-                examples_by_id[sentence.id] = sentence
-    example_sentences = [
-        _public_model(ExampleSentenceResponse, sentence)
-        for sentence in sorted(examples_by_id.values(), key=lambda item: (item.created_at, item.id))
-    ]
-
-    return LessonContentResponse(
-        lesson=LessonResponse.model_validate(lesson),
-        sections=sections,
-        vocabularies=vocabularies,
-        kanjis=kanjis,
-        grammar_points=grammar_points,
-        example_sentences=example_sentences,
-        readings=readings,
-    )
+    return LessonContentResponse(lesson=LessonResponse.model_validate(lesson), sections=sections)
 
 
 def _get_published_lesson(db: Session, lesson_id: str) -> Lesson:
@@ -140,10 +91,6 @@ def _get_published_lesson(db: Session, lesson_id: str) -> Lesson:
         _published_lesson_query(db)
         .options(
             selectinload(Lesson.sections),
-            selectinload(Lesson.vocabularies),
-            selectinload(Lesson.kanjis),
-            selectinload(Lesson.grammar_points),
-            selectinload(Lesson.readings),
         )
         .filter(Lesson.id == lesson_id)
         .first()

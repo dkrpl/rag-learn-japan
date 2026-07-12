@@ -13,6 +13,7 @@ class MaterialDocumentResponse(BaseModel):
     content_type: str
     file_size_bytes: int
     checksum: str
+    file_url: str
     page_count: int
     extracted_text_preview: str
     created_by_id: str | None = None

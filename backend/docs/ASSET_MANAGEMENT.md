@@ -1,56 +1,32 @@
-# Pengelolaan Materi Dan Audio
+# Pengelolaan Materi PDF
 
-Materi dan audio adalah data yang dikelola melalui endpoint administrator/content editor. File tidak ditanam permanen di kode aplikasi.
+Materi utama MVP adalah PDF yang di-upload oleh admin/content editor ke lesson. User tidak meng-upload materi; user hanya memilih PDF yang tersedia, meminta AI membuat soal dari PDF tersebut, lalu mengerjakan sesi soal.
 
 ## Materi Yang Didukung
 
 - Level, course, unit, lesson, dan lesson section.
-- Vocabulary, kanji, grammar point, example sentence, dan reading.
-- Audio asset dengan transcript, MIME type, ukuran, checksum, dan visibility.
-- Question bank yang mengacu pada lesson/reading/audio.
+- PDF lesson melalui `MaterialDocument`.
+- Soal pilihan ganda reading yang dibuat AI dari teks PDF.
+- Progress lesson, XP, dan leaderboard.
 
 ## Lifecycle
 
-1. Content editor membuat atau mengimpor materi sebagai draft.
-2. Materi diperiksa dan dihubungkan ke lesson.
-3. Lesson hanya dipublikasikan setelah mempunyai objective dan konten minimum.
-4. Learner hanya menerima resource published/non-archived.
-5. Resource yang sudah direferensikan diarsipkan, bukan dihapus dari history.
+1. Admin membuat struktur kursus.
+2. Admin upload PDF ke lesson.
+3. Backend menyimpan file PDF, mengekstrak teks, dan menyimpan metadata material.
+4. Lesson dipublish jika sudah punya objective dan section atau PDF material.
+5. User membuka PDF, generate soal, mengerjakan, lalu mendapatkan XP jika lulus KKM.
 
-## Upload Audio
+## Storage
 
-Gunakan endpoint admin audio di katalog endpoint. Backend memvalidasi MIME type dan ukuran, menghitung checksum, lalu menyimpan metadata. Client learner menerima URL; file audio tidak pernah dikirim sebagai base64 di JSON.
-
-Untuk satu host, gunakan:
+Untuk production, gunakan volume persisten atau object storage yang dipasang ke path material:
 
 ```env
-AUDIO_STORAGE_PROVIDER=local
-AUDIO_STORAGE_PATH=/app/data/uploads/audio
+MATERIAL_STORAGE_PATH=/app/data/uploads/materials
 ```
 
-Untuk multi-instance, gunakan S3-compatible storage:
-
-```env
-AUDIO_STORAGE_PROVIDER=s3
-S3_BUCKET_NAME=nihongo-audio
-S3_ENDPOINT_URL=https://<account>.r2.cloudflarestorage.com
-S3_REGION=auto
-S3_ACCESS_KEY_ID=...
-S3_SECRET_ACCESS_KEY=...
-```
-
-## Seed Materi
-
-Seed production starter harus:
-
-- Idempotent.
-- Memakai teks Jepang UTF-8 yang valid.
-- Tidak membuat kata/kanji sintetis dengan suffix angka.
-- Tidak menandai materi sebagai reviewed tanpa pemeriksaan manusia.
-- Menyimpan provenance dan versi dataset bila berasal dari sumber eksternal.
-
-Audio dummy lama di `data/uploads/audio/mock_*` hanya fixture historis dan tidak boleh dipakai sebagai materi learner production. Audio production berasal dari upload berlisensi atau provider TTS yang dikonfigurasi.
+Jangan memakai filesystem container ephemeral untuk file PDF production jika API/worker bisa direstart atau berjalan multi-instance.
 
 ## Hak Cipta Dan Lisensi
 
-Jangan memasukkan audio, teks buku, soal ujian resmi, atau dataset pihak lain tanpa lisensi yang mengizinkan redistribusi. Simpan nama sumber, versi, lisensi, dan tanggal impor bersama manifest aset.
+Jangan memasukkan PDF buku, soal ujian resmi, atau dataset pihak lain tanpa izin redistribusi. Simpan informasi sumber dan lisensi di proses operasional admin.

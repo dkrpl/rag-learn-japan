@@ -132,28 +132,6 @@ class Lesson(PublicationMixin, CustomBase):
         order_by="LessonSection.sequence",
     )
 
-    # Association ordering is deliberately stored on the join rows so one
-    # material can appear at a different position in different lessons.
-    vocabularies = relationship(
-        "Vocabulary",
-        secondary="lesson_vocabularies",
-        back_populates="lessons",
-        order_by="lesson_vocabularies.c.sequence",
-    )
-    kanjis = relationship(
-        "Kanji",
-        secondary="lesson_kanjis",
-        back_populates="lessons",
-        order_by="lesson_kanjis.c.sequence",
-    )
-    grammar_points = relationship(
-        "GrammarPoint",
-        secondary="lesson_grammar_points",
-        back_populates="lessons",
-        order_by="lesson_grammar_points.c.sequence",
-    )
-    readings = relationship("Reading", back_populates="lesson", order_by="Reading.sequence")
-
 
 class LessonSection(PublicationMixin, CustomBase):
     """A structured text section inside a lesson."""

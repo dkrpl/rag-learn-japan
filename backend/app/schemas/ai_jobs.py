@@ -17,11 +17,6 @@ class GenerationJobCreate(BaseModel):
     additional_notes: Optional[str] = None
 
 
-class AudioJobCreate(BaseModel):
-    transcript: str
-    lesson_id: Optional[str] = None
-
-
 class GenerationJobResponse(BaseModel):
     id: str
     job_type: JobType

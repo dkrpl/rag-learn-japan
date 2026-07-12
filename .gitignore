@@ -50,6 +50,7 @@ backend/.pytest_tmp/
 backend/.ruff_cache/
 backend/data/seed/generated/
 backend/data/uploads/audio/[0-9a-f][0-9a-f]/
+backend/data/uploads/materials/
 cover/
 
 # IDEs

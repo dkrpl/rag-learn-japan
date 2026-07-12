@@ -7,9 +7,11 @@ tests, but this router is the contract a course frontend should start from.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
@@ -21,20 +23,20 @@ from app.models.ai_jobs import GenerationJob, JobStatus, JobType
 from app.models.curriculum import Course, Lesson, Level, Unit
 from app.models.learning import SessionMode
 from app.models.material import MaterialDocument
-from app.models.progress import XPTransaction
+from app.models.progress import LessonStatus, UserLessonProgress, XPTransaction
+from app.models.question import QuestionStatus
 from app.models.user import User
 from app.schemas.ai_jobs import GenerationJobResponse
 from app.schemas.curriculum import LessonContentResponse
 from app.schemas.learning import (
-    LearningSessionCreate,
     LearningSessionResponse,
     SessionQuestionResponse,
     SubmitAnswerRequest,
     SubmitAnswerResponse,
 )
-from app.schemas.progress import DashboardOverviewResponse
 from app.schemas.user import UserResponse
 from app.services import learning as learning_service
+from app.services.pdf_material import PdfMaterialError, material_storage_path
 from app.services.progress import dashboard_overview
 from app.tasks.ai_tasks import generate_questions_task
 
@@ -47,6 +49,11 @@ class AppLessonSummary(BaseModel):
     summary: str | None = None
     estimated_minutes: int
     sequence: int
+    status: str = "locked"
+    is_locked: bool = True
+    passing_score: int = 70
+    best_score: int = 0
+    last_score: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -71,18 +78,7 @@ class AppCourseSummary(BaseModel):
 
 
 class AppCatalogResponse(BaseModel):
-    level_id: str
-    level_name: str
     courses: list[AppCourseSummary]
-
-
-class AiQuestionJobCreate(BaseModel):
-    question_count: int = Field(default=5, ge=1, le=20)
-    skill: str | None = Field(default=None, max_length=32)
-    difficulty: int | None = Field(default=None, ge=1, le=5)
-    prompt: str | None = Field(default=None, max_length=4000)
-
-    model_config = ConfigDict(extra="forbid")
 
 
 class AppMaterialSummary(BaseModel):
@@ -90,13 +86,13 @@ class AppMaterialSummary(BaseModel):
     lesson_id: str
     title: str
     original_filename: str
+    file_url: str
     page_count: int
     extracted_text_preview: str
 
 
 class MaterialAiQuestionJobCreate(BaseModel):
     question_count: int = Field(default=10, ge=1, le=30)
-    skill: str = Field(default="READING", max_length=32)
     difficulty: int = Field(default=1, ge=1, le=5)
     prompt: str | None = Field(default=None, max_length=4000)
 
@@ -116,6 +112,18 @@ class LeaderboardEntry(BaseModel):
     total_xp: int
 
 
+class AppDashboardResponse(BaseModel):
+    total_xp: int
+    current_streak: int
+    longest_streak: int
+    lessons_completed: int
+    answered_questions: int
+    correct_answers: int
+    accuracy_percentage: int
+    course_progress_percentage: int
+    leaderboard_rank: int | None = None
+
+
 def _raise_learning_error(exc: learning_service.LearningServiceError) -> None:
     raise HTTPException(
         status_code=exc.status_code,
@@ -127,6 +135,117 @@ def _is_visible(resource: Any) -> bool:
     return bool(resource.is_published and not resource.is_archived)
 
 
+def _progress_map(db: Session, user_id: str) -> dict[str, UserLessonProgress]:
+    rows = db.query(UserLessonProgress).filter(UserLessonProgress.user_id == user_id).all()
+    return {row.lesson_id: row for row in rows}
+
+
+def _lesson_state(lesson: Lesson, *, is_unlocked: bool, progress: UserLessonProgress | None) -> str:
+    if progress and progress.status == LessonStatus.COMPLETED:
+        return "completed"
+    return "unlocked" if is_unlocked else "locked"
+
+
+def _lesson_summary(
+    lesson: Lesson,
+    *,
+    is_unlocked: bool,
+    progress: UserLessonProgress | None,
+) -> AppLessonSummary:
+    state = _lesson_state(lesson, is_unlocked=is_unlocked, progress=progress)
+    return AppLessonSummary(
+        id=lesson.id,
+        title=lesson.title,
+        summary=lesson.summary,
+        estimated_minutes=lesson.estimated_minutes,
+        sequence=lesson.sequence,
+        status=state,
+        is_locked=state == "locked",
+        passing_score=lesson.passing_score,
+        best_score=progress.best_score if progress else 0,
+        last_score=progress.last_score if progress else 0,
+    )
+
+
+def _visible_course_lessons(course: Course) -> list[Lesson]:
+    lessons: list[Lesson] = []
+    visible_units = (item for item in course.units if _is_visible(item))
+    for unit in sorted(visible_units, key=lambda item: (item.sequence, item.id)):
+        visible_lessons = (item for item in unit.lessons if _is_visible(item))
+        lessons.extend(sorted(visible_lessons, key=lambda item: (item.sequence, item.id)))
+    return lessons
+
+
+def _unlocked_lesson_ids(course: Course, progress_by_lesson: dict[str, UserLessonProgress]) -> set[str]:
+    unlocked: set[str] = set()
+    previous_completed = True
+    for lesson in _visible_course_lessons(course):
+        progress = progress_by_lesson.get(lesson.id)
+        is_completed = bool(progress and progress.status == LessonStatus.COMPLETED)
+        if previous_completed or is_completed:
+            unlocked.add(lesson.id)
+        previous_completed = is_completed
+    return unlocked
+
+
+def _course_progress_percentage(db: Session, user_id: str) -> int:
+    visible_lessons = (
+        db.query(Lesson.id)
+        .join(Unit, Lesson.unit_id == Unit.id)
+        .join(Course, Unit.course_id == Course.id)
+        .join(Level, Course.level_id == Level.id)
+        .filter(
+            Lesson.is_published.is_(True),
+            Lesson.is_archived.is_(False),
+            Unit.is_published.is_(True),
+            Unit.is_archived.is_(False),
+            Course.is_published.is_(True),
+            Course.is_archived.is_(False),
+            Level.is_published.is_(True),
+            Level.is_archived.is_(False),
+        )
+        .count()
+    )
+    if not visible_lessons:
+        return 0
+    completed = (
+        db.query(UserLessonProgress)
+        .join(Lesson, UserLessonProgress.lesson_id == Lesson.id)
+        .join(Unit, Lesson.unit_id == Unit.id)
+        .join(Course, Unit.course_id == Course.id)
+        .join(Level, Course.level_id == Level.id)
+        .filter(
+            UserLessonProgress.user_id == user_id,
+            UserLessonProgress.status == LessonStatus.COMPLETED,
+            Lesson.is_published.is_(True),
+            Lesson.is_archived.is_(False),
+            Unit.is_published.is_(True),
+            Unit.is_archived.is_(False),
+            Course.is_published.is_(True),
+            Course.is_archived.is_(False),
+            Level.is_published.is_(True),
+            Level.is_archived.is_(False),
+        )
+        .count()
+    )
+    return round((completed / visible_lessons) * 100)
+
+
+def _leaderboard_rank(db: Session, user_id: str) -> int | None:
+    rows = (
+        db.query(User.id, func.coalesce(func.sum(XPTransaction.amount), 0).label("total_xp"))
+        .join(XPTransaction, XPTransaction.user_id == User.id)
+        .filter(User.is_active.is_(True))
+        .group_by(User.id)
+        .order_by(func.coalesce(func.sum(XPTransaction.amount), 0).desc(), User.created_at.asc())
+        .all()
+    )
+    for index, row in enumerate(rows, start=1):
+        if row.id == user_id:
+            return index
+    return None
+
+
 def _lesson_content(lesson: Lesson) -> LessonContentResponse:
     from app.api.v1.curriculum import _lesson_content as build_lesson_content
 
@@ -134,13 +253,7 @@ def _lesson_content(lesson: Lesson) -> LessonContentResponse:
 
 
 def _published_lessons_options():
-    return (
-        selectinload(Lesson.sections),
-        selectinload(Lesson.vocabularies),
-        selectinload(Lesson.kanjis),
-        selectinload(Lesson.grammar_points),
-        selectinload(Lesson.readings),
-    )
+    return (selectinload(Lesson.sections),)
 
 
 def _get_published_lesson(db: Session, lesson_id: str) -> Lesson:
@@ -168,6 +281,21 @@ def _get_published_lesson(db: Session, lesson_id: str) -> Lesson:
     return lesson
 
 
+def _ensure_lesson_unlocked(db: Session, lesson: Lesson, user: User) -> None:
+    course = (
+        db.query(Course)
+        .join(Unit, Unit.course_id == Course.id)
+        .options(selectinload(Course.units).selectinload(Unit.lessons))
+        .filter(Unit.id == lesson.unit_id)
+        .first()
+    )
+    if course is None:
+        raise HTTPException(status_code=404, detail="Course not found")
+    progress_by_lesson = _progress_map(db, user.id)
+    if lesson.id not in _unlocked_lesson_ids(course, progress_by_lesson):
+        raise HTTPException(status_code=423, detail="Lesson is locked")
+
+
 def _can_dispatch_ai_worker() -> tuple[bool, str | None]:
     try:
         import redis
@@ -189,6 +317,7 @@ def _material_summary(material: MaterialDocument) -> AppMaterialSummary:
         lesson_id=material.lesson_id,
         title=material.title,
         original_filename=material.original_filename,
+        file_url=f"/api/v1/app/materials/{material.id}/file",
         page_count=material.page_count,
         extracted_text_preview=material.extracted_text[:500],
     )
@@ -250,13 +379,19 @@ def get_catalog(db: Session = Depends(get_db), current_user: User = Depends(get_
         raise HTTPException(status_code=404, detail="Published catalog is empty")
 
     courses: list[AppCourseSummary] = []
+    progress_by_lesson = _progress_map(db, current_user.id)
     visible_courses = (item for item in level.courses if _is_visible(item))
     for course in sorted(visible_courses, key=lambda item: (item.sequence, item.id)):
         units: list[AppUnitSummary] = []
+        unlocked_ids = _unlocked_lesson_ids(course, progress_by_lesson)
         visible_units = (item for item in course.units if _is_visible(item))
         for unit in sorted(visible_units, key=lambda item: (item.sequence, item.id)):
             lessons = [
-                AppLessonSummary.model_validate(lesson)
+                _lesson_summary(
+                    lesson,
+                    is_unlocked=lesson.id in unlocked_ids,
+                    progress=progress_by_lesson.get(lesson.id),
+                )
                 for lesson in sorted(
                     (item for item in unit.lessons if _is_visible(item)),
                     key=lambda item: (item.sequence, item.id),
@@ -272,12 +407,14 @@ def get_catalog(db: Session = Depends(get_db), current_user: User = Depends(get_
                 units=units,
             )
         )
-    return AppCatalogResponse(level_id=level.id, level_name=level.name, courses=courses)
+    return AppCatalogResponse(courses=courses)
 
 
 @router.get("/lessons/{lesson_id}", response_model=LessonContentResponse, summary="Get one lesson with content")
 def get_lesson(lesson_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return _lesson_content(_get_published_lesson(db, lesson_id))
+    lesson = _get_published_lesson(db, lesson_id)
+    _ensure_lesson_unlocked(db, lesson, current_user)
+    return _lesson_content(lesson)
 
 
 @router.get(
@@ -286,7 +423,8 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db), current_user: User
     summary="Get PDFs uploaded by admin for a lesson",
 )
 def get_lesson_materials(lesson_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    _get_published_lesson(db, lesson_id)
+    lesson = _get_published_lesson(db, lesson_id)
+    _ensure_lesson_unlocked(db, lesson, current_user)
     materials = (
         db.query(MaterialDocument)
         .filter(MaterialDocument.lesson_id == lesson_id)
@@ -296,23 +434,28 @@ def get_lesson_materials(lesson_id: str, db: Session = Depends(get_db), current_
     return [_material_summary(material) for material in materials]
 
 
-@router.post(
-    "/lessons/{lesson_id}/sessions",
-    response_model=LearningSessionResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Start practice for a lesson",
+@router.get(
+    "/materials/{material_id}/file",
+    response_class=FileResponse,
+    summary="Stream an admin-uploaded PDF for the lesson viewer",
 )
-def start_lesson_session(
-    lesson_id: str,
-    payload: LearningSessionCreate | None = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    request = (payload or LearningSessionCreate(lesson_id=lesson_id)).model_copy(update={"lesson_id": lesson_id})
+def get_material_file(material_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    material = _get_visible_material(db, material_id)
+    lesson = _get_published_lesson(db, material.lesson_id)
+    _ensure_lesson_unlocked(db, lesson, current_user)
+    if not material.storage_key:
+        raise HTTPException(status_code=404, detail="PDF file is not available")
     try:
-        return learning_service.start_lesson_session(db, request, current_user)
-    except learning_service.LearningServiceError as exc:
-        _raise_learning_error(exc)
+        path = material_storage_path(material.storage_key)
+    except PdfMaterialError as exc:
+        raise HTTPException(status_code=404, detail="PDF file is not available") from exc
+    if not path.exists() or not path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file is not available")
+    return FileResponse(
+        Path(path),
+        media_type="application/pdf",
+        filename=material.original_filename,
+    )
 
 
 @router.get(
@@ -375,59 +518,20 @@ def complete_session(session_id: str, db: Session = Depends(get_db), current_use
         _raise_learning_error(exc)
 
 
-@router.get("/dashboard", response_model=DashboardOverviewResponse, summary="Get learner dashboard")
+@router.get("/dashboard", response_model=AppDashboardResponse, summary="Get learner MVP dashboard")
 def get_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return dashboard_overview(db, user=current_user)
-
-
-@router.post(
-    "/lessons/{lesson_id}/ai-question-jobs",
-    response_model=GenerationJobResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Generate more questions for a lesson with AI",
-)
-def create_ai_question_job(
-    lesson_id: str,
-    payload: AiQuestionJobCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    _get_published_lesson(db, lesson_id)
-    job_payload = {
-        "lesson_id": lesson_id,
-        "question_type": "MULTIPLE_CHOICE",
-        "skill": payload.skill or "VOCABULARY",
-        "count": payload.question_count,
-        "difficulty": payload.difficulty or 1,
-        "additional_notes": payload.prompt,
-    }
-    job = GenerationJob(
-        job_type=JobType.QUESTION_GENERATION,
-        status=JobStatus.PENDING,
-        prompt_json=json.dumps(job_payload, separators=(",", ":"), sort_keys=True),
-        target_id=lesson_id,
-        created_by=current_user.id,
+    overview = dashboard_overview(db, user=current_user)
+    return AppDashboardResponse(
+        total_xp=overview["total_xp"],
+        current_streak=overview["current_streak"],
+        longest_streak=overview["longest_streak"],
+        lessons_completed=overview["lessons_completed"],
+        answered_questions=overview["answered_questions"],
+        correct_answers=overview["correct_answers"],
+        accuracy_percentage=overview["accuracy_percentage"],
+        course_progress_percentage=_course_progress_percentage(db, current_user.id),
+        leaderboard_rank=_leaderboard_rank(db, current_user.id),
     )
-    db.add(job)
-    db.commit()
-    db.refresh(job)
-
-    broker_ready, broker_error = _can_dispatch_ai_worker()
-    if not broker_ready:
-        job.status = JobStatus.FAILED
-        job.error_message = broker_error
-        db.commit()
-        db.refresh(job)
-        return job
-
-    try:
-        generate_questions_task.delay(job.id)
-    except Exception as exc:
-        job.status = JobStatus.FAILED
-        job.error_message = f"AI worker dispatch failed: {exc}"
-        db.commit()
-        db.refresh(job)
-    return job
 
 
 @router.post(
@@ -443,17 +547,19 @@ def create_material_ai_question_job(
     current_user: User = Depends(get_current_user),
 ):
     material = _get_visible_material(db, material_id)
+    lesson = _get_published_lesson(db, material.lesson_id)
+    _ensure_lesson_unlocked(db, lesson, current_user)
     job_payload = {
         "lesson_id": material.lesson_id,
         "material_id": material.id,
         "material_title": material.title,
         "question_type": "MULTIPLE_CHOICE",
-        "skill": payload.skill,
+        "skill": "READING",
         "count": payload.question_count,
         "difficulty": payload.difficulty,
         "additional_notes": payload.prompt,
         "source_material": material.extracted_text,
-        "auto_publish": True,
+        "private_to_user": True,
     }
     job = GenerationJob(
         job_type=JobType.QUESTION_GENERATION,
@@ -529,6 +635,12 @@ def start_ai_job_session(
         raise HTTPException(status_code=404, detail="AI question job not found")
     if job.status != JobStatus.COMPLETED:
         raise HTTPException(status_code=409, detail="AI question job is not completed")
+    try:
+        job_config = json.loads(job.prompt_json)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=409, detail="AI question job payload is invalid") from exc
+    if not isinstance(job_config, dict) or not job_config.get("material_id"):
+        raise HTTPException(status_code=409, detail="AI question job is not linked to a PDF material")
     question_ids = _question_ids_from_job(job)
     try:
         return learning_service.start_question_session(
@@ -538,6 +650,8 @@ def start_ai_job_session(
             lesson_id=job.target_id or "",
             limit=len(question_ids),
             mode=(payload or StartJobSessionRequest()).mode,
+            owner_user_id=current_user.id,
+            allowed_statuses={QuestionStatus.AUTO_VALIDATED, QuestionStatus.PUBLISHED},
         )
     except learning_service.LearningServiceError as exc:
         _raise_learning_error(exc)

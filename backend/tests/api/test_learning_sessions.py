@@ -44,7 +44,7 @@ def _published_question(db, lesson, *, prompt_text="What is dog in Japanese?"):
     question = Question(
         lesson_id=lesson.id,
         question_type=QuestionType.MULTIPLE_CHOICE,
-        skill=SkillType.VOCABULARY,
+        skill=SkillType.READING,
         difficulty=1,
         prompt_json={
             "text": prompt_text,

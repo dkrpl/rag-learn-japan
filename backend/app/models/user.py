@@ -11,7 +11,6 @@ class UserRole(str, enum.Enum):
 
     LEARNER = "learner"
     CONTENT_EDITOR = "content_editor"
-    REVIEWER = "reviewer"
     ADMINISTRATOR = "administrator"
 
     @classmethod

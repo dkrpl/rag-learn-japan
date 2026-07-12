@@ -1,991 +1,24 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "RAG Learn Japan API",
-    "description": "Production backend for the RAG Learn Japan platform.",
-    "version": "1.0.0"
-  },
-  "paths": {
-    "/api/v1/auth/register": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Register a learner account",
-        "operationId": "auth-register-api-v1-auth-register",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Create a login session",
-        "operationId": "auth-login-api-v1-auth-login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/refresh": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Rotate a refresh token",
-        "operationId": "auth-refresh-api-v1-auth-refresh",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/logout": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Revoke one login session",
-        "operationId": "auth-logout-api-v1-auth-logout",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthMessageResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/app/me": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get the signed-in user",
-        "operationId": "frontend-get_me-api-v1-app-me",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/app/catalog": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get published course catalog",
-        "operationId": "frontend-get_catalog-api-v1-app-catalog",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppCatalogResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/app/lessons/{lesson_id}": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get one lesson with content",
-        "operationId": "frontend-get_lesson-api-v1-app-lessons-lesson_id",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "lesson_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Lesson Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonContentResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/lessons/{lesson_id}/materials": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get PDFs uploaded by admin for a lesson",
-        "operationId": "frontend-get_lesson_materials-api-v1-app-lessons-lesson_id-materials",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "lesson_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Lesson Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AppMaterialSummary"
-                  },
-                  "title": "Response Frontend-Get Lesson Materials-Api-V1-App-Lessons-Lesson Id-Materials"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/lessons/{lesson_id}/sessions": {
-      "post": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Start practice for a lesson",
-        "operationId": "frontend-start_lesson_session-api-v1-app-lessons-lesson_id-sessions",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "lesson_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Lesson Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/LearningSessionCreate"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/sessions/{session_id}": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get an owned practice session",
-        "operationId": "frontend-get_session-api-v1-app-sessions-session_id",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/sessions/{session_id}/questions": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get learner-safe session questions",
-        "operationId": "frontend-get_session_questions-api-v1-app-sessions-session_id-questions",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SessionQuestionResponse"
-                  },
-                  "title": "Response Frontend-Get Session Questions-Api-V1-App-Sessions-Session Id-Questions"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/sessions/{session_id}/answers": {
-      "post": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Submit an answer",
-        "operationId": "frontend-submit_session_answer-api-v1-app-sessions-session_id-answers",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitAnswerRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubmitAnswerResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/sessions/{session_id}/complete": {
-      "post": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Complete a fully answered session",
-        "operationId": "frontend-complete_session-api-v1-app-sessions-session_id-complete",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/dashboard": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get learner dashboard",
-        "operationId": "frontend-get_dashboard-api-v1-app-dashboard",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DashboardOverviewResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/app/lessons/{lesson_id}/ai-question-jobs": {
-      "post": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Generate more questions for a lesson with AI",
-        "operationId": "frontend-create_ai_question_job-api-v1-app-lessons-lesson_id-ai-question-jobs",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "lesson_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Lesson Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AiQuestionJobCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/materials/{material_id}/ai-question-jobs": {
-      "post": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Generate questions from an admin-uploaded PDF",
-        "operationId": "frontend-create_material_ai_question_job-api-v1-app-materials-material_id-ai-question-jobs",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "material_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Material Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MaterialAiQuestionJobCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/ai-question-jobs/{job_id}": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get an owned AI question job",
-        "operationId": "frontend-get_ai_question_job-api-v1-app-ai-question-jobs-job_id",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/ai-question-jobs/{job_id}/sessions": {
-      "post": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Start a session from questions created by an AI job",
-        "operationId": "frontend-start_ai_job_session-api-v1-app-ai-question-jobs-job_id-sessions",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/StartJobSessionRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/app/leaderboard": {
-      "get": {
-        "tags": [
-          "Frontend"
-        ],
-        "summary": "Get XP leaderboard",
-        "operationId": "frontend-get_leaderboard-api-v1-app-leaderboard",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LeaderboardEntry"
-                  },
-                  "title": "Response Frontend-Get Leaderboard-Api-V1-App-Leaderboard"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "components": {
     "schemas": {
-      "AiQuestionJobCreate": {
-        "properties": {
-          "question_count": {
-            "type": "integer",
-            "maximum": 20.0,
-            "minimum": 1.0,
-            "title": "Question Count",
-            "default": 5
-          },
-          "skill": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 32
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Skill"
-          },
-          "difficulty": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 5.0,
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Difficulty"
-          },
-          "prompt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 4000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Prompt"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "AiQuestionJobCreate"
-      },
       "AppCatalogResponse": {
         "properties": {
-          "level_id": {
-            "type": "string",
-            "title": "Level Id"
-          },
-          "level_name": {
-            "type": "string",
-            "title": "Level Name"
-          },
           "courses": {
             "items": {
               "$ref": "#/components/schemas/AppCourseSummary"
             },
-            "type": "array",
-            "title": "Courses"
+            "title": "Courses",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
-          "level_id",
-          "level_name",
           "courses"
         ],
-        "title": "AppCatalogResponse"
+        "title": "AppCatalogResponse",
+        "type": "object"
       },
       "AppCourseSummary": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
           "description": {
             "anyOf": [
               {
@@ -996,6 +29,10 @@
               }
             ],
             "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
           },
           "image_url": {
             "anyOf": [
@@ -1008,30 +45,122 @@
             ],
             "title": "Image Url"
           },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
           "units": {
             "items": {
               "$ref": "#/components/schemas/AppUnitSummary"
             },
-            "type": "array",
-            "title": "Units"
+            "title": "Units",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "title"
         ],
-        "title": "AppCourseSummary"
+        "title": "AppCourseSummary",
+        "type": "object"
+      },
+      "AppDashboardResponse": {
+        "properties": {
+          "accuracy_percentage": {
+            "title": "Accuracy Percentage",
+            "type": "integer"
+          },
+          "answered_questions": {
+            "title": "Answered Questions",
+            "type": "integer"
+          },
+          "correct_answers": {
+            "title": "Correct Answers",
+            "type": "integer"
+          },
+          "course_progress_percentage": {
+            "title": "Course Progress Percentage",
+            "type": "integer"
+          },
+          "current_streak": {
+            "title": "Current Streak",
+            "type": "integer"
+          },
+          "leaderboard_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leaderboard Rank"
+          },
+          "lessons_completed": {
+            "title": "Lessons Completed",
+            "type": "integer"
+          },
+          "longest_streak": {
+            "title": "Longest Streak",
+            "type": "integer"
+          },
+          "total_xp": {
+            "title": "Total Xp",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_xp",
+          "current_streak",
+          "longest_streak",
+          "lessons_completed",
+          "answered_questions",
+          "correct_answers",
+          "accuracy_percentage",
+          "course_progress_percentage"
+        ],
+        "title": "AppDashboardResponse",
+        "type": "object"
       },
       "AppLessonSummary": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
+          "best_score": {
+            "default": 0,
+            "title": "Best Score",
+            "type": "integer"
           },
-          "title": {
-            "type": "string",
-            "title": "Title"
+          "estimated_minutes": {
+            "title": "Estimated Minutes",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_locked": {
+            "default": true,
+            "title": "Is Locked",
+            "type": "boolean"
+          },
+          "last_score": {
+            "default": 0,
+            "title": "Last Score",
+            "type": "integer"
+          },
+          "passing_score": {
+            "default": 70,
+            "title": "Passing Score",
+            "type": "integer"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "status": {
+            "default": "locked",
+            "title": "Status",
+            "type": "string"
           },
           "summary": {
             "anyOf": [
@@ -1044,449 +173,114 @@
             ],
             "title": "Summary"
           },
-          "estimated_minutes": {
-            "type": "integer",
-            "title": "Estimated Minutes"
-          },
-          "sequence": {
-            "type": "integer",
-            "title": "Sequence"
+          "title": {
+            "title": "Title",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "title",
           "estimated_minutes",
           "sequence"
         ],
-        "title": "AppLessonSummary"
+        "title": "AppLessonSummary",
+        "type": "object"
       },
       "AppMaterialSummary": {
         "properties": {
+          "extracted_text_preview": {
+            "title": "Extracted Text Preview",
+            "type": "string"
+          },
+          "file_url": {
+            "title": "File Url",
+            "type": "string"
+          },
           "id": {
-            "type": "string",
-            "title": "Id"
+            "title": "Id",
+            "type": "string"
           },
           "lesson_id": {
-            "type": "string",
-            "title": "Lesson Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
+            "title": "Lesson Id",
+            "type": "string"
           },
           "original_filename": {
-            "type": "string",
-            "title": "Original Filename"
+            "title": "Original Filename",
+            "type": "string"
           },
           "page_count": {
-            "type": "integer",
-            "title": "Page Count"
+            "title": "Page Count",
+            "type": "integer"
           },
-          "extracted_text_preview": {
-            "type": "string",
-            "title": "Extracted Text Preview"
+          "title": {
+            "title": "Title",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "lesson_id",
           "title",
           "original_filename",
+          "file_url",
           "page_count",
           "extracted_text_preview"
         ],
-        "title": "AppMaterialSummary"
+        "title": "AppMaterialSummary",
+        "type": "object"
       },
       "AppUnitSummary": {
         "properties": {
           "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "sequence": {
-            "type": "integer",
-            "title": "Sequence"
+            "title": "Id",
+            "type": "string"
           },
           "lessons": {
             "items": {
               "$ref": "#/components/schemas/AppLessonSummary"
             },
-            "type": "array",
-            "title": "Lessons"
+            "title": "Lessons",
+            "type": "array"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "title",
           "sequence"
         ],
-        "title": "AppUnitSummary"
-      },
-      "AudioAssetResponse": {
-        "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "archived_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "file_url": {
-            "type": "string",
-            "title": "File Url"
-          },
-          "content_type": {
-            "type": "string",
-            "title": "Content Type"
-          },
-          "duration_seconds": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Duration Seconds"
-          },
-          "transcript_available": {
-            "type": "boolean",
-            "title": "Transcript Available",
-            "default": false
-          },
-          "transcript_visible": {
-            "type": "boolean",
-            "title": "Transcript Visible",
-            "default": false
-          },
-          "transcript": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Transcript"
-          },
-          "translation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Translation"
-          },
-          "speaker": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Speaker"
-          },
-          "source_type": {
-            "type": "string",
-            "title": "Source Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "file_url",
-          "content_type",
-          "duration_seconds",
-          "source_type"
-        ],
-        "title": "AudioAssetResponse",
-        "description": "Learner-safe audio metadata. Internal storage paths never leave the API."
+        "title": "AppUnitSummary",
+        "type": "object"
       },
       "AuthMessageResponse": {
         "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "default": "success"
-          },
           "message": {
-            "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "type": "string"
+          },
+          "status": {
+            "default": "success",
+            "title": "Status",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "message"
         ],
-        "title": "AuthMessageResponse"
-      },
-      "DashboardOverviewResponse": {
-        "properties": {
-          "total_xp": {
-            "type": "integer",
-            "title": "Total Xp"
-          },
-          "current_streak": {
-            "type": "integer",
-            "title": "Current Streak"
-          },
-          "longest_streak": {
-            "type": "integer",
-            "title": "Longest Streak"
-          },
-          "lessons_completed": {
-            "type": "integer",
-            "title": "Lessons Completed"
-          },
-          "answered_questions": {
-            "type": "integer",
-            "title": "Answered Questions"
-          },
-          "correct_answers": {
-            "type": "integer",
-            "title": "Correct Answers"
-          },
-          "accuracy_percentage": {
-            "type": "integer",
-            "title": "Accuracy Percentage"
-          },
-          "reviews_due": {
-            "type": "integer",
-            "title": "Reviews Due"
-          },
-          "unresolved_mistakes": {
-            "type": "integer",
-            "title": "Unresolved Mistakes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "total_xp",
-          "current_streak",
-          "longest_streak",
-          "lessons_completed",
-          "answered_questions",
-          "correct_answers",
-          "accuracy_percentage",
-          "reviews_due",
-          "unresolved_mistakes"
-        ],
-        "title": "DashboardOverviewResponse"
-      },
-      "ExampleSentenceResponse": {
-        "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "archived_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "japanese": {
-            "type": "string",
-            "title": "Japanese"
-          },
-          "romaji": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Romaji"
-          },
-          "indonesian": {
-            "type": "string",
-            "title": "Indonesian"
-          },
-          "audio_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Audio Id"
-          },
-          "level_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level Id"
-          },
-          "vocabulary_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Vocabulary Id"
-          },
-          "grammar_point_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Grammar Point Id"
-          },
-          "audio": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AudioAssetResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "japanese",
-          "indonesian"
-        ],
-        "title": "ExampleSentenceResponse"
+        "title": "AuthMessageResponse",
+        "type": "object"
       },
       "GenerationJobResponse": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "job_type": {
-            "$ref": "#/components/schemas/JobType"
-          },
-          "status": {
-            "$ref": "#/components/schemas/JobStatus"
-          },
-          "prompt_json": {
-            "type": "string",
-            "title": "Prompt Json"
-          },
-          "error_message": {
+          "celery_task_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -1495,11 +289,19 @@
                 "type": "null"
               }
             ],
-            "title": "Error Message"
+            "title": "Celery Task Id"
           },
-          "tokens_used": {
-            "type": "integer",
-            "title": "Tokens Used"
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
           },
           "created_by": {
             "anyOf": [
@@ -1512,31 +314,7 @@
             ],
             "title": "Created By"
           },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
-          },
-          "completed_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Completed At"
-          },
-          "celery_task_id": {
+          "error_message": {
             "anyOf": [
               {
                 "type": "string"
@@ -1545,7 +323,33 @@
                 "type": "null"
               }
             ],
-            "title": "Celery Task Id"
+            "title": "Error Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "job_type": {
+            "$ref": "#/components/schemas/JobType"
+          },
+          "prompt_json": {
+            "title": "Prompt Json",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
           },
           "target_id": {
             "anyOf": [
@@ -1557,9 +361,12 @@
               }
             ],
             "title": "Target Id"
+          },
+          "tokens_used": {
+            "title": "Tokens Used",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "job_type",
@@ -1571,114 +378,8 @@
           "started_at",
           "completed_at"
         ],
-        "title": "GenerationJobResponse"
-      },
-      "GrammarPointResponse": {
-        "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "archived_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "structure": {
-            "type": "string",
-            "title": "Structure"
-          },
-          "meaning": {
-            "type": "string",
-            "title": "Meaning"
-          },
-          "explanation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Explanation"
-          },
-          "usage_notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Usage Notes"
-          },
-          "level_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "title",
-          "structure",
-          "meaning"
-        ],
-        "title": "GrammarPointResponse"
+        "title": "GenerationJobResponse",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1686,15 +387,14 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             },
-            "type": "array",
-            "title": "Detail"
+            "title": "Detail",
+            "type": "array"
           }
         },
-        "type": "object",
-        "title": "HTTPValidationError"
+        "title": "HTTPValidationError",
+        "type": "object"
       },
       "JobStatus": {
-        "type": "string",
         "enum": [
           "PENDING",
           "PROCESSING",
@@ -1702,156 +402,18 @@
           "FAILED",
           "CANCELLED"
         ],
-        "title": "JobStatus"
+        "title": "JobStatus",
+        "type": "string"
       },
       "JobType": {
-        "type": "string",
         "enum": [
-          "QUESTION_GENERATION",
-          "TTS_GENERATION",
-          "ADAPTIVE_EVALUATION_GENERATION"
+          "QUESTION_GENERATION"
         ],
-        "title": "JobType"
-      },
-      "KanjiResponse": {
-        "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "archived_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "character": {
-            "type": "string",
-            "title": "Character"
-          },
-          "onyomi": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Onyomi"
-          },
-          "kunyomi": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kunyomi"
-          },
-          "meaning": {
-            "type": "string",
-            "title": "Meaning"
-          },
-          "radical": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Radical"
-          },
-          "stroke_count": {
-            "type": "integer",
-            "title": "Stroke Count"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          },
-          "level_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "character",
-          "meaning",
-          "stroke_count"
-        ],
-        "title": "KanjiResponse"
+        "title": "JobType",
+        "type": "string"
       },
       "LeaderboardEntry": {
         "properties": {
-          "rank": {
-            "type": "integer",
-            "title": "Rank"
-          },
-          "user_id": {
-            "type": "string",
-            "title": "User Id"
-          },
           "name": {
             "anyOf": [
               {
@@ -1863,78 +425,61 @@
             ],
             "title": "Name"
           },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
           "total_xp": {
-            "type": "integer",
-            "title": "Total Xp"
+            "title": "Total Xp",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "rank",
           "user_id",
           "total_xp"
         ],
-        "title": "LeaderboardEntry"
+        "title": "LeaderboardEntry",
+        "type": "object"
       },
-      "LearningSessionCreate": {
+      "LearningSessionResponse": {
         "properties": {
-          "lesson_id": {
-            "type": "string",
-            "maxLength": 36,
-            "minLength": 1,
-            "title": "Lesson Id"
+          "answered_questions": {
+            "title": "Answered Questions",
+            "type": "integer"
           },
-          "mode": {
-            "$ref": "#/components/schemas/SessionMode",
-            "default": "PRACTICE"
-          },
-          "question_count": {
-            "type": "integer",
-            "maximum": 50.0,
-            "minimum": 1.0,
-            "title": "Question Count",
-            "default": 10
-          },
-          "skill": {
+          "completed_at": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/SkillType"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "difficulty": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 5.0,
-                "minimum": 1.0
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Difficulty"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "lesson_id"
-        ],
-        "title": "LearningSessionCreate"
-      },
-      "LearningSessionResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
+            "title": "Completed At"
           },
-          "user_id": {
-            "type": "string",
-            "title": "User Id"
+          "correct_answers": {
+            "title": "Correct Answers",
+            "type": "integer"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "final_score": {
+            "title": "Final Score",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
           },
           "lesson_id": {
             "anyOf": [
@@ -1953,49 +498,23 @@
           "source": {
             "$ref": "#/components/schemas/SessionSource"
           },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
           "status": {
             "$ref": "#/components/schemas/SessionStatus"
           },
           "total_questions": {
-            "type": "integer",
-            "title": "Total Questions"
+            "title": "Total Questions",
+            "type": "integer"
           },
-          "answered_questions": {
-            "type": "integer",
-            "title": "Answered Questions"
-          },
-          "correct_answers": {
-            "type": "integer",
-            "title": "Correct Answers"
-          },
-          "final_score": {
-            "type": "integer",
-            "title": "Final Score"
-          },
-          "started_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Started At"
-          },
-          "expires_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Expires At"
-          },
-          "completed_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Completed At"
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "user_id",
@@ -2009,7 +528,8 @@
           "started_at",
           "expires_at"
         ],
-        "title": "LearningSessionResponse"
+        "title": "LearningSessionResponse",
+        "type": "object"
       },
       "LessonContentResponse": {
         "properties": {
@@ -2020,78 +540,23 @@
             "items": {
               "$ref": "#/components/schemas/LessonSectionResponse"
             },
-            "type": "array",
-            "title": "Sections"
-          },
-          "vocabularies": {
-            "items": {
-              "$ref": "#/components/schemas/VocabularyResponse"
-            },
-            "type": "array",
-            "title": "Vocabularies"
-          },
-          "kanjis": {
-            "items": {
-              "$ref": "#/components/schemas/KanjiResponse"
-            },
-            "type": "array",
-            "title": "Kanjis"
-          },
-          "grammar_points": {
-            "items": {
-              "$ref": "#/components/schemas/GrammarPointResponse"
-            },
-            "type": "array",
-            "title": "Grammar Points"
-          },
-          "example_sentences": {
-            "items": {
-              "$ref": "#/components/schemas/ExampleSentenceResponse"
-            },
-            "type": "array",
-            "title": "Example Sentences"
-          },
-          "readings": {
-            "items": {
-              "$ref": "#/components/schemas/ReadingResponse"
-            },
-            "type": "array",
-            "title": "Readings"
+            "title": "Sections",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "lesson"
         ],
-        "title": "LessonContentResponse"
+        "title": "LessonContentResponse",
+        "type": "object"
       },
       "LessonResponse": {
         "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
           "archived_at": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2100,26 +565,56 @@
             "title": "Archived At"
           },
           "created_at": {
-            "type": "string",
             "format": "date-time",
-            "title": "Created At"
+            "title": "Created At",
+            "type": "string"
           },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
+          "estimated_minutes": {
+            "title": "Estimated Minutes",
+            "type": "integer"
           },
           "id": {
-            "type": "string",
-            "title": "Id"
+            "title": "Id",
+            "type": "string"
           },
-          "unit_id": {
-            "type": "string",
-            "title": "Unit Id"
+          "is_archived": {
+            "title": "Is Archived",
+            "type": "boolean"
           },
-          "title": {
-            "type": "string",
-            "title": "Title"
+          "is_published": {
+            "title": "Is Published",
+            "type": "boolean"
+          },
+          "learning_objective": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learning Objective"
+          },
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
           },
           "slug": {
             "anyOf": [
@@ -2143,31 +638,20 @@
             ],
             "title": "Summary"
           },
-          "learning_objective": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Learning Objective"
+          "title": {
+            "title": "Title",
+            "type": "string"
           },
-          "estimated_minutes": {
-            "type": "integer",
-            "title": "Estimated Minutes"
+          "unit_id": {
+            "title": "Unit Id",
+            "type": "string"
           },
-          "passing_score": {
-            "type": "integer",
-            "title": "Passing Score"
-          },
-          "sequence": {
-            "type": "integer",
-            "title": "Sequence"
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "is_published",
           "is_archived",
@@ -2180,67 +664,22 @@
           "passing_score",
           "sequence"
         ],
-        "title": "LessonResponse"
+        "title": "LessonResponse",
+        "type": "object"
       },
       "LessonSectionResponse": {
         "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
           "archived_at": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "lesson_id": {
-            "type": "string",
-            "title": "Lesson Id"
-          },
-          "section_type": {
-            "type": "string",
-            "title": "Section Type"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
           },
           "content": {
             "anyOf": [
@@ -2253,12 +692,57 @@
             ],
             "title": "Content"
           },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_archived": {
+            "title": "Is Archived",
+            "type": "boolean"
+          },
+          "is_published": {
+            "title": "Is Published",
+            "type": "boolean"
+          },
+          "lesson_id": {
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "section_type": {
+            "title": "Section Type",
+            "type": "string"
+          },
           "sequence": {
-            "type": "integer",
-            "title": "Sequence"
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "is_published",
           "is_archived",
@@ -2270,131 +754,104 @@
           "title",
           "sequence"
         ],
-        "title": "LessonSectionResponse"
+        "title": "LessonSectionResponse",
+        "type": "object"
       },
       "LoginRequest": {
+        "additionalProperties": false,
         "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Password"
-          },
           "device_name": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "maxLength": 255,
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Device Name"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "email",
           "password"
         ],
-        "title": "LoginRequest"
+        "title": "LoginRequest",
+        "type": "object"
       },
       "MaterialAiQuestionJobCreate": {
+        "additionalProperties": false,
         "properties": {
-          "question_count": {
-            "type": "integer",
-            "maximum": 30.0,
-            "minimum": 1.0,
-            "title": "Question Count",
-            "default": 10
-          },
-          "skill": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Skill",
-            "default": "READING"
-          },
           "difficulty": {
-            "type": "integer",
+            "default": 1,
             "maximum": 5.0,
             "minimum": 1.0,
             "title": "Difficulty",
-            "default": 1
+            "type": "integer"
           },
           "prompt": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 4000
+                "maxLength": 4000,
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Prompt"
+          },
+          "question_count": {
+            "default": 10,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Question Count",
+            "type": "integer"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "MaterialAiQuestionJobCreate"
+        "title": "MaterialAiQuestionJobCreate",
+        "type": "object"
       },
       "QuestionResponseLearner": {
+        "additionalProperties": false,
+        "description": "Safe delivery shape: no explanation or answer key before answer submission.",
         "properties": {
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "integer"
+          },
           "id": {
-            "type": "string",
-            "title": "Id"
+            "title": "Id",
+            "type": "string"
           },
           "lesson_id": {
-            "type": "string",
-            "title": "Lesson Id"
+            "title": "Lesson Id",
+            "type": "string"
           },
-          "reading_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reading Id"
-          },
-          "audio_asset_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Audio Asset Id"
+          "prompt_json": {
+            "additionalProperties": true,
+            "title": "Prompt Json",
+            "type": "object"
           },
           "question_type": {
             "$ref": "#/components/schemas/QuestionType"
           },
           "skill": {
             "$ref": "#/components/schemas/SkillType"
-          },
-          "difficulty": {
-            "type": "integer",
-            "title": "Difficulty"
-          },
-          "prompt_json": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Prompt Json"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "id",
           "lesson_id",
@@ -2404,212 +861,113 @@
           "prompt_json"
         ],
         "title": "QuestionResponseLearner",
-        "description": "Safe delivery shape: no status, explanation, review, or answer key."
+        "type": "object"
       },
       "QuestionType": {
-        "type": "string",
+        "description": "Canonical MVP question type: AI-generated reading multiple choice.",
         "enum": [
-          "MULTIPLE_CHOICE",
-          "CLOZE_MULTIPLE_CHOICE",
-          "TRUE_FALSE",
-          "MATCHING",
-          "ORDERING",
-          "KANJI_READING",
-          "READING_COMPREHENSION",
-          "LISTENING_MULTIPLE_CHOICE",
-          "LISTENING_TRUE_FALSE",
-          "LISTENING_WITH_IMAGE",
-          "CLOZE_MULTIPLE_CHOICE",
-          "READING_COMPREHENSION",
-          "LISTENING_MULTIPLE_CHOICE"
+          "MULTIPLE_CHOICE"
         ],
         "title": "QuestionType",
-        "description": "The ten canonical MVP question types from the PRD."
-      },
-      "ReadingResponse": {
-        "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "archived_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "content": {
-            "type": "string",
-            "title": "Content"
-          },
-          "furigana": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Furigana"
-          },
-          "translation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Translation"
-          },
-          "difficulty": {
-            "type": "integer",
-            "title": "Difficulty"
-          },
-          "sequence": {
-            "type": "integer",
-            "title": "Sequence"
-          },
-          "lesson_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lesson Id"
-          },
-          "level_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level Id"
-          },
-          "audio_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Audio Id"
-          },
-          "audio": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AudioAssetResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "title",
-          "content",
-          "difficulty",
-          "sequence"
-        ],
-        "title": "ReadingResponse"
+        "type": "string"
       },
       "RefreshRequest": {
+        "additionalProperties": false,
         "properties": {
           "refresh_token": {
-            "type": "string",
             "maxLength": 4096,
             "minLength": 32,
-            "title": "Refresh Token"
+            "title": "Refresh Token",
+            "type": "string"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "refresh_token"
         ],
-        "title": "RefreshRequest"
+        "title": "RefreshRequest",
+        "type": "object"
       },
       "SessionMode": {
-        "type": "string",
         "enum": [
           "PRACTICE",
           "EXAM"
         ],
-        "title": "SessionMode"
+        "title": "SessionMode",
+        "type": "string"
       },
       "SessionQuestionResponse": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
+          "correct_answer_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer Json"
           },
-          "order_number": {
-            "type": "integer",
-            "title": "Order Number"
+          "explanation_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation Json"
+          },
+          "feedback_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Notes"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
           },
           "is_answered": {
-            "type": "boolean",
-            "title": "Is Answered"
+            "title": "Is Answered",
+            "type": "boolean"
+          },
+          "is_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Correct"
+          },
+          "order_number": {
+            "title": "Order Number",
+            "type": "integer"
           },
           "question": {
             "$ref": "#/components/schemas/QuestionResponseLearner"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
           },
           "user_answer_json": {
             "anyOf": [
@@ -2622,180 +980,92 @@
               }
             ],
             "title": "User Answer Json"
-          },
-          "is_correct": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Correct"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "correct_answer_json": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct Answer Json"
-          },
-          "explanation_json": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Explanation Json"
-          },
-          "feedback_notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Feedback Notes"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "order_number",
           "is_answered",
           "question"
         ],
-        "title": "SessionQuestionResponse"
+        "title": "SessionQuestionResponse",
+        "type": "object"
       },
       "SessionSource": {
-        "type": "string",
         "enum": [
-          "LESSON",
-          "REVIEW",
-          "MISTAKE"
+          "LESSON"
         ],
-        "title": "SessionSource"
+        "title": "SessionSource",
+        "type": "string"
       },
       "SessionStatus": {
-        "type": "string",
         "enum": [
           "ACTIVE",
           "COMPLETED",
           "CANCELLED",
           "EXPIRED"
         ],
-        "title": "SessionStatus"
+        "title": "SessionStatus",
+        "type": "string"
       },
       "SkillType": {
-        "type": "string",
         "enum": [
-          "VOCABULARY",
-          "GRAMMAR",
-          "READING",
-          "LISTENING"
+          "READING"
         ],
-        "title": "SkillType"
+        "title": "SkillType",
+        "type": "string"
       },
       "StartJobSessionRequest": {
+        "additionalProperties": false,
         "properties": {
           "mode": {
             "$ref": "#/components/schemas/SessionMode",
             "default": "PRACTICE"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "StartJobSessionRequest"
+        "title": "StartJobSessionRequest",
+        "type": "object"
       },
       "SubmitAnswerRequest": {
+        "additionalProperties": false,
         "properties": {
+          "answer_json": {
+            "additionalProperties": true,
+            "title": "Answer Json",
+            "type": "object"
+          },
+          "response_time_ms": {
+            "default": 0,
+            "maximum": 86400000.0,
+            "minimum": 0.0,
+            "title": "Response Time Ms",
+            "type": "integer"
+          },
           "session_question_id": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 36
+                "maxLength": 36,
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Session Question Id"
-          },
-          "answer_json": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Answer Json"
-          },
-          "response_time_ms": {
-            "type": "integer",
-            "maximum": 86400000.0,
-            "minimum": 0.0,
-            "title": "Response Time Ms",
-            "default": 0
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "answer_json"
         ],
-        "title": "SubmitAnswerRequest"
+        "title": "SubmitAnswerRequest",
+        "type": "object"
       },
       "SubmitAnswerResponse": {
         "properties": {
           "accepted": {
-            "type": "boolean",
+            "default": true,
             "title": "Accepted",
-            "default": true
-          },
-          "session_question_id": {
-            "type": "string",
-            "title": "Session Question Id"
-          },
-          "is_correct": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Correct"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
+            "type": "boolean"
           },
           "correct_answer_json": {
             "anyOf": [
@@ -2831,59 +1101,85 @@
               }
             ],
             "title": "Feedback Notes"
+          },
+          "is_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Correct"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "session_question_id": {
+            "title": "Session Question Id",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "session_question_id"
         ],
-        "title": "SubmitAnswerResponse"
+        "title": "SubmitAnswerResponse",
+        "type": "object"
       },
       "TokenResponse": {
         "properties": {
           "access_token": {
-            "type": "string",
-            "title": "Access Token"
-          },
-          "refresh_token": {
-            "type": "string",
-            "title": "Refresh Token"
-          },
-          "token_type": {
-            "type": "string",
-            "title": "Token Type",
-            "default": "bearer"
+            "title": "Access Token",
+            "type": "string"
           },
           "expires_in": {
-            "type": "integer",
-            "title": "Expires In"
+            "title": "Expires In",
+            "type": "integer"
           },
           "refresh_expires_in": {
-            "type": "integer",
-            "title": "Refresh Expires In"
+            "title": "Refresh Expires In",
+            "type": "integer"
+          },
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "access_token",
           "refresh_token",
           "expires_in",
           "refresh_expires_in"
         ],
-        "title": "TokenResponse"
+        "title": "TokenResponse",
+        "type": "object"
       },
       "UserCreate": {
         "properties": {
           "email": {
-            "type": "string",
             "format": "email",
-            "title": "Email"
+            "title": "Email",
+            "type": "string"
           },
           "name": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "maxLength": 255,
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2891,11 +1187,17 @@
             ],
             "title": "Name"
           },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
           "photo_url": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 512
+                "maxLength": 512,
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2903,105 +1205,60 @@
             ],
             "title": "Photo Url"
           },
-          "timezone": {
-            "type": "string",
-            "maxLength": 50,
-            "title": "Timezone",
-            "default": "UTC"
-          },
           "target_level": {
-            "type": "string",
+            "default": "N5",
             "pattern": "^N[1-5]$",
             "title": "Target Level",
-            "default": "N5"
+            "type": "string"
           },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 8,
-            "title": "Password"
+          "timezone": {
+            "default": "UTC",
+            "maxLength": 50,
+            "title": "Timezone",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "email",
           "password"
         ],
-        "title": "UserCreate"
+        "title": "UserCreate",
+        "type": "object"
       },
       "UserResponse": {
         "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "photo_url": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 512
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Photo Url"
-          },
-          "timezone": {
-            "type": "string",
-            "maxLength": 50,
-            "title": "Timezone",
-            "default": "UTC"
-          },
-          "target_level": {
-            "type": "string",
-            "pattern": "^N[1-5]$",
-            "title": "Target Level",
-            "default": "N5"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active"
-          },
-          "is_email_verified": {
-            "type": "boolean",
-            "title": "Is Email Verified"
-          },
-          "role": {
-            "$ref": "#/components/schemas/UserRole"
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
           },
           "current_streak": {
-            "type": "integer",
+            "default": 0,
             "title": "Current Streak",
-            "default": 0
+            "type": "integer"
           },
-          "longest_streak": {
-            "type": "integer",
-            "title": "Longest Streak",
-            "default": 0
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_email_verified": {
+            "title": "Is Email Verified",
+            "type": "boolean"
           },
           "last_activity_date": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date"
+                "format": "date",
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3012,8 +1269,8 @@
           "last_login_at": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3021,18 +1278,56 @@
             ],
             "title": "Last Login At"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+          "longest_streak": {
+            "default": 0,
+            "title": "Longest Streak",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "target_level": {
+            "default": "N5",
+            "pattern": "^N[1-5]$",
+            "title": "Target Level",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "maxLength": 50,
+            "title": "Timezone",
+            "type": "string"
           },
           "updated_at": {
-            "type": "string",
             "format": "date-time",
-            "title": "Updated At"
+            "title": "Updated At",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "email",
           "id",
@@ -3042,21 +1337,28 @@
           "created_at",
           "updated_at"
         ],
-        "title": "UserResponse"
+        "title": "UserResponse",
+        "type": "object"
       },
       "UserRole": {
-        "type": "string",
+        "description": "Canonical application roles exposed by the public API.",
         "enum": [
           "learner",
           "content_editor",
-          "reviewer",
           "administrator"
         ],
         "title": "UserRole",
-        "description": "Canonical application roles exposed by the public API."
+        "type": "string"
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -3068,177 +1370,848 @@
                 }
               ]
             },
-            "type": "array",
-            "title": "Location"
+            "title": "Location",
+            "type": "array"
           },
           "msg": {
-            "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
+            "title": "Error Type",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "loc",
           "msg",
           "type"
         ],
-        "title": "ValidationError"
-      },
-      "VocabularyResponse": {
-        "properties": {
-          "is_published": {
-            "type": "boolean",
-            "title": "Is Published"
-          },
-          "is_archived": {
-            "type": "boolean",
-            "title": "Is Archived"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "archived_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "word": {
-            "type": "string",
-            "title": "Word"
-          },
-          "kana": {
-            "type": "string",
-            "title": "Kana"
-          },
-          "romaji": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Romaji"
-          },
-          "meaning": {
-            "type": "string",
-            "title": "Meaning"
-          },
-          "part_of_speech": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Part Of Speech"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          },
-          "level_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level Id"
-          },
-          "audio_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Audio Id"
-          },
-          "audio": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AudioAssetResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "word",
-          "kana",
-          "meaning"
-        ],
-        "title": "VocabularyResponse"
+        "title": "ValidationError",
+        "type": "object"
       }
     },
     "securitySchemes": {
       "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Production backend for the RAG Learn Japan platform.",
+    "title": "RAG Learn Japan API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/app/ai-question-jobs/{job_id}": {
+      "get": {
+        "operationId": "frontend-get_ai_question_job-api-v1-app-ai-question-jobs-job_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get an owned AI question job",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/ai-question-jobs/{job_id}/sessions": {
+      "post": {
+        "operationId": "frontend-start_ai_job_session-api-v1-app-ai-question-jobs-job_id-sessions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StartJobSessionRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Start a session from questions created by an AI job",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/catalog": {
+      "get": {
+        "operationId": "frontend-get_catalog-api-v1-app-catalog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get published course catalog",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/dashboard": {
+      "get": {
+        "operationId": "frontend-get_dashboard-api-v1-app-dashboard",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppDashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get learner MVP dashboard",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/leaderboard": {
+      "get": {
+        "operationId": "frontend-get_leaderboard-api-v1-app-leaderboard",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LeaderboardEntry"
+                  },
+                  "title": "Response Frontend-Get Leaderboard-Api-V1-App-Leaderboard",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get XP leaderboard",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/lessons/{lesson_id}": {
+      "get": {
+        "operationId": "frontend-get_lesson-api-v1-app-lessons-lesson_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonContentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get one lesson with content",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/lessons/{lesson_id}/materials": {
+      "get": {
+        "operationId": "frontend-get_lesson_materials-api-v1-app-lessons-lesson_id-materials",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AppMaterialSummary"
+                  },
+                  "title": "Response Frontend-Get Lesson Materials-Api-V1-App-Lessons-Lesson Id-Materials",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get PDFs uploaded by admin for a lesson",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/materials/{material_id}/ai-question-jobs": {
+      "post": {
+        "operationId": "frontend-create_material_ai_question_job-api-v1-app-materials-material_id-ai-question-jobs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialAiQuestionJobCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Generate questions from an admin-uploaded PDF",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/materials/{material_id}/file": {
+      "get": {
+        "operationId": "frontend-get_material_file-api-v1-app-materials-material_id-file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Stream an admin-uploaded PDF for the lesson viewer",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/me": {
+      "get": {
+        "operationId": "frontend-get_me-api-v1-app-me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get the signed-in user",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/sessions/{session_id}": {
+      "get": {
+        "operationId": "frontend-get_session-api-v1-app-sessions-session_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get an owned practice session",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/sessions/{session_id}/answers": {
+      "post": {
+        "operationId": "frontend-submit_session_answer-api-v1-app-sessions-session_id-answers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAnswerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitAnswerResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Submit an answer",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/sessions/{session_id}/complete": {
+      "post": {
+        "operationId": "frontend-complete_session-api-v1-app-sessions-session_id-complete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Complete a fully answered session",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/sessions/{session_id}/questions": {
+      "get": {
+        "operationId": "frontend-get_session_questions-api-v1-app-sessions-session_id-questions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SessionQuestionResponse"
+                  },
+                  "title": "Response Frontend-Get Session Questions-Api-V1-App-Sessions-Session Id-Questions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get learner-safe session questions",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "auth-login-api-v1-auth-login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a login session",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "auth-logout-api-v1-auth-logout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMessageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Revoke one login session",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "auth-refresh-api-v1-auth-refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rotate a refresh token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "auth-register-api-v1-auth-register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register a learner account",
+        "tags": [
+          "Auth"
+        ]
       }
     }
   }

@@ -3,9 +3,12 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from io import BytesIO
+from pathlib import Path
 
 from fastapi import UploadFile
 from pypdf import PdfReader
+
+from app.core.config import settings
 
 MAX_PDF_BYTES = 20 * 1024 * 1024
 MAX_EXTRACTED_TEXT_CHARS = 120_000
@@ -23,6 +26,24 @@ class ExtractedPdfMaterial:
     checksum: str
     page_count: int
     text: str
+    data: bytes
+
+
+def material_storage_path(storage_key: str) -> Path:
+    root = settings.MATERIAL_STORAGE_PATH.resolve()
+    path = (root / storage_key).resolve()
+    if root != path and root not in path.parents:
+        raise PdfMaterialError("Invalid material storage key")
+    return path
+
+
+def store_pdf_material(data: bytes, checksum: str) -> str:
+    storage_key = f"{checksum[:2]}/{checksum}.pdf"
+    path = material_storage_path(storage_key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_bytes(data)
+    return storage_key
 
 
 def _normalize_text(value: str) -> str:
@@ -63,4 +84,5 @@ async def extract_pdf_material(upload: UploadFile) -> ExtractedPdfMaterial:
         checksum=hashlib.sha256(data).hexdigest(),
         page_count=len(reader.pages),
         text=text,
+        data=data,
     )

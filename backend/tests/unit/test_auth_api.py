@@ -172,10 +172,10 @@ def test_admin_user_management_and_last_admin_guard(api: tuple[TestClient, sessi
     role_response = client.patch(
         f"/api/v1/admin/users/{learner_id}/role",
         headers=headers,
-        json={"role": "reviewer"},
+        json={"role": "content_editor"},
     )
     assert role_response.status_code == 200, role_response.text
-    assert role_response.json()["role"] == "reviewer"
+    assert role_response.json()["role"] == "content_editor"
 
     last_admin_response = client.patch(
         f"/api/v1/admin/users/{administrator_id}/status",

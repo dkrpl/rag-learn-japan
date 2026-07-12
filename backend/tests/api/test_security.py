@@ -71,9 +71,9 @@ async def test_answer_leakage(client, learner_token_headers, db):
     question = Question(
         lesson_id=lesson.id,
         question_type=QuestionType.MULTIPLE_CHOICE,
-        skill=SkillType.VOCABULARY,
-        prompt_json={"text": "Test Q?"},
-        answer_key_json={"correct": "A"},
+        skill=SkillType.READING,
+        prompt_json={"text": "Test Q?", "options": [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]},
+        answer_key_json={"correct_option_id": "a"},
         explanation_json={"text": "Because A"},
         status=QuestionStatus.PUBLISHED,
     )
@@ -87,8 +87,6 @@ async def test_answer_leakage(client, learner_token_headers, db):
         question_id=question.id,
         version_number=1,
         lesson_id=question.lesson_id,
-        reading_id=question.reading_id,
-        audio_asset_id=question.audio_asset_id,
         question_type=question.question_type,
         skill=question.skill,
         difficulty=question.difficulty,
@@ -101,8 +99,8 @@ async def test_answer_leakage(client, learner_token_headers, db):
 
     # 2. Start session
     payload = {"lesson_id": lesson.id, "mode": "PRACTICE"}
-    response = client.post("/api/v1/learning-sessions/start", json=payload, headers=learner_token_headers)
-    assert response.status_code == 200
+    response = client.post("/api/v1/learning-sessions", json=payload, headers=learner_token_headers)
+    assert response.status_code == 201
     data = response.json()
 
     session_id = data["id"]
@@ -114,8 +112,8 @@ async def test_answer_leakage(client, learner_token_headers, db):
 
     for q in questions:
         # Crucial security check: learners should never see the answer_key_json
-        assert "answer_key_json" not in q
-        assert "explanation_json" not in q  # Explanation only visible after answer/completion
+        assert "answer_key_json" not in q["question"]
+        assert "explanation_json" not in q["question"]  # Explanation only visible after answer/completion
 
 
 @pytest.mark.asyncio

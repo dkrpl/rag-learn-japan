@@ -38,8 +38,6 @@ class SessionStatus(str, enum.Enum):
 
 class SessionSource(str, enum.Enum):
     LESSON = "LESSON"
-    REVIEW = "REVIEW"
-    MISTAKE = "MISTAKE"
 
 
 class LearningSession(CustomBase):

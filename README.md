@@ -65,7 +65,7 @@ Script ini membaca `DATABASE_URL` dari `backend/.env`, menolak reset host MySQL 
 
 - Admin: `admin@example.com` / `Password123`
 - Learner: `learner@example.com` / `Password123`
-- Data: kurikulum N5, konten lesson, soal published, question revisions, dan simulasi JLPT N5.
+- Data: kurikulum N5, lesson, materi PDF demo, dan akun demo untuk flow MVP.
 
 ### 6. Menjalankan Server API
 Jalankan FastAPI menggunakan Uvicorn:
@@ -91,16 +91,16 @@ Can't locate revision identified by '69e963bb7b7b'
 
 Redeploy kode terbaru ini. Migration `69e963bb7b7b` sudah disediakan kembali sebagai anchor kompatibilitas, lalu Alembic akan menaikkan database ke head `000000000001`. Tidak perlu reset database Railway untuk error ini.
 
-## 📚 Panduan Tim Frontend (Web / Mobile)
+## Panduan Tim Frontend (Web / Mobile)
 
 Bagi tim yang akan mengintegrasikan aplikasi *Frontend* dengan *Backend* ini, kami telah menyiapkan dokumentasi super komprehensif di dalam direktori `backend/docs/`! 
 Silakan baca urutan berikut agar Anda paham cara berinteraksi dengan API ini:
 
-1. **[Frontend Integration Guide (Penting)](backend/docs/FRONTEND_INTEGRATION.md)**: Kontrak simpel untuk frontend: auth, katalog kursus, lesson, practice session, dashboard, dan AI question job.
+1. **[Frontend Integration Guide (Penting)](backend/docs/FRONTEND_INTEGRATION.md)**: Kontrak simpel untuk frontend: auth, katalog Course -> Unit -> Lesson, PDF viewer, AI quiz dari PDF, dashboard, dan leaderboard.
 2. **[Material PDF Workflow](backend/docs/MATERIAL_PDF_WORKFLOW.md)**: Alur admin upload PDF, AI generate soal dari materi, lalu user mengerjakan soal.
-3. **[Gambaran Umum API (Arsitektur)](backend/docs/API_OVERVIEW.md)**: Pahami *endpoint* yang tersedia, perbedaan *Public* vs *Admin* API, _Rate Limiting_, serta **Breaking Change Policy**.
+3. **[Gambaran Umum API (Arsitektur)](backend/docs/API_OVERVIEW.md)**: Ringkasan endpoint MVP, auth, dan batas kontrak frontend.
 4. **[Cara Autentikasi JWT](backend/docs/AUTHENTICATION.md)**: Pelajari cara mendapatkan Token saat Login, dan cara menyematkannya di *Header Authorization*.
-5. **[Question Types Schema](backend/docs/QUESTION_TYPES.md)**: Penjelasan mengenai bentuk-bentuk JSON yang dinamis untuk tiap tipe pertanyaan (Pilihan Ganda, Benar/Salah, *Matching*).
+5. **[Question Types Schema](backend/docs/QUESTION_TYPES.md)**: Bentuk JSON soal pilihan ganda reading dan payload submit jawaban.
 6. **[Standarisasi Kode Error](backend/docs/ERROR_CODES.md)**: Daftar makna status HTTP (*400, 401, 403, 404*) yang dikembalikan sistem.
 7. **[Changelog (Catatan Rilis)](backend/docs/CHANGELOG.md)**: Melacak penambahan fitur baru pada API dari rilis ke rilis.
 8. **[Known Limitations](backend/docs/KNOWN_LIMITATIONS.md)**: Panduan mengenai beberapa keterbatasan MVP yang belum selesai saat peluncuran versi awal.
@@ -123,12 +123,12 @@ Smoke test manual yang disarankan setelah `python import_db.py --yes`:
 3. Ambil profil user: `GET /api/v1/app/me`.
 4. Ambil katalog kursus: `GET /api/v1/app/catalog`.
 5. Ambil detail lesson: `GET /api/v1/app/lessons/{lesson_id}`.
-6. Untuk flow PDF AI: ambil materi `GET /api/v1/app/lessons/{lesson_id}/materials`.
-7. Generate soal dari materi: `POST /api/v1/app/materials/{material_id}/ai-question-jobs`.
-8. Poll job: `GET /api/v1/app/ai-question-jobs/{job_id}` sampai `status=COMPLETED`.
-9. Mulai sesi dari job: `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`.
-10. Alternatif tanpa PDF: mulai latihan biasa `POST /api/v1/app/lessons/{lesson_id}/sessions`.
-11. Ambil soal, submit jawaban sesuai `question_type`, lalu complete session:
+6. Ambil materi `GET /api/v1/app/lessons/{lesson_id}/materials`.
+7. Buka PDF viewer dari `file_url`: `GET /api/v1/app/materials/{material_id}/file`.
+8. Generate soal dari materi: `POST /api/v1/app/materials/{material_id}/ai-question-jobs`.
+9. Poll job: `GET /api/v1/app/ai-question-jobs/{job_id}` sampai `status=COMPLETED`.
+10. Mulai sesi dari job: `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`.
+11. Ambil soal, submit jawaban pilihan ganda, lalu complete session:
    `GET /api/v1/app/sessions/{session_id}/questions`,
    `POST /api/v1/app/sessions/{session_id}/answers`,
    `POST /api/v1/app/sessions/{session_id}/complete`.

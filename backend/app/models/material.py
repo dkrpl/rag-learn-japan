@@ -14,6 +14,7 @@ class MaterialDocument(CustomBase):
     content_type = Column(String(100), default="application/pdf", nullable=False)
     file_size_bytes = Column(Integer, nullable=False)
     checksum = Column(String(64), nullable=False, index=True)
+    storage_key = Column(String(512), nullable=True)
     page_count = Column(Integer, nullable=False, default=0)
     extracted_text = Column(Text, nullable=False)
     created_by_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)

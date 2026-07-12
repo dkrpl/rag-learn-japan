@@ -14,7 +14,7 @@ from app.models.material import MaterialDocument
 from app.models.user import User, UserRole
 from app.schemas.ai_jobs import GenerationJobResponse
 from app.schemas.material import MaterialDocumentResponse, MaterialQuestionJobCreate
-from app.services.pdf_material import PdfMaterialError, extract_pdf_material
+from app.services.pdf_material import PdfMaterialError, extract_pdf_material, store_pdf_material
 from app.tasks.ai_tasks import generate_questions_task
 
 admin_checker = RoleChecker([UserRole.CONTENT_EDITOR, UserRole.ADMINISTRATOR])
@@ -30,6 +30,7 @@ def _material_response(material: MaterialDocument) -> MaterialDocumentResponse:
         content_type=material.content_type,
         file_size_bytes=material.file_size_bytes,
         checksum=material.checksum,
+        file_url=f"/api/v1/app/materials/{material.id}/file",
         page_count=material.page_count,
         extracted_text_preview=material.extracted_text[:500],
         created_by_id=material.created_by_id,
@@ -78,6 +79,7 @@ async def upload_pdf_material(
         content_type=extracted.content_type,
         file_size_bytes=extracted.file_size_bytes,
         checksum=extracted.checksum,
+        storage_key=store_pdf_material(extracted.data, extracted.checksum),
         page_count=extracted.page_count,
         extracted_text=extracted.text,
         created_by_id=current_user.id,

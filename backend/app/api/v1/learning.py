@@ -7,11 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models.ai_jobs import GenerationJob, JobStatus, JobType
 from app.models.user import User
-from app.schemas.ai_jobs import GenerationJobResponse
 from app.schemas.learning import (
-    AdaptiveEvaluationCreate,
     LearningSessionCreate,
     LearningSessionResponse,
     SessionQuestionResponse,
@@ -19,7 +16,6 @@ from app.schemas.learning import (
     SubmitAnswerResponse,
 )
 from app.services import learning as learning_service
-from app.tasks.ai_tasks import generate_adaptive_evaluation_task
 
 router = APIRouter()
 
@@ -66,36 +62,6 @@ def start_learning_session_compatibility(
     """Compatibility alias for pre-contract clients; use POST /learning-sessions."""
 
     return _start(payload, db, current_user)
-
-
-@router.post(
-    "/adaptive",
-    response_model=GenerationJobResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-    operation_id="createAdaptiveEvaluation",
-    summary="Trigger RAG-based personalized evaluation",
-)
-def create_adaptive_evaluation(
-    payload: AdaptiveEvaluationCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    # Buat job baru untuk RAG
-    job = GenerationJob(
-        job_type=JobType.ADAPTIVE_EVALUATION_GENERATION,
-        status=JobStatus.PENDING,
-        prompt_json=payload.model_dump_json(),
-        target_id=payload.lesson_id,  # Target is the lesson to evaluate
-        created_by=current_user.id,
-    )
-    db.add(job)
-    db.commit()
-    db.refresh(job)
-
-    # Dispatch Celery task
-    generate_adaptive_evaluation_task.delay(job.id)
-
-    return job
 
 
 @router.get(

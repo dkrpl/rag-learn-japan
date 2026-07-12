@@ -1,5 +1,4 @@
 import json
-from datetime import datetime, timezone
 from unittest.mock import patch
 
 from app.models.ai_jobs import GenerationJob, JobStatus, JobType
@@ -50,6 +49,7 @@ def test_admin_uploads_pdf_material_and_creates_question_job(client, admin_token
     material = upload.json()
     assert material["lesson_id"] == ids["lesson_id"]
     assert material["page_count"] == 1
+    assert material["file_url"] == f"/api/v1/app/materials/{material['id']}/file"
     assert "Konnichiwa" in material["extracted_text_preview"]
 
     with (
@@ -96,6 +96,11 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     )
     assert visible.status_code == 200, visible.text
     assert visible.json()[0]["id"] == material["id"]
+    assert visible.json()[0]["file_url"] == f"/api/v1/app/materials/{material['id']}/file"
+
+    pdf_file = client.get(visible.json()[0]["file_url"], headers=learner_token_headers)
+    assert pdf_file.status_code == 200, pdf_file.text
+    assert pdf_file.headers["content-type"].startswith("application/pdf")
 
     with (
         patch("app.api.v1.frontend._can_dispatch_ai_worker", return_value=(True, None)),
@@ -104,13 +109,15 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
         job_response = client.post(
             f"/api/v1/app/materials/{material['id']}/ai-question-jobs",
             headers=learner_token_headers,
-            json={"question_count": 1, "skill": "READING", "difficulty": 1},
+            json={"question_count": 1, "difficulty": 1},
         )
     assert job_response.status_code == 202, job_response.text
     assert delay.called
     job = job_response.json()
     prompt = json.loads(job["prompt_json"])
-    assert prompt["auto_publish"] is True
+    assert prompt["private_to_user"] is True
+    assert "auto_publish" not in prompt
+    assert prompt["skill"] == "READING"
     assert prompt["material_id"] == material["id"]
     assert "Konnichiwa" in prompt["source_material"]
 
@@ -126,11 +133,9 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
         },
         answer_key_json={"correct_option_id": "a"},
         explanation_json={"text": "The uploaded material says Konnichiwa means hello during the day."},
-        status=QuestionStatus.PUBLISHED,
+        status=QuestionStatus.AUTO_VALIDATED,
         is_ai_generated=True,
         created_by=learner.id,
-        reviewed_by=learner.id,
-        published_at=datetime.now(timezone.utc),
     )
     db.add(question)
     db.flush()
@@ -180,6 +185,12 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     assert leaderboard.json()[0]["user_id"] == learner.id
     assert leaderboard.json()[0]["total_xp"] == 60
 
+    dashboard = client.get("/api/v1/app/dashboard", headers=learner_token_headers)
+    assert dashboard.status_code == 200, dashboard.text
+    assert dashboard.json()["course_progress_percentage"] == 100
+    assert "reviews_due" not in dashboard.json()
+    assert "unresolved_mistakes" not in dashboard.json()
+
 
 def test_frontend_leaderboard_orders_by_total_xp(client, db, learner_token_headers):
     learner = db.query(User).filter(User.email == "learner_test_fixture@example.com").one()
@@ -204,3 +215,47 @@ def test_frontend_leaderboard_orders_by_total_xp(client, db, learner_token_heade
     rows = response.json()
     assert [row["user_id"] for row in rows] == [other.id, learner.id]
     assert [row["rank"] for row in rows] == [1, 2]
+
+
+def test_frontend_catalog_marks_later_lessons_locked(client, admin_token_headers, learner_token_headers):
+    ids = create_published_hierarchy(client, admin_token_headers)
+    second = client.post(
+        "/api/v1/admin/curriculum/lessons",
+        json={
+            "unit_id": ids["unit_id"],
+            "title": "Pelajaran Kedua",
+            "learning_objective": "Lanjutan setelah lesson pertama.",
+            "sequence": 2,
+        },
+        headers=admin_token_headers,
+    )
+    assert second.status_code == 201, second.text
+    second_id = second.json()["id"]
+    section = client.post(
+        f"/api/v1/admin/curriculum/lessons/{second_id}/sections",
+        json={
+            "title": "Materi Kedua",
+            "content": "Materi lanjutan.",
+            "sequence": 1,
+            "is_published": True,
+        },
+        headers=admin_token_headers,
+    )
+    assert section.status_code == 201, section.text
+    publish = client.post(
+        f"/api/v1/admin/curriculum/lessons/{second_id}/publish",
+        headers=admin_token_headers,
+    )
+    assert publish.status_code == 200, publish.text
+
+    catalog = client.get("/api/v1/app/catalog", headers=learner_token_headers)
+    assert catalog.status_code == 200, catalog.text
+    lessons = catalog.json()["courses"][0]["units"][0]["lessons"]
+    assert [(lesson["id"], lesson["status"]) for lesson in lessons] == [
+        (ids["lesson_id"], "unlocked"),
+        (second_id, "locked"),
+    ]
+    assert "level_id" not in catalog.json()
+
+    locked = client.get(f"/api/v1/app/lessons/{second_id}", headers=learner_token_headers)
+    assert locked.status_code == 423

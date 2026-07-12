@@ -16,8 +16,6 @@ class JobStatus(str, enum.Enum):
 
 class JobType(str, enum.Enum):
     QUESTION_GENERATION = "QUESTION_GENERATION"
-    TTS_GENERATION = "TTS_GENERATION"
-    ADAPTIVE_EVALUATION_GENERATION = "ADAPTIVE_EVALUATION_GENERATION"
 
 
 class GenerationJob(CustomBase):
@@ -27,7 +25,7 @@ class GenerationJob(CustomBase):
     status = Column(Enum(JobStatus), default=JobStatus.PENDING, nullable=False)
 
     celery_task_id = Column(String(255), nullable=True, index=True)
-    target_id = Column(String(36), nullable=True)  # ID target terkait, misal ID question untuk TTS
+    target_id = Column(String(36), nullable=True)
 
     prompt_json = Column(Text, nullable=False)  # Payload configuration
     raw_response = Column(Text, nullable=True)  # Raw AI response

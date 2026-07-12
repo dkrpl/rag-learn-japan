@@ -1,37 +1,29 @@
-# Question Types Schema
+# Question Type Schema
 
-Di database, struktur JSON yang dikembalikan untuk pertanyaan bervariasi bergantung pada tipe pertanyaannya. Frontend harus merender komponen yang berbeda (UI) untuk setiap tipe.
+MVP hanya mendukung soal reading pilihan ganda dari PDF.
 
-## 1. MULTIPLE_CHOICE
+## MULTIPLE_CHOICE
+
+Payload learner:
+
 ```json
 {
-  "text": "Apa arti kata ini?",
+  "text": "Apa arti kalimat ini?",
   "options": [
-    {"id": "A", "text": "Kucing"},
-    {"id": "B", "text": "Anjing"}
+    {"id": "a", "text": "Selamat pagi"},
+    {"id": "b", "text": "Selamat malam"}
   ]
 }
 ```
 
-## 2. TRUE_FALSE
+Payload submit jawaban:
+
 ```json
 {
-  "text": "Kanji ini dibaca 'Inu'.",
-  "options": [
-    {"id": "TRUE", "text": "Benar"},
-    {"id": "FALSE", "text": "Salah"}
-  ]
+  "answer_json": {
+    "selected_option_id": "a"
+  }
 }
 ```
 
-## 3. MATCHING
-```json
-{
-  "text": "Cocokkan pasangan berikut",
-  "pairs_left": [{"id": "L1", "text": "Kucing"}],
-  "pairs_right": [{"id": "R1", "text": "Neko"}]
-}
-```
-
-## Note Security
-Kunci jawaban (`answer_key_json`) akan selalu disensor dari objek pertanyaan saat direquest oleh `Learner` di endpoint `GET /learning-sessions/.../questions`. Frontend tidak boleh mengandalkan validasi di browser/client-side. Validasi mutlak terjadi di backend pada saat submit POST `answers`.
+`answer_key_json` dan `explanation_json` tidak dikirim sebelum user submit jawaban. Validasi selalu dilakukan di backend.
