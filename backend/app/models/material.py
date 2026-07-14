@@ -1,4 +1,6 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from datetime import datetime, timezone
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 
 from app.db.base_class import CustomBase
 
@@ -17,4 +19,6 @@ class MaterialDocument(CustomBase):
     storage_key = Column(String(512), nullable=True)
     page_count = Column(Integer, nullable=False, default=0)
     extracted_text = Column(Text, nullable=False)
+    is_published = Column(Boolean, default=True, nullable=False)
+    published_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=True)
     created_by_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)

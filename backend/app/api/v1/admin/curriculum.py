@@ -141,7 +141,7 @@ def get_level(resource_id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/levels/{resource_id}", response_model=LevelResponse)
-@router.put("/levels/{resource_id}", response_model=LevelResponse, include_in_schema=False)
+@router.put("/levels/{resource_id}", response_model=LevelResponse, name="replace_level")
 def update_level(resource_id: str, payload: LevelUpdate, db: Session = Depends(get_db)):
     return _update_resource(db, Level, resource_id, payload)
 
@@ -176,7 +176,7 @@ def get_course(resource_id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/courses/{resource_id}", response_model=CourseResponse)
-@router.put("/courses/{resource_id}", response_model=CourseResponse, include_in_schema=False)
+@router.put("/courses/{resource_id}", response_model=CourseResponse, name="replace_course")
 def update_course(resource_id: str, payload: CourseUpdate, db: Session = Depends(get_db)):
     return _update_resource(db, Course, resource_id, payload)
 
@@ -211,7 +211,7 @@ def get_unit(resource_id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/units/{resource_id}", response_model=UnitResponse)
-@router.put("/units/{resource_id}", response_model=UnitResponse, include_in_schema=False)
+@router.put("/units/{resource_id}", response_model=UnitResponse, name="replace_unit")
 def update_unit(resource_id: str, payload: UnitUpdate, db: Session = Depends(get_db)):
     return _update_resource(db, Unit, resource_id, payload)
 
@@ -246,7 +246,7 @@ def get_lesson(resource_id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/lessons/{resource_id}", response_model=LessonResponse)
-@router.put("/lessons/{resource_id}", response_model=LessonResponse, include_in_schema=False)
+@router.put("/lessons/{resource_id}", response_model=LessonResponse, name="replace_lesson")
 def update_lesson(resource_id: str, payload: LessonUpdate, db: Session = Depends(get_db)):
     return _update_resource(db, Lesson, resource_id, payload)
 
@@ -290,7 +290,7 @@ def get_lesson_section(resource_id: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/lesson-sections/{resource_id}", response_model=LessonSectionResponse)
-@router.put("/lessons/sections/{resource_id}", response_model=LessonSectionResponse, include_in_schema=False)
+@router.put("/lessons/sections/{resource_id}", response_model=LessonSectionResponse, name="replace_lesson_section")
 def update_lesson_section(resource_id: str, payload: LessonSectionUpdate, db: Session = Depends(get_db)):
     return _update_resource(db, LessonSection, resource_id, payload)
 
@@ -376,7 +376,6 @@ def _register_lifecycle_routes(resource_type: str) -> None:
         archive_resource,
         methods=["DELETE"],
         response_model=LifecycleActionResponse,
-        include_in_schema=False,
         name=f"delete_archives_{resource_type}",
     )
 

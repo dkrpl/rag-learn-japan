@@ -1,6 +1,7 @@
 import json
 from unittest.mock import patch
 
+from app.core.config import settings
 from app.models.ai_jobs import GenerationJob, JobStatus, JobType
 from app.models.progress import XPTransaction
 from app.models.question import Question, QuestionStatus, QuestionType, SkillType
@@ -51,6 +52,20 @@ def test_admin_uploads_pdf_material_and_creates_question_job(client, admin_token
     assert material["page_count"] == 1
     assert material["file_url"] == f"/api/v1/app/materials/{material['id']}/file"
     assert "Konnichiwa" in material["extracted_text_preview"]
+    assert material["extracted_text_char_count"] > 0
+    assert material["is_published"] is True
+
+    preview = client.get(f"/api/v1/admin/materials/{material['id']}/preview", headers=admin_token_headers)
+    assert preview.status_code == 200, preview.text
+    assert "Konnichiwa" in preview.json()["extracted_text"]
+
+    unpublished = client.post(f"/api/v1/admin/materials/{material['id']}/unpublish", headers=admin_token_headers)
+    assert unpublished.status_code == 200, unpublished.text
+    assert unpublished.json()["is_published"] is False
+
+    published = client.post(f"/api/v1/admin/materials/{material['id']}/publish", headers=admin_token_headers)
+    assert published.status_code == 200, published.text
+    assert published.json()["is_published"] is True
 
     with (
         patch("app.api.v1.admin.materials._can_dispatch_ai_worker", return_value=(True, None)),
@@ -97,6 +112,7 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     assert visible.status_code == 200, visible.text
     assert visible.json()[0]["id"] == material["id"]
     assert visible.json()[0]["file_url"] == f"/api/v1/app/materials/{material['id']}/file"
+    assert visible.json()[0]["is_published"] is True
 
     pdf_file = client.get(visible.json()[0]["file_url"], headers=learner_token_headers)
     assert pdf_file.status_code == 200, pdf_file.text
@@ -114,6 +130,8 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     assert job_response.status_code == 202, job_response.text
     assert delay.called
     job = job_response.json()
+    assert job["status_label"] == "Menunggu antrean"
+    assert job["can_retry"] is False
     prompt = json.loads(job["prompt_json"])
     assert prompt["private_to_user"] is True
     assert "auto_publish" not in prompt
@@ -144,6 +162,21 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     stored_job.raw_response = json.dumps({"created_question_ids": [question.id]})
     db.commit()
 
+    with (
+        patch("app.api.v1.frontend._can_dispatch_ai_worker", return_value=(True, None)),
+        patch("app.api.v1.frontend.generate_questions_task.delay") as regenerate_delay,
+    ):
+        regenerated = client.post(
+            f"/api/v1/app/ai-question-jobs/{job['id']}/regenerate",
+            headers=learner_token_headers,
+            json={"prompt": "Buat variasi yang lebih mudah."},
+        )
+    assert regenerated.status_code == 202, regenerated.text
+    assert regenerate_delay.called
+    regenerated_prompt = json.loads(regenerated.json()["prompt_json"])
+    assert regenerated_prompt["regenerate_of_job_id"] == job["id"]
+    assert regenerated_prompt["additional_notes"] == "Buat variasi yang lebih mudah."
+
     session_response = client.post(
         f"/api/v1/app/ai-question-jobs/{job['id']}/sessions",
         headers=learner_token_headers,
@@ -172,6 +205,7 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     )
     assert answer.status_code == 200, answer.text
     assert answer.json()["is_correct"] is True
+    assert "uploaded material" in answer.json()["feedback_notes"]
 
     completed = client.post(
         f"/api/v1/app/sessions/{session['id']}/complete",
@@ -188,8 +222,19 @@ def test_frontend_flow_generates_session_from_admin_pdf_material(
     dashboard = client.get("/api/v1/app/dashboard", headers=learner_token_headers)
     assert dashboard.status_code == 200, dashboard.text
     assert dashboard.json()["course_progress_percentage"] == 100
+    assert dashboard.json()["ai_generations_remaining_today"] >= 0
     assert "reviews_due" not in dashboard.json()
     assert "unresolved_mistakes" not in dashboard.json()
+
+    attempts = client.get("/api/v1/app/attempts", headers=learner_token_headers)
+    assert attempts.status_code == 200, attempts.text
+    assert attempts.json()[0]["id"] == session["id"]
+    assert attempts.json()[0]["xp_earned"] == 60
+
+    progress = client.get(f"/api/v1/app/lessons/{ids['lesson_id']}/progress", headers=learner_token_headers)
+    assert progress.status_code == 200, progress.text
+    assert progress.json()["is_completed"] is True
+    assert progress.json()["attempts_count"] == 1
 
 
 def test_frontend_leaderboard_orders_by_total_xp(client, db, learner_token_headers):
@@ -215,6 +260,64 @@ def test_frontend_leaderboard_orders_by_total_xp(client, db, learner_token_heade
     rows = response.json()
     assert [row["user_id"] for row in rows] == [other.id, learner.id]
     assert [row["rank"] for row in rows] == [1, 2]
+
+    weekly = client.get("/api/v1/app/leaderboard?limit=2&period=weekly", headers=learner_token_headers)
+    assert weekly.status_code == 200, weekly.text
+    assert weekly.json()[0]["user_id"] == other.id
+
+
+def test_frontend_ai_generation_daily_limit(client, admin_token_headers, learner_token_headers, monkeypatch):
+    monkeypatch.setattr(settings, "AI_DAILY_GENERATION_LIMIT", 1)
+    ids = create_published_hierarchy(client, admin_token_headers)
+    upload = client.post(
+        "/api/v1/admin/materials/pdf",
+        headers=admin_token_headers,
+        data={"lesson_id": ids["lesson_id"], "title": "PDF Limit"},
+        files={"file": ("limit.pdf", _text_pdf_bytes("Konnichiwa means hello."), "application/pdf")},
+    )
+    assert upload.status_code == 201, upload.text
+    material_id = upload.json()["id"]
+
+    with (
+        patch("app.api.v1.frontend._can_dispatch_ai_worker", return_value=(True, None)),
+        patch("app.api.v1.frontend.generate_questions_task.delay"),
+    ):
+        first = client.post(
+            f"/api/v1/app/materials/{material_id}/ai-question-jobs",
+            headers=learner_token_headers,
+            json={"question_count": 1},
+        )
+        second = client.post(
+            f"/api/v1/app/materials/{material_id}/ai-question-jobs",
+            headers=learner_token_headers,
+            json={"question_count": 1},
+        )
+
+    assert first.status_code == 202, first.text
+    assert second.status_code == 429, second.text
+    assert "Batas generate soal harian" in second.text
+
+
+def test_unpublished_material_is_hidden_from_learner(client, admin_token_headers, learner_token_headers):
+    ids = create_published_hierarchy(client, admin_token_headers)
+    upload = client.post(
+        "/api/v1/admin/materials/pdf",
+        headers=admin_token_headers,
+        data={"lesson_id": ids["lesson_id"], "title": "PDF Hidden"},
+        files={"file": ("hidden.pdf", _text_pdf_bytes("Hidden material text."), "application/pdf")},
+    )
+    assert upload.status_code == 201, upload.text
+    material_id = upload.json()["id"]
+
+    unpublish = client.post(f"/api/v1/admin/materials/{material_id}/unpublish", headers=admin_token_headers)
+    assert unpublish.status_code == 200, unpublish.text
+
+    materials = client.get(f"/api/v1/app/lessons/{ids['lesson_id']}/materials", headers=learner_token_headers)
+    assert materials.status_code == 200, materials.text
+    assert materials.json() == []
+
+    file_response = client.get(f"/api/v1/app/materials/{material_id}/file", headers=learner_token_headers)
+    assert file_response.status_code == 404
 
 
 def test_frontend_catalog_marks_later_lessons_locked(client, admin_token_headers, learner_token_headers):

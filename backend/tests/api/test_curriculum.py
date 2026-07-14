@@ -94,25 +94,12 @@ def test_admin_can_create_publish_and_learner_can_traverse_curriculum(
 ):
     ids = create_published_hierarchy(client, admin_token_headers)
 
-    levels = client.get("/api/v1/curriculum/levels", headers=learner_token_headers)
-    courses = client.get(
-        f"/api/v1/curriculum/levels/{ids['level_id']}/courses",
-        headers=learner_token_headers,
-    )
-    units = client.get(
-        f"/api/v1/curriculum/courses/{ids['course_id']}/units",
-        headers=learner_token_headers,
-    )
-    lessons = client.get(
-        f"/api/v1/curriculum/units/{ids['unit_id']}/lessons",
-        headers=learner_token_headers,
-    )
-    detail = client.get(
-        f"/api/v1/curriculum/lessons/{ids['lesson_id']}/content",
-        headers=learner_token_headers,
-    )
+    catalog = client.get("/api/v1/app/catalog", headers=learner_token_headers)
+    detail = client.get(f"/api/v1/app/lessons/{ids['lesson_id']}", headers=learner_token_headers)
 
-    assert levels.status_code == courses.status_code == units.status_code == lessons.status_code == 200
+    assert catalog.status_code == 200, catalog.text
+    lessons = catalog.json()["courses"][0]["units"][0]["lessons"]
+    assert ids["lesson_id"] in {lesson["id"] for lesson in lessons}
     assert detail.status_code == 200, detail.text
     assert detail.json()["lesson"]["id"] == ids["lesson_id"]
     assert detail.json()["sections"][0]["content"].startswith("「こんにちは」")
@@ -145,21 +132,16 @@ def test_draft_and_archived_resources_are_not_disclosed_to_learner(
     )
     assert draft.status_code == 201
 
-    listed = client.get(
-        f"/api/v1/curriculum/units/{ids['unit_id']}/lessons",
-        headers=learner_token_headers,
-    )
-    assert draft.json()["id"] not in {item["id"] for item in listed.json()}
+    listed = client.get("/api/v1/app/catalog", headers=learner_token_headers)
+    lessons = listed.json()["courses"][0]["units"][0]["lessons"]
+    assert draft.json()["id"] not in {item["id"] for item in lessons}
 
     archived = client.post(
         f"/api/v1/admin/curriculum/levels/{ids['level_id']}/archive",
         headers=admin_token_headers,
     )
     assert archived.status_code == 200
-    hidden = client.get(
-        f"/api/v1/curriculum/lessons/{ids['lesson_id']}",
-        headers=learner_token_headers,
-    )
+    hidden = client.get(f"/api/v1/app/lessons/{ids['lesson_id']}", headers=learner_token_headers)
     assert hidden.status_code == 404
 
 

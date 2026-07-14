@@ -42,7 +42,12 @@ def _has_published_section(lesson: Lesson) -> bool:
 
 
 def _has_pdf_material(db: Session, lesson: Lesson) -> bool:
-    return db.query(MaterialDocument.id).filter(MaterialDocument.lesson_id == lesson.id).first() is not None
+    return (
+        db.query(MaterialDocument.id)
+        .filter(MaterialDocument.lesson_id == lesson.id, MaterialDocument.is_published.is_(True))
+        .first()
+        is not None
+    )
 
 
 def ensure_publishable(resource: LifecycleModel, db: Session | None = None) -> None:

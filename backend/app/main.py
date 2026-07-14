@@ -42,7 +42,7 @@ async def lifespan(_: FastAPI):
 
 
 def register_routers(app: FastAPI) -> None:
-    from app.api.v1 import auth, curriculum, frontend, learning, system, users
+    from app.api.v1 import auth, frontend, system
     from app.api.v1.admin import curriculum as admin_curriculum
     from app.api.v1.admin import materials as admin_materials
     from app.api.v1.admin import users as admin_users
@@ -50,27 +50,17 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(system.router, prefix="/api/v1", tags=["System"], include_in_schema=False)
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
     app.include_router(frontend.router, prefix="/api/v1/app", tags=["Frontend"])
-    app.include_router(users.router, prefix="/api/v1/users", tags=["Users"], include_in_schema=False)
-    app.include_router(curriculum.router, prefix="/api/v1/curriculum", tags=["Curriculum"], include_in_schema=False)
-    app.include_router(
-        learning.router,
-        prefix="/api/v1/learning-sessions",
-        tags=["Learning Sessions"],
-        include_in_schema=False,
-    )
     app.include_router(
         admin_curriculum.router,
         prefix="/api/v1/admin/curriculum",
         tags=["Admin Curriculum"],
-        include_in_schema=False,
     )
     app.include_router(
         admin_materials.router,
         prefix="/api/v1/admin/materials",
         tags=["Admin Materials"],
-        include_in_schema=False,
     )
-    app.include_router(admin_users.router, prefix="/api/v1/admin/users", tags=["Admin Users"], include_in_schema=False)
+    app.include_router(admin_users.router, prefix="/api/v1/admin/users", tags=["Admin Users"])
 
     # Operational aliases follow the PRD and stay outside the versioned contract.
     app.add_api_route("/health", system.check_health, methods=["GET"], include_in_schema=False)

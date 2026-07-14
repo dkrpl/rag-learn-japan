@@ -29,6 +29,10 @@ class GenerationJobResponse(BaseModel):
     completed_at: Optional[datetime]
     celery_task_id: Optional[str] = None
     target_id: Optional[str] = None
+    status_label: str
+    status_message: str
+    can_retry: bool
+    created_question_count: int
 
     class Config:
         from_attributes = True

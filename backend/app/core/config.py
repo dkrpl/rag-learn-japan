@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-3.5-flash"
     AI_REQUEST_TIMEOUT_SECONDS: int = Field(default=60, ge=5, le=300)
     AI_MAX_RETRIES: int = Field(default=3, ge=0, le=10)
+    AI_DAILY_GENERATION_LIMIT: int = Field(default=5, ge=1, le=100)
 
     model_config = SettingsConfigDict(
         env_file=".env",

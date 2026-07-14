@@ -8,7 +8,7 @@
 
 ## PDF
 
-- PDF harus berbasis teks. PDF scan/gambar belum didukung karena OCR belum ada.
+- PDF harus berbasis teks. PDF scan/gambar akan ditolak dengan pesan bahwa OCR belum tersedia.
 - Soal hanya dibuat dari teks hasil ekstraksi PDF.
 
 ## Cakupan MVP

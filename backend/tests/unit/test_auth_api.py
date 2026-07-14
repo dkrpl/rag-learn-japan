@@ -78,7 +78,7 @@ def test_refresh_rotation_reuse_and_refresh_as_access(api: tuple[TestClient, ses
     first = register_and_login(client)
 
     refresh_as_access = client.get(
-        "/api/v1/users/me",
+        "/api/v1/app/me",
         headers={"Authorization": f"Bearer {first['refresh_token']}"},
     )
     assert refresh_as_access.status_code == 401
@@ -102,42 +102,6 @@ def test_refresh_rotation_reuse_and_refresh_as_access(api: tuple[TestClient, ses
         json={"refresh_token": second["refresh_token"]},
     )
     assert family_revoked_response.status_code == 401
-
-
-def test_session_listing_and_single_session_logout(api: tuple[TestClient, sessionmaker]) -> None:
-    client, _ = api
-    tokens = register_and_login(client)
-    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
-
-    sessions_response = client.get("/api/v1/users/me/sessions", headers=headers)
-    assert sessions_response.status_code == 200, sessions_response.text
-    sessions = sessions_response.json()
-    assert sessions["total"] == 1
-    assert sessions["items"][0]["is_current"] is True
-
-    delete_response = client.delete(
-        f"/api/v1/users/me/sessions/{sessions['items'][0]['id']}",
-        headers=headers,
-    )
-    assert delete_response.status_code == 204
-    assert client.get("/api/v1/users/me", headers=headers).status_code == 401
-
-
-def test_soft_deactivation_revokes_access_immediately(api: tuple[TestClient, sessionmaker]) -> None:
-    client, _ = api
-    tokens = register_and_login(client)
-    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
-
-    deactivate_response = client.delete("/api/v1/users/me", headers=headers)
-
-    assert deactivate_response.status_code == 200, deactivate_response.text
-    assert client.get("/api/v1/users/me", headers=headers).status_code == 401
-    login_response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "learner@example.com", "password": "Password123"},
-    )
-    assert login_response.status_code == 401
-    assert login_response.json()["error"]["message"] == "Invalid email or password"
 
 
 def test_admin_user_management_and_last_admin_guard(api: tuple[TestClient, sessionmaker]) -> None:

@@ -1,4 +1,5 @@
 import enum
+import json
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text
@@ -36,6 +37,45 @@ class GenerationJob(CustomBase):
     created_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def created_question_count(self) -> int:
+        if not self.raw_response:
+            return 0
+        try:
+            payload = json.loads(self.raw_response)
+        except json.JSONDecodeError:
+            return 0
+        ids = payload.get("created_question_ids") if isinstance(payload, dict) else None
+        return len(ids) if isinstance(ids, list) else 0
+
+    @property
+    def can_retry(self) -> bool:
+        return self.status in {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED}
+
+    @property
+    def status_label(self) -> str:
+        labels = {
+            JobStatus.PENDING: "Menunggu antrean",
+            JobStatus.PROCESSING: "Sedang membuat soal",
+            JobStatus.COMPLETED: "Selesai",
+            JobStatus.FAILED: "Gagal",
+            JobStatus.CANCELLED: "Dibatalkan",
+        }
+        return labels[self.status]
+
+    @property
+    def status_message(self) -> str:
+        if self.status == JobStatus.FAILED:
+            return self.error_message or "AI gagal membuat soal. Silakan coba lagi."
+        if self.status == JobStatus.COMPLETED:
+            count = self.created_question_count
+            return f"{count} soal berhasil dibuat." if count else "Job selesai."
+        if self.status == JobStatus.PROCESSING:
+            return "AI sedang membaca materi PDF dan membuat soal."
+        if self.status == JobStatus.CANCELLED:
+            return "Job dibatalkan."
+        return "Job masuk antrean dan akan segera diproses."
 
 
 class AuditLog(CustomBase):

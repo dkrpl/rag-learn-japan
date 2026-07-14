@@ -4,7 +4,7 @@ Dokumen ini mendefinisikan standar dan konvensi pembuatan API untuk backend Niho
 
 ## 1. Konvensi Dasar
 
-- **Base URL API**: Semua endpoint API harus diawali dengan prefix `/api/v1`. Contoh: `https://api.nihongolearn.com/api/v1/users`
+- **Base URL API**: Semua endpoint API harus diawali dengan prefix `/api/v1`. Contoh: `https://api.nihongolearn.com/api/v1/app/me`
 - **Format Data**: Request dan Response payload harus dalam format JSON (`application/json`).
 - **Format Nama Field**: Menggunakan `snake_case` untuk *semua* key pada JSON.
   - ✅ Benar: `first_name`, `is_active`

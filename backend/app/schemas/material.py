@@ -16,6 +16,8 @@ class MaterialDocumentResponse(BaseModel):
     file_url: str
     page_count: int
     extracted_text_preview: str
+    extracted_text_char_count: int
+    is_published: bool
     created_by_id: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -31,3 +33,12 @@ class MaterialQuestionJobCreate(BaseModel):
     additional_notes: str | None = Field(default=None, max_length=4000)
 
     model_config = ConfigDict(extra="forbid")
+
+
+class MaterialPreviewResponse(BaseModel):
+    id: str
+    title: str
+    page_count: int
+    extracted_text: str
+    extracted_text_char_count: int
+    is_published: bool

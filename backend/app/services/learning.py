@@ -327,6 +327,15 @@ def sanitize_prompt(prompt_json: dict) -> dict:
     return _strip_prompt_secrets(copy.deepcopy(prompt_json))
 
 
+def _explanation_text(explanation_json: dict | None) -> str | None:
+    if not isinstance(explanation_json, dict):
+        return None
+    value = explanation_json.get("text") or explanation_json.get("explanation")
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
 def _shuffle_list(items: list, *, seed: str) -> list:
     result = list(items)
     digest = hashlib.sha256(seed.encode("utf-8")).digest()
@@ -429,7 +438,10 @@ def submit_answer(
     session_question.is_correct = is_correct
     session_question.score = score
     session_question.response_time_ms = payload.response_time_ms
-    session_question.feedback_notes = feedback
+    explanation = _explanation_text(revision.explanation_json)
+    session_question.feedback_notes = (
+        f"{feedback}. {explanation}" if explanation else feedback
+    )
     session.answered_questions += 1
     if is_correct:
         session.correct_answers += 1
@@ -450,7 +462,7 @@ def submit_answer(
         score=score,
         correct_answer_json=revision.answer_key_json,
         explanation_json=revision.explanation_json,
-        feedback_notes=feedback,
+        feedback_notes=session_question.feedback_notes,
     )
 
 

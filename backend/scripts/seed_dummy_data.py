@@ -150,6 +150,8 @@ def seed_dummy_data() -> dict[str, int]:
             "storage_key": store_pdf_material(pdf_bytes, checksum),
             "page_count": 1,
             "extracted_text": extracted_text,
+            "is_published": True,
+            "published_at": datetime.now(timezone.utc),
             "created_by_id": admin.id,
         }
         if material is None:

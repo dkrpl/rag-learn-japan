@@ -43,10 +43,11 @@ async def test_mass_assignment_registration(client):
 @pytest.mark.asyncio
 async def test_answer_leakage(client, learner_token_headers, db):
     # 1. Create a mock level, course, unit, lesson and question
-    import uuid
-
+    from app.models.ai_jobs import GenerationJob, JobStatus, JobType
     from app.models.curriculum import Course, Lesson, Level, Unit
+    from app.models.material import MaterialDocument
     from app.models.question import Question, QuestionType, SkillType
+    from app.models.user import User
 
     level = Level(name=f"N5_{uuid.uuid4()}", is_published=True)
     db.add(level)
@@ -68,6 +69,7 @@ async def test_answer_leakage(client, learner_token_headers, db):
     db.commit()
     db.refresh(lesson)
 
+    learner = db.query(User).filter(User.email == "learner_test_fixture@example.com").one()
     question = Question(
         lesson_id=lesson.id,
         question_type=QuestionType.MULTIPLE_CHOICE,
@@ -76,6 +78,7 @@ async def test_answer_leakage(client, learner_token_headers, db):
         answer_key_json={"correct_option_id": "a"},
         explanation_json={"text": "Because A"},
         status=QuestionStatus.PUBLISHED,
+        created_by=learner.id,
     )
     db.add(question)
     db.commit()
@@ -97,16 +100,43 @@ async def test_answer_leakage(client, learner_token_headers, db):
     db.add(rev)
     db.commit()
 
-    # 2. Start session
-    payload = {"lesson_id": lesson.id, "mode": "PRACTICE"}
-    response = client.post("/api/v1/learning-sessions", json=payload, headers=learner_token_headers)
+    material = MaterialDocument(
+        lesson_id=lesson.id,
+        title="Security PDF",
+        original_filename="security.pdf",
+        content_type="application/pdf",
+        file_size_bytes=100,
+        checksum=uuid.uuid4().hex + uuid.uuid4().hex,
+        page_count=1,
+        extracted_text="Security material",
+        is_published=True,
+    )
+    db.add(material)
+    db.flush()
+    job = GenerationJob(
+        job_type=JobType.QUESTION_GENERATION,
+        status=JobStatus.COMPLETED,
+        target_id=lesson.id,
+        prompt_json=f'{{"lesson_id":"{lesson.id}","material_id":"{material.id}"}}',
+        raw_response=f'{{"created_question_ids":["{question.id}"]}}',
+        created_by=learner.id,
+    )
+    db.add(job)
+    db.commit()
+
+    # 2. Start session from app facade
+    response = client.post(
+        f"/api/v1/app/ai-question-jobs/{job.id}/sessions",
+        json={"mode": "PRACTICE"},
+        headers=learner_token_headers,
+    )
     assert response.status_code == 201
     data = response.json()
 
     session_id = data["id"]
 
     # Fetch questions
-    q_response = client.get(f"/api/v1/learning-sessions/{session_id}/questions", headers=learner_token_headers)
+    q_response = client.get(f"/api/v1/app/sessions/{session_id}/questions", headers=learner_token_headers)
     assert q_response.status_code == 200
     questions = q_response.json()
 

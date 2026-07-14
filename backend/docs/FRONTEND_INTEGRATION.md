@@ -8,8 +8,9 @@ Swagger utama sekarang sengaja kecil. Untuk frontend kursus, gunakan hanya:
 - `POST /api/v1/auth/logout`
 - Semua endpoint di `/api/v1/app/*`
 
-Endpoint `/api/v1/admin/*`, `/api/v1/curriculum/*`, `/api/v1/learning-sessions/*`, dan `/api/v1/users/*`
-tetap ada untuk back-office/test/kompatibilitas, tetapi bukan kontrak utama MVP frontend.
+Endpoint `/api/v1/admin/*` dipakai oleh admin/back-office. Endpoint internal lama
+`/api/v1/curriculum/*`, `/api/v1/learning-sessions/*`, dan `/api/v1/users/*` sudah dihapus
+karena sudah digantikan oleh `/api/v1/app/*`.
 
 ## Autentikasi Wajib
 
@@ -107,7 +108,13 @@ Kalau header ini tidak dikirim, response yang benar adalah `401 Authentication r
 13. Dashboard:
    `GET /api/v1/app/dashboard`
 
-14. Leaderboard:
+14. Riwayat attempt:
+   `GET /api/v1/app/attempts`
+
+15. Progress detail lesson:
+   `GET /api/v1/app/lessons/{lesson_id}/progress`
+
+16. Leaderboard:
    `GET /api/v1/app/leaderboard`
 
 ## Generate Soal Dengan AI
@@ -134,6 +141,22 @@ Poll status:
 Setelah status `COMPLETED`, buat session:
 `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
 
+Jika hasil AI kurang baik atau job gagal, frontend bisa membuat ulang dari job yang sama:
+`POST /api/v1/app/ai-question-jobs/{job_id}/regenerate`
+
+Response job memiliki field ramah frontend:
+
+- `status_label`
+- `status_message`
+- `can_retry`
+- `created_question_count`
+
+Backend membatasi generate soal per user per hari melalui:
+
+```env
+AI_DAILY_GENERATION_LIMIT=5
+```
+
 Jika Redis/Celery belum hidup, job akan cepat menjadi `FAILED` dengan `error_message`.
 Untuk menjalankan AI sungguhan, jalankan Redis + worker Celery, lalu set:
 
@@ -149,6 +172,17 @@ MVP frontend hanya perlu mendukung pilihan ganda reading:
 - `MULTIPLE_CHOICE`: `{"selected_option_id":"a"}`
 
 Backend tidak pernah mengirim answer key sebelum jawaban dikirim, jadi frontend aman dari answer leak.
+Setelah submit, backend mengirim `feedback_notes` dan `explanation_json` untuk ditampilkan sebagai feedback per soal.
+
+## Leaderboard Periodik
+
+Leaderboard mendukung filter:
+
+```http
+GET /api/v1/app/leaderboard?period=all
+GET /api/v1/app/leaderboard?period=weekly
+GET /api/v1/app/leaderboard?period=monthly
+```
 
 ## Fitur Yang Tidak Dipakai MVP Frontend
 

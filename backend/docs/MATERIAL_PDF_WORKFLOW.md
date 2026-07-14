@@ -47,6 +47,19 @@ List material:
 GET /api/v1/admin/materials?lesson_id=<lesson_id>
 ```
 
+Preview teks hasil ekstraksi PDF:
+
+```http
+GET /api/v1/admin/materials/{material_id}/preview
+```
+
+Publish/unpublish material:
+
+```http
+POST /api/v1/admin/materials/{material_id}/publish
+POST /api/v1/admin/materials/{material_id}/unpublish
+```
+
 ## Endpoint User
 
 Frontend user tetap memakai endpoint sederhana:
@@ -58,11 +71,14 @@ GET /api/v1/app/lessons/{lesson_id}/materials
 GET /api/v1/app/materials/{material_id}/file
 POST /api/v1/app/materials/{material_id}/ai-question-jobs
 GET /api/v1/app/ai-question-jobs/{job_id}
+POST /api/v1/app/ai-question-jobs/{job_id}/regenerate
 POST /api/v1/app/ai-question-jobs/{job_id}/sessions
 GET /api/v1/app/sessions/{session_id}/questions
 POST /api/v1/app/sessions/{session_id}/answers
 POST /api/v1/app/sessions/{session_id}/complete
 GET /api/v1/app/dashboard
+GET /api/v1/app/attempts
+GET /api/v1/app/lessons/{lesson_id}/progress
 GET /api/v1/app/leaderboard
 ```
 
@@ -76,10 +92,12 @@ Alur utama user dari PDF:
    `POST /api/v1/app/materials/{material_id}/ai-question-jobs`
 4. Poll sampai job `COMPLETED`:
    `GET /api/v1/app/ai-question-jobs/{job_id}`
-5. Mulai sesi dari soal hasil AI:
+5. Jika perlu, regenerate dari job lama:
+   `POST /api/v1/app/ai-question-jobs/{job_id}/regenerate`
+6. Mulai sesi dari soal hasil AI:
    `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
-6. Ambil soal, submit jawaban, lalu complete session.
-7. Cek progres di dashboard dan ranking di leaderboard.
+7. Ambil soal, submit jawaban, lalu complete session.
+8. Cek dashboard, riwayat attempt, progress lesson, dan ranking leaderboard.
 
 User tidak memakai endpoint admin, tetapi user memang melihat daftar PDF/materi yang sudah di-upload admin.
 
@@ -90,4 +108,6 @@ User tidak memakai endpoint admin, tetapi user memang melihat daftar PDF/materi 
 - Soal hasil job user di MVP ini private untuk user/job, bukan bank soal global.
 - XP utama dibuat saat session complete dan skor memenuhi KKM lesson, default 70.
 - Lesson berikutnya dihitung unlocked jika lesson sebelumnya sudah completed.
+- Generate soal user dibatasi per hari dengan `AI_DAILY_GENERATION_LIMIT`.
+- Leaderboard mendukung periode `all`, `weekly`, dan `monthly`.
 - Untuk menjalankan AI sungguhan di Railway, aktifkan Redis/Celery dan set `AI_PROVIDER=gemini` serta `GEMINI_API_KEY`.

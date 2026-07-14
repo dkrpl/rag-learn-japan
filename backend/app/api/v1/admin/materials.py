@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
@@ -13,7 +14,7 @@ from app.models.curriculum import Lesson
 from app.models.material import MaterialDocument
 from app.models.user import User, UserRole
 from app.schemas.ai_jobs import GenerationJobResponse
-from app.schemas.material import MaterialDocumentResponse, MaterialQuestionJobCreate
+from app.schemas.material import MaterialDocumentResponse, MaterialPreviewResponse, MaterialQuestionJobCreate
 from app.services.pdf_material import PdfMaterialError, extract_pdf_material, store_pdf_material
 from app.tasks.ai_tasks import generate_questions_task
 
@@ -33,6 +34,8 @@ def _material_response(material: MaterialDocument) -> MaterialDocumentResponse:
         file_url=f"/api/v1/app/materials/{material.id}/file",
         page_count=material.page_count,
         extracted_text_preview=material.extracted_text[:500],
+        extracted_text_char_count=len(material.extracted_text or ""),
+        is_published=material.is_published,
         created_by_id=material.created_by_id,
         created_at=material.created_at,
         updated_at=material.updated_at,
@@ -82,6 +85,8 @@ async def upload_pdf_material(
         storage_key=store_pdf_material(extracted.data, extracted.checksum),
         page_count=extracted.page_count,
         extracted_text=extracted.text,
+        is_published=True,
+        published_at=datetime.now(timezone.utc),
         created_by_id=current_user.id,
     )
     db.add(material)
@@ -112,6 +117,43 @@ def list_materials(
 @router.get("/{material_id}", response_model=MaterialDocumentResponse, summary="Get one uploaded source material")
 def get_material(material_id: str, db: Session = Depends(get_db)):
     return _material_response(_get_material(db, material_id))
+
+
+@router.get(
+    "/{material_id}/preview",
+    response_model=MaterialPreviewResponse,
+    summary="Preview extracted PDF text before it is used by AI",
+)
+def preview_material(material_id: str, db: Session = Depends(get_db)):
+    material = _get_material(db, material_id)
+    return MaterialPreviewResponse(
+        id=material.id,
+        title=material.title,
+        page_count=material.page_count,
+        extracted_text=material.extracted_text,
+        extracted_text_char_count=len(material.extracted_text or ""),
+        is_published=material.is_published,
+    )
+
+
+@router.post("/{material_id}/publish", response_model=MaterialDocumentResponse, summary="Publish a PDF material")
+def publish_material(material_id: str, db: Session = Depends(get_db)):
+    material = _get_material(db, material_id)
+    material.is_published = True
+    material.published_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(material)
+    return _material_response(material)
+
+
+@router.post("/{material_id}/unpublish", response_model=MaterialDocumentResponse, summary="Unpublish a PDF material")
+def unpublish_material(material_id: str, db: Session = Depends(get_db)):
+    material = _get_material(db, material_id)
+    material.is_published = False
+    material.published_at = None
+    db.commit()
+    db.refresh(material)
+    return _material_response(material)
 
 
 @router.post(

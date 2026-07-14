@@ -67,3 +67,55 @@ Berdasarkan revisi MVP, fitur-fitur berikut yang sebelumnya ada di rencana awal 
 *   **Backend:** Tetap menggunakan arsitektur yang sudah ada (FastAPI + SQLAlchemy). Semua model utama (`Course`, `Lesson`, `MaterialDocument`, `GenerationJob`, `XPTransaction`) sudah mendukung visi revisi ini.
 *   **Background Jobs:** Penggunaan Celery + Redis WAJIB dipertahankan khusus untuk tugas *AI Question Generation* agar tidak memblokir antarmuka pengguna saat proses *parsing* PDF yang berat.
 *   **Database:** Tetap menyimpan riwayat `Question` yang di-*generate* AI untuk keperluan analitik, namun tidak difokuskan sebagai "Bank Soal Manual" untuk Admin.
+
+---
+
+## 7. Saran Pengembangan Berikutnya (Post-MVP)
+
+Fitur berikut tidak wajib untuk rilis MVP pertama, tetapi disarankan sebagai prioritas lanjutan karena masih selaras dengan alur utama: **Admin upload PDF -> User generate soal -> User mengerjakan -> XP -> Leaderboard**.
+
+### Prioritas Tinggi
+
+1.  **Riwayat Attempt User**
+    *   User dapat melihat sesi yang pernah dikerjakan: tanggal, lesson, skor, jumlah benar, XP yang didapat, dan status lulus/tidak.
+    *   Manfaat: user merasa progresnya nyata dan frontend punya halaman "aktivitas belajar" yang jelas.
+
+2.  **Feedback Per Soal**
+    *   Setelah user menjawab, sistem menampilkan penjelasan singkat berdasarkan isi PDF.
+    *   Manfaat: aplikasi tidak hanya memberi nilai, tetapi benar-benar membantu evaluasi pemahaman bahasa.
+
+3.  **Batas Generate AI Per User**
+    *   Batasi jumlah generate soal per hari atau per lesson, misalnya 3-5 kali per hari untuk user biasa.
+    *   Manfaat: mengontrol biaya AI dan mencegah spam job.
+
+### Prioritas Menengah
+
+4.  **Preview Hasil Ekstraksi PDF Untuk Admin**
+    *   Setelah upload PDF, admin bisa melihat cuplikan teks hasil ekstraksi.
+    *   Manfaat: admin bisa memastikan PDF terbaca dengan benar sebelum dipakai AI.
+
+5.  **Publish/Unpublish PDF Material**
+    *   Admin bisa menyembunyikan PDF yang belum siap tanpa menghapus file.
+    *   Manfaat: materi bisa disiapkan bertahap tanpa langsung terlihat oleh user.
+
+6.  **Regenerate Soal**
+    *   User atau admin dapat membuat ulang soal dari PDF yang sama jika hasil AI kurang baik.
+    *   Manfaat: menjaga kualitas pengalaman belajar tanpa perlu upload ulang materi.
+
+7.  **Status AI Job Yang Lebih Informatif**
+    *   Status tetap sederhana (`PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`), tetapi pesan error dibuat ramah frontend.
+    *   Manfaat: user tahu apakah harus menunggu, mencoba lagi, atau menghubungi admin.
+
+### Prioritas Rendah / Future Enhancement
+
+8.  **OCR Untuk PDF Scan**
+    *   Mendukung PDF berbasis gambar melalui OCR.
+    *   Manfaat: memperluas jenis materi yang bisa digunakan, tetapi tidak wajib untuk MVP karena menambah kompleksitas dan biaya.
+
+9.  **Progress Per Lesson Lebih Detail**
+    *   Tambahkan statistik seperti best score, last score, total attempt, dan waktu terakhir belajar.
+    *   Manfaat: dashboard menjadi lebih informatif tanpa mengubah alur utama.
+
+10. **Leaderboard Mingguan/Bulanan**
+    *   Selain leaderboard total XP, tampilkan ranking periodik.
+    *   Manfaat: user baru tetap punya peluang bersaing meskipun total XP masih kecil.
