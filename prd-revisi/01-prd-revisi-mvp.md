@@ -794,3 +794,123 @@ Kesimpulan final: roadmap sudah mentok rata kanan untuk produk Nihongo Learn.
 Pengembangan berikutnya bukan lagi wajib secara teknis, tetapi pilihan strategi:
 individual learning app, school platform, certification platform, marketplace,
 atau enterprise learning ecosystem.
+
+## 16. Arah Pilihan Bisnis
+
+Setelah produk inti stabil, Nihongo Learn dapat diarahkan ke beberapa jalur
+bisnis. Pilihan ini tidak harus dikerjakan bersamaan. Pilih satu arah utama
+berdasarkan data penggunaan, target pasar, dan kemampuan operasional.
+
+### 16.1 B2C - Individual Learning App
+
+Target: user individu yang ingin belajar Bahasa Jepang mandiri.
+
+Fokus:
+
+- Subscription personal.
+- Daily learning streak.
+- AI tutor personal.
+- Mobile/PWA experience.
+- Gamification, badge, leaderboard, dan progress visual.
+
+Cocok jika produk ingin tumbuh dari banyak user umum dengan harga terjangkau.
+
+### 16.2 B2B - School And Organization Platform
+
+Target: sekolah, kursus, kampus, komunitas belajar, atau perusahaan.
+
+Fokus:
+
+- Organization/workspace.
+- Class/group management.
+- Teacher/admin dashboard.
+- Assignment dan deadline.
+- Report per learner, class, dan material.
+- SSO dan bulk invite.
+
+Cocok jika produk ingin menjual paket seat dengan revenue lebih stabil.
+
+### 16.3 Certification Platform
+
+Target: lembaga yang ingin melakukan evaluasi resmi kemampuan Bahasa Jepang.
+
+Fokus:
+
+- Exam mode.
+- Timer dan anti-cheat ringan.
+- Certificate.
+- Skill transcript.
+- Proctored exam integration.
+- Validity period sertifikat.
+
+Cocok jika produk ingin diposisikan sebagai alat assessment, bukan hanya latihan.
+
+### 16.4 Marketplace Materi
+
+Target: creator, tutor, atau lembaga yang ingin menjual paket materi Bahasa Jepang.
+
+Fokus:
+
+- Creator portal.
+- Materi premium.
+- Review/rating.
+- Moderation queue.
+- Revenue share.
+- Template resmi per JLPT level.
+
+Cocok jika produk ingin menjadi ecosystem konten, tetapi membutuhkan quality
+control dan moderation yang kuat.
+
+### 16.5 Enterprise Learning Ecosystem
+
+Target: institusi besar yang butuh keamanan, audit, integrasi, dan kontrol data.
+
+Fokus:
+
+- Multi-tenant isolation.
+- SSO/SAML/OIDC.
+- Role permission granular.
+- Audit log lengkap.
+- Data retention dan backup policy.
+- API/SDK dan webhook.
+- SLA, monitoring, dan incident process.
+
+Cocok jika produk ingin masuk kontrak besar, tetapi membutuhkan kesiapan
+operasional dan support yang lebih matang.
+
+### 16.6 API/SDK Platform
+
+Target: partner atau developer yang ingin memakai engine PDF-to-quiz di sistem
+mereka sendiri.
+
+Fokus:
+
+- Public API.
+- API key management.
+- Usage limit dan billing.
+- Webhook.
+- Dokumentasi endpoint stabil.
+- Versioning kontrak API.
+
+Cocok jika value utama produk adalah engine AI assessment, bukan hanya aplikasi
+web.
+
+### 16.7 Rekomendasi Urutan Bisnis
+
+Urutan paling aman:
+
+1. Mulai dari B2C untuk membuktikan produk inti dan retensi user.
+2. Naik ke B2B sekolah/lembaga setelah dashboard admin dan report matang.
+3. Tambahkan certification jika data evaluasi sudah dipercaya.
+4. Buka marketplace setelah moderation dan quality review kuat.
+5. Masuk enterprise/API platform setelah security, audit, dan SLA matang.
+
+Keputusan bisnis final sebaiknya ditentukan dari metrik:
+
+- retention learner,
+- pass/fail rate,
+- frequency generate AI,
+- material completion rate,
+- conversion ke paid plan,
+- kebutuhan admin/lembaga,
+- biaya AI per active user.

@@ -84,7 +84,7 @@ Script ini membaca `DATABASE_URL` dari `backend/.env`, menolak reset host MySQL 
 
 - Admin: `admin@example.com` / `Password123`
 - Learner: `learner@example.com` / `Password123`
-- Data demo saat ini masih mengikuti backend berjalan. Setelah backend refactor, seed akan disesuaikan menjadi materi PDF demo, quiz AI, progress pass/fail, EXP, dan leaderboard.
+- Data demo mengikuti alur material-first: materi PDF demo, learner, progress pass/fail, EXP, dan leaderboard.
 
 ### 6. Menjalankan Server API
 Jalankan FastAPI menggunakan Uvicorn:
@@ -109,7 +109,15 @@ Jika database Railway pernah memakai migration lama dan log menampilkan:
 Can't locate revision identified by '69e963bb7b7b'
 ```
 
-Redeploy kode terbaru ini. Migration `69e963bb7b7b` sudah disediakan kembali sebagai anchor kompatibilitas, lalu Alembic akan menaikkan database ke head `000000000001`. Tidak perlu reset database Railway untuk error ini.
+Redeploy kode terbaru ini. Migration `69e963bb7b7b` sudah disediakan kembali sebagai anchor kompatibilitas, lalu Alembic akan menaikkan database ke head terbaru `000000000007`. Tidak perlu reset database Railway untuk error ini.
+
+Supaya database Railway otomatis diperbarui saat deploy, set variable:
+
+```env
+RUN_MIGRATIONS=1
+```
+
+Dockerfile backend memakai `scripts/entrypoint.sh`, sehingga saat variable tersebut aktif container akan menunggu MySQL siap, menjalankan `alembic upgrade head`, lalu baru menyalakan API.
 
 ## Panduan Tim Frontend (Web / Mobile)
 
