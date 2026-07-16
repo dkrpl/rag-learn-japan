@@ -46,11 +46,13 @@ class Question(CustomBase):
     __tablename__ = "questions"
     __table_args__ = (
         CheckConstraint("difficulty BETWEEN 1 AND 5", name="ck_questions_difficulty"),
-        Index("ix_questions_selection", "lesson_id", "status", "skill", "difficulty"),
+        Index("ix_questions_material_selection", "material_id", "status", "skill", "difficulty"),
         Index("ix_questions_status_updated", "status", "updated_at"),
     )
 
-    lesson_id = Column(String(36), ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
+    material_id = Column(String(36), ForeignKey("material_documents.id", ondelete="CASCADE"), nullable=True, index=True)
+    # Legacy compatibility only. New MVP flow uses material_id.
+    lesson_id = Column(String(36), nullable=True)
     question_type = Column(Enum(QuestionType), nullable=False)
     skill = Column(Enum(SkillType), nullable=False)
     difficulty = Column(Integer, default=1, nullable=False)
@@ -85,7 +87,8 @@ class QuestionRevision(CustomBase):
     question_id = Column(String(36), ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
     version_number = Column(Integer, nullable=False)
 
-    lesson_id = Column(String(36), nullable=False)
+    material_id = Column(String(36), nullable=True)
+    lesson_id = Column(String(36), nullable=True)
     question_type = Column(Enum(QuestionType), nullable=False)
     skill = Column(Enum(SkillType), nullable=False)
     difficulty = Column(Integer, nullable=False)

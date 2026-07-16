@@ -1,6 +1,7 @@
 # Python environments
 backend/venv/
 backend/env/
+backend/.venv/
 backend/.env
 backend/.env.*
 !backend/.env.example

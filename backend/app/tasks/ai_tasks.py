@@ -5,7 +5,7 @@ from typing import Any
 
 from app.db.session import SessionLocal
 from app.models.ai_jobs import GenerationJob, JobStatus
-from app.models.curriculum import Lesson
+from app.models.material import MaterialDocument
 from app.models.question import Question, QuestionStatus, QuestionType, SkillType
 from app.services.ai_provider import get_ai_provider
 from app.services.question_workflow import QuestionWorkflowError, snapshot_question, validate_question_payload
@@ -109,7 +109,7 @@ def _coerce_answer_key(raw: dict[str, Any], prompt: dict[str, Any]) -> dict[str,
     return {"correct_option_id": option_ids[0] if option_ids else "a"}
 
 
-def _coerce_generated_question(raw: dict[str, Any], config: dict[str, Any], lesson_id: str) -> dict[str, Any]:
+def _coerce_generated_question(raw: dict[str, Any], config: dict[str, Any], material_id: str) -> dict[str, Any]:
     question_type = QuestionType(raw.get("question_type") or raw.get("type") or config.get("question_type"))
     skill = SkillType(raw.get("skill") or config.get("skill"))
     prompt = _coerce_prompt(raw)
@@ -117,7 +117,7 @@ def _coerce_generated_question(raw: dict[str, Any], config: dict[str, Any], less
     if isinstance(explanation, str):
         explanation = {"text": explanation}
     return {
-        "lesson_id": lesson_id,
+        "material_id": material_id,
         "question_type": question_type,
         "skill": skill,
         "difficulty": int(raw.get("difficulty") or config.get("difficulty") or 1),
@@ -131,7 +131,7 @@ def _create_questions_from_ai_response(
     *,
     db,
     job: GenerationJob,
-    lesson: Lesson,
+    material: MaterialDocument,
     content: str,
     config: dict[str, Any],
 ) -> list[Question]:
@@ -144,7 +144,7 @@ def _create_questions_from_ai_response(
         if not isinstance(q_data, dict):
             continue
 
-        materialized = _coerce_generated_question(q_data, config, lesson.id)
+        materialized = _coerce_generated_question(q_data, config, material.id)
         validate_question_payload(
             question_type=materialized["question_type"],
             skill=materialized["skill"],
@@ -155,7 +155,8 @@ def _create_questions_from_ai_response(
             require_explanation=True,
         )
         question = Question(
-            lesson_id=materialized["lesson_id"],
+            material_id=materialized["material_id"],
+            lesson_id=material.lesson_id,
             question_type=materialized["question_type"],
             skill=materialized["skill"],
             difficulty=materialized["difficulty"],
@@ -195,9 +196,9 @@ def generate_questions_task(self, job_id: str):
         job.celery_task_id = self.request.id
         db.commit()
 
-        lesson = db.query(Lesson).filter(Lesson.id == job.target_id).first() if job.target_id else None
-        if lesson is None:
-            raise ValueError("Lesson not found")
+        material = db.query(MaterialDocument).filter(MaterialDocument.id == job.target_id).first() if job.target_id else None
+        if material is None:
+            raise ValueError("Material not found")
 
         config = _job_config(job)
         content, metadata = get_ai_provider().generate_questions(_generation_prompt(config, job.prompt_json))
@@ -205,7 +206,7 @@ def generate_questions_task(self, job_id: str):
             created_questions = _create_questions_from_ai_response(
                 db=db,
                 job=job,
-                lesson=lesson,
+                material=material,
                 content=content,
                 config=config,
             )

@@ -7,8 +7,13 @@ from app.models.question import QuestionType, SkillType
 
 class MaterialDocumentResponse(BaseModel):
     id: str
-    lesson_id: str
+    lesson_id: str | None = None
     title: str
+    description: str | None = None
+    level: str
+    category: str | None = None
+    sequence: int
+    passing_score: int
     original_filename: str
     content_type: str
     file_size_bytes: int
@@ -18,6 +23,7 @@ class MaterialDocumentResponse(BaseModel):
     extracted_text_preview: str
     extracted_text_char_count: int
     is_published: bool
+    is_archived: bool
     created_by_id: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -42,3 +48,14 @@ class MaterialPreviewResponse(BaseModel):
     extracted_text: str
     extracted_text_char_count: int
     is_published: bool
+
+
+class MaterialUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=4000)
+    level: str | None = Field(default=None, min_length=1, max_length=16)
+    category: str | None = Field(default=None, max_length=100)
+    sequence: int | None = Field(default=None, ge=0)
+    passing_score: int | None = Field(default=None, ge=0, le=100)
+
+    model_config = ConfigDict(extra="forbid")

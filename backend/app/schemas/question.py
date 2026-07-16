@@ -15,7 +15,8 @@ class QuestionResponseLearner(BaseModel):
     """Safe delivery shape: no explanation or answer key before answer submission."""
 
     id: str
-    lesson_id: str
+    material_id: str | None = None
+    lesson_id: str | None = None
     question_type: QuestionType
     skill: SkillType
     difficulty: int

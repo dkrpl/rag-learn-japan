@@ -1,22 +1,29 @@
-# Frontend Integration Guide
+# Frontend Integration Guide - Material-First MVP
 
-Swagger utama sekarang sengaja kecil. Untuk frontend kursus, gunakan hanya:
+Dokumen ini adalah kontrak frontend untuk backend material-first.
 
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-- Semua endpoint di `/api/v1/app/*`
+## Prinsip Integrasi
 
-Endpoint `/api/v1/admin/*` dipakai oleh admin/back-office. Endpoint internal lama
-`/api/v1/curriculum/*`, `/api/v1/learning-sessions/*`, dan `/api/v1/users/*` sudah dihapus
-karena sudah digantikan oleh `/api/v1/app/*`.
+Frontend tidak perlu memikirkan course, unit, atau lesson.
 
-## Autentikasi Wajib
+Frontend cukup memakai alur:
 
-Semua endpoint `/api/v1/app/*` wajib memakai access token dari login. Token tidak dibaca dari body atau cookie.
+```text
+Login
+GET materials
+Open material PDF
+Choose difficulty
+Generate quiz
+Poll session status
+Show questions
+Submit answers
+Show result
+Update dashboard/attempt/leaderboard
+```
 
-1. Login:
+## Auth
+
+Login:
 
 ```http
 POST /api/v1/auth/login
@@ -24,171 +31,287 @@ Content-Type: application/json
 
 {
   "email": "learner@example.com",
-  "password": "Password123"
+  "password": "Password123",
+  "device_name": "Web"
 }
 ```
 
-2. Ambil `access_token` dari response.
+Pakai token:
 
-3. Kirim token di setiap request `/api/v1/app/*`:
+```http
+Authorization: Bearer <access_token>
+```
+
+## User App Flow
+
+### 1. Ambil profil user
 
 ```http
 GET /api/v1/app/me
-Authorization: Bearer <access_token>
 ```
 
-Contoh frontend:
-
-```ts
-const loginRes = await fetch(`${API_URL}/api/v1/auth/login`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    email: "learner@example.com",
-    password: "Password123",
-  }),
-});
-
-const { access_token } = await loginRes.json();
-
-const meRes = await fetch(`${API_URL}/api/v1/app/me`, {
-  headers: { Authorization: `Bearer ${access_token}` },
-});
-```
-
-Di Swagger, klik tombol **Authorize**, lalu paste nilai `access_token` saja.
-Untuk request manual seperti Postman/fetch/cURL, header lengkapnya tetap:
-
-```text
-Authorization: Bearer <access_token>
-```
-
-Kalau header ini tidak dikirim, response yang benar adalah `401 Authentication required`.
-
-## Alur Frontend Utama
-
-1. Login:
-   `POST /api/v1/auth/login`
-
-2. Ambil user:
-   `GET /api/v1/app/me`
-
-3. Ambil katalog kursus:
-   `GET /api/v1/app/catalog`
-
-   Frontend memakai status lesson: `locked`, `unlocked`, atau `completed`.
-
-4. Ambil detail lesson:
-   `GET /api/v1/app/lessons/{lesson_id}`
-
-5. Ambil materi PDF yang di-upload admin:
-   `GET /api/v1/app/lessons/{lesson_id}/materials`
-
-6. Tampilkan PDF viewer dari `file_url` material:
-   `GET /api/v1/app/materials/{material_id}/file`
-
-7. Generate soal dari PDF:
-   `POST /api/v1/app/materials/{material_id}/ai-question-jobs`
-
-8. Poll status AI job:
-   `GET /api/v1/app/ai-question-jobs/{job_id}`
-
-9. Kalau job sudah `COMPLETED`, mulai sesi dari soal hasil AI:
-   `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
-
-10. Ambil soal session:
-   `GET /api/v1/app/sessions/{session_id}/questions`
-
-11. Submit jawaban:
-   `POST /api/v1/app/sessions/{session_id}/answers`
-
-12. Complete session:
-   `POST /api/v1/app/sessions/{session_id}/complete`
-
-13. Dashboard:
-   `GET /api/v1/app/dashboard`
-
-14. Riwayat attempt:
-   `GET /api/v1/app/attempts`
-
-15. Progress detail lesson:
-   `GET /api/v1/app/lessons/{lesson_id}/progress`
-
-16. Leaderboard:
-   `GET /api/v1/app/leaderboard`
-
-## Generate Soal Dengan AI
-
-Frontend tidak perlu memakai endpoint admin.
-
-Generate dari materi PDF admin:
+### 2. Ambil dashboard
 
 ```http
-POST /api/v1/app/materials/{material_id}/ai-question-jobs
-Authorization: Bearer <access_token>
+GET /api/v1/app/dashboard
+```
+
+Dashboard minimal menampilkan:
+
+- total EXP
+- jumlah materi completed
+- attempt count
+- accuracy
+- current rank
+- next locked/unlocked material
+
+### 3. Ambil daftar materi
+
+```http
+GET /api/v1/app/materials
+```
+
+Response:
+
+```json
+[
+  {
+    "id": "material_id",
+    "title": "Reading N5 - Salam Dasar",
+    "description": "Latihan pemahaman bacaan dasar.",
+    "level": "N5",
+    "category": "reading",
+    "sequence": 1,
+    "passing_score": 70,
+    "page_count": 1,
+    "file_url": "/api/v1/app/materials/material_id/file",
+    "status": "unlocked",
+    "is_locked": false,
+    "best_score": 0,
+    "last_score": 0,
+    "attempts_count": 0
+  }
+]
+```
+
+Status material:
+
+- `locked`
+- `unlocked`
+- `completed`
+
+### 4. Ambil detail materi
+
+```http
+GET /api/v1/app/materials/{material_id}
+```
+
+Detail menampilkan metadata dan `file_url`.
+
+### 5. Buka file PDF
+
+```http
+GET /api/v1/app/materials/{material_id}/file
+```
+
+### 6. Generate quiz
+
+User memilih difficulty sebelum generate.
+
+```http
+POST /api/v1/app/materials/{material_id}/generate-quiz
 Content-Type: application/json
 
 {
-  "question_count": 10,
-  "difficulty": 1,
-  "prompt": "Fokus pada pemahaman arti kalimat."
+  "difficulty": "medium",
+  "question_count": 10
 }
 ```
 
-Poll status:
-`GET /api/v1/app/ai-question-jobs/{job_id}`
+Difficulty valid:
 
-Setelah status `COMPLETED`, buat session:
-`POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
+- `easy`
+- `medium`
+- `hard`
 
-Jika hasil AI kurang baik atau job gagal, frontend bisa membuat ulang dari job yang sama:
-`POST /api/v1/app/ai-question-jobs/{job_id}/regenerate`
+Response:
 
-Response job memiliki field ramah frontend:
-
-- `status_label`
-- `status_message`
-- `can_retry`
-- `created_question_count`
-
-Backend membatasi generate soal per user per hari melalui:
-
-```env
-AI_DAILY_GENERATION_LIMIT=5
+```json
+{
+  "session_id": "session_id",
+  "material_id": "material_id",
+  "status": "ACTIVE",
+  "difficulty": 2,
+  "passing_score": 70,
+  "total_questions": 10,
+  "ai_generation_id": "generation_id"
+}
 ```
 
-Jika Redis/Celery belum hidup, job akan cepat menjadi `FAILED` dengan `error_message`.
-Untuk menjalankan AI sungguhan, jalankan Redis + worker Celery, lalu set:
-
-```env
-AI_PROVIDER=gemini
-GEMINI_API_KEY=...
-```
-
-## Bentuk Jawaban
-
-MVP frontend hanya perlu mendukung pilihan ganda reading:
-
-- `MULTIPLE_CHOICE`: `{"selected_option_id":"a"}`
-
-Backend tidak pernah mengirim answer key sebelum jawaban dikirim, jadi frontend aman dari answer leak.
-Setelah submit, backend mengirim `feedback_notes` dan `explanation_json` untuk ditampilkan sebagai feedback per soal.
-
-## Leaderboard Periodik
-
-Leaderboard mendukung filter:
+### 7. Poll status quiz
 
 ```http
-GET /api/v1/app/leaderboard?period=all
-GET /api/v1/app/leaderboard?period=weekly
-GET /api/v1/app/leaderboard?period=monthly
+GET /api/v1/app/quiz-sessions/{session_id}/status
 ```
 
-## Fitur Yang Tidak Dipakai MVP Frontend
+Status mengikuti enum session backend, terutama `ACTIVE`, `COMPLETED`, `EXPIRED`, dan `CANCELLED`.
 
-- SRS/review schedule.
-- Mistake review khusus.
-- JLPT simulation.
-- TTS/audio/listening.
-- Admin manual question bank dan review workflow.
-- Generate soal bebas dari lesson tanpa PDF.
+### 8. Ambil soal
+
+```http
+GET /api/v1/app/quiz-sessions/{session_id}/questions
+```
+
+Backend tidak boleh mengirim answer key sebelum submit.
+
+### 9. Submit jawaban
+
+```http
+POST /api/v1/app/quiz-sessions/{session_id}/submit
+Content-Type: application/json
+
+{
+  "answers": [
+    {
+      "session_question_id": "session_question_id",
+      "answer_json": {
+        "selected_option_id": "a"
+      },
+      "response_time_ms": 1200
+    }
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "session_id": "session_id",
+  "material_id": "material_id",
+  "score": 80,
+  "passing_score": 70,
+  "is_passed": true,
+  "earned_exp": 100,
+  "correct_answers": 8,
+  "total_questions": 10,
+  "completed_at": "2026-07-16T15:00:00",
+  "message": "Selamat, materi berikutnya sudah terbuka."
+}
+```
+
+Jika tidak lulus:
+
+```json
+{
+  "score": 50,
+  "passing_score": 70,
+  "is_passed": false,
+  "earned_exp": 0
+}
+```
+
+Frontend harus menampilkan pesan:
+
+```text
+Nilai belum cukup. Kamu harus mengulang materi ini untuk membuka materi berikutnya.
+```
+
+### 10. Riwayat attempt
+
+```http
+GET /api/v1/app/attempts
+```
+
+Attempt gagal tetap muncul, tetapi `earned_exp = 0`.
+
+### 11. Leaderboard
+
+```http
+GET /api/v1/app/leaderboard
+```
+
+Leaderboard memakai total EXP dari attempt yang lulus saja.
+
+## Admin Flow
+
+### Upload PDF
+
+```http
+POST /api/v1/admin/materials/pdf
+Content-Type: multipart/form-data
+
+file=<material.pdf>
+title=Reading N5 - Salam Dasar
+description=Materi bacaan dasar
+level=N5
+category=reading
+sequence=1
+passing_score=70
+is_published=true
+```
+
+### List materials
+
+```http
+GET /api/v1/admin/materials
+```
+
+### Edit material
+
+```http
+PATCH /api/v1/admin/materials/{material_id}
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "level": "N5",
+  "category": "reading",
+  "sequence": 2,
+  "passing_score": 75
+}
+```
+
+### Preview extracted text
+
+```http
+GET /api/v1/admin/materials/{material_id}/preview
+```
+
+### Publish/unpublish
+
+```http
+POST /api/v1/admin/materials/{material_id}/publish
+POST /api/v1/admin/materials/{material_id}/unpublish
+```
+
+### Delete/archive
+
+```http
+DELETE /api/v1/admin/materials/{material_id}
+```
+
+Delete harus soft delete/archive.
+
+## Frontend Routing Target
+
+User:
+
+```text
+/app/dashboard
+/app/materials
+/app/materials/:id
+/app/quiz/:sessionId
+/app/attempts
+/app/leaderboard
+```
+
+Admin:
+
+```text
+/admin/dashboard
+/admin/materials
+/admin/users
+```
+
+Tidak perlu halaman admin curriculum untuk MVP baru.

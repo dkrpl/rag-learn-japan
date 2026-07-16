@@ -42,36 +42,30 @@ async def test_mass_assignment_registration(client):
 
 @pytest.mark.asyncio
 async def test_answer_leakage(client, learner_token_headers, db):
-    # 1. Create a mock level, course, unit, lesson and question
-    from app.models.ai_jobs import GenerationJob, JobStatus, JobType
-    from app.models.curriculum import Course, Lesson, Level, Unit
+    # Learners should never receive answer keys before submission.
+    from datetime import datetime, timedelta, timezone
+
+    from app.models.learning import LearningSession, LearningSessionQuestion, SessionMode, SessionSource, SessionStatus
     from app.models.material import MaterialDocument
-    from app.models.question import Question, QuestionType, SkillType
+    from app.models.question import Question, QuestionRevision, QuestionType, SkillType
     from app.models.user import User
 
-    level = Level(name=f"N5_{uuid.uuid4()}", is_published=True)
-    db.add(level)
-    db.commit()
-    db.refresh(level)
-
-    course = Course(level_id=level.id, title="Test Course", description="Desc", is_published=True)
-    db.add(course)
-    db.commit()
-    db.refresh(course)
-
-    unit = Unit(course_id=course.id, title="Test Unit", description="Desc", sequence=1, is_published=True)
-    db.add(unit)
-    db.commit()
-    db.refresh(unit)
-
-    lesson = Lesson(unit_id=unit.id, title="Test Lesson", sequence=1, is_published=True)
-    db.add(lesson)
-    db.commit()
-    db.refresh(lesson)
-
     learner = db.query(User).filter(User.email == "learner_test_fixture@example.com").one()
+    material = MaterialDocument(
+        title="Security PDF",
+        original_filename="security.pdf",
+        content_type="application/pdf",
+        file_size_bytes=100,
+        checksum=uuid.uuid4().hex + uuid.uuid4().hex,
+        page_count=1,
+        extracted_text="Security material",
+        is_published=True,
+        published_at=datetime.now(timezone.utc),
+    )
+    db.add(material)
+    db.flush()
     question = Question(
-        lesson_id=lesson.id,
+        material_id=material.id,
         question_type=QuestionType.MULTIPLE_CHOICE,
         skill=SkillType.READING,
         prompt_json={"text": "Test Q?", "options": [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]},
@@ -84,12 +78,10 @@ async def test_answer_leakage(client, learner_token_headers, db):
     db.commit()
     db.refresh(question)
 
-    from app.models.question import QuestionRevision
-
     rev = QuestionRevision(
         question_id=question.id,
         version_number=1,
-        lesson_id=question.lesson_id,
+        material_id=material.id,
         question_type=question.question_type,
         skill=question.skill,
         difficulty=question.difficulty,
@@ -98,45 +90,35 @@ async def test_answer_leakage(client, learner_token_headers, db):
         explanation_json=question.explanation_json,
     )
     db.add(rev)
-    db.commit()
-
-    material = MaterialDocument(
-        lesson_id=lesson.id,
-        title="Security PDF",
-        original_filename="security.pdf",
-        content_type="application/pdf",
-        file_size_bytes=100,
-        checksum=uuid.uuid4().hex + uuid.uuid4().hex,
-        page_count=1,
-        extracted_text="Security material",
-        is_published=True,
+    now = datetime.now(timezone.utc)
+    session = LearningSession(
+        user_id=learner.id,
+        material_id=material.id,
+        mode=SessionMode.PRACTICE,
+        source=SessionSource.MATERIAL,
+        status=SessionStatus.ACTIVE,
+        total_questions=1,
+        answered_questions=0,
+        correct_answers=0,
+        final_score=0,
+        difficulty=1,
+        passing_score=70,
+        started_at=now,
+        expires_at=now + timedelta(hours=1),
     )
-    db.add(material)
+    db.add(session)
     db.flush()
-    job = GenerationJob(
-        job_type=JobType.QUESTION_GENERATION,
-        status=JobStatus.COMPLETED,
-        target_id=lesson.id,
-        prompt_json=f'{{"lesson_id":"{lesson.id}","material_id":"{material.id}"}}',
-        raw_response=f'{{"created_question_ids":["{question.id}"]}}',
-        created_by=learner.id,
+    db.add(
+        LearningSessionQuestion(
+            session_id=session.id,
+            question_id=question.id,
+            question_revision_id=rev.id,
+            order_number=1,
+        )
     )
-    db.add(job)
     db.commit()
 
-    # 2. Start session from app facade
-    response = client.post(
-        f"/api/v1/app/ai-question-jobs/{job.id}/sessions",
-        json={"mode": "PRACTICE"},
-        headers=learner_token_headers,
-    )
-    assert response.status_code == 201
-    data = response.json()
-
-    session_id = data["id"]
-
-    # Fetch questions
-    q_response = client.get(f"/api/v1/app/sessions/{session_id}/questions", headers=learner_token_headers)
+    q_response = client.get(f"/api/v1/app/quiz-sessions/{session.id}/questions", headers=learner_token_headers)
     assert q_response.status_code == 200
     questions = q_response.json()
 

@@ -1,4 +1,4 @@
-"""Course progress and XP persistence for the reading-comprehension MVP."""
+"""Material progress and XP persistence for the PDF quiz MVP."""
 
 from __future__ import annotations
 
@@ -18,25 +18,25 @@ from sqlalchemy import (
 from app.db.base_class import CustomBase
 
 
-class LessonStatus(str, enum.Enum):
+class MaterialProgressStatus(str, enum.Enum):
     NOT_STARTED = "NOT_STARTED"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
 
 
-class UserLessonProgress(CustomBase):
-    __tablename__ = "user_lesson_progress"
+class UserMaterialProgress(CustomBase):
+    __tablename__ = "user_material_progress"
     __table_args__ = (
-        UniqueConstraint("user_id", "lesson_id", name="uq_user_lesson_progress"),
-        CheckConstraint("attempts_count >= 0", name="ck_lesson_progress_attempts"),
-        CheckConstraint("best_score BETWEEN 0 AND 100", name="ck_lesson_progress_best_score"),
-        CheckConstraint("last_score BETWEEN 0 AND 100", name="ck_lesson_progress_last_score"),
-        Index("ix_lesson_progress_user_status", "user_id", "status"),
+        UniqueConstraint("user_id", "material_id", name="uq_user_material_progress"),
+        CheckConstraint("attempts_count >= 0", name="ck_material_progress_attempts"),
+        CheckConstraint("best_score BETWEEN 0 AND 100", name="ck_material_progress_best_score"),
+        CheckConstraint("last_score BETWEEN 0 AND 100", name="ck_material_progress_last_score"),
+        Index("ix_material_progress_user_status", "user_id", "status"),
     )
 
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    lesson_id = Column(String(36), ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
-    status = Column(Enum(LessonStatus), default=LessonStatus.NOT_STARTED, nullable=False)
+    material_id = Column(String(36), ForeignKey("material_documents.id", ondelete="CASCADE"), nullable=False)
+    status = Column(Enum(MaterialProgressStatus), default=MaterialProgressStatus.NOT_STARTED, nullable=False)
     attempts_count = Column(Integer, default=0, nullable=False)
     best_score = Column(Integer, default=0, nullable=False)
     last_score = Column(Integer, default=0, nullable=False)
@@ -54,4 +54,3 @@ class XPTransaction(CustomBase):
     amount = Column(Integer, nullable=False)
     reason = Column(String(255), nullable=False)
     session_id = Column(String(36), ForeignKey("learning_sessions.id", ondelete="SET NULL"), nullable=True)
-

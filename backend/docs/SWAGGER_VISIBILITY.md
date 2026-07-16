@@ -1,8 +1,17 @@
-# Swagger Visibility Guide
+# Swagger Visibility Guide - Material-First MVP
 
-Swagger utama sekarang menampilkan endpoint yang dibutuhkan oleh **frontend user app** dan **frontend admin/back-office**.
+Dokumen ini menjelaskan isi Swagger setelah backend dirombak ke material-first MVP.
 
-Total endpoint yang tampil di `http://127.0.0.1:8000/docs`: **82 endpoint**.
+## Prinsip
+
+Swagger utama harus membantu frontend, bukan menampilkan semua endpoint internal.
+
+Untuk MVP baru, Swagger utama cukup menampilkan:
+
+- Auth
+- User App material-first
+- Admin Materials
+- Admin Users
 
 ## Tampil Di Swagger Utama
 
@@ -15,82 +24,59 @@ POST /api/v1/auth/refresh
 POST /api/v1/auth/logout
 ```
 
-### Frontend User App
-
-Base path:
+### User App
 
 ```http
-/api/v1/app/*
+GET  /api/v1/app/me
+GET  /api/v1/app/dashboard
+GET  /api/v1/app/materials
+GET  /api/v1/app/materials/{material_id}
+GET  /api/v1/app/materials/{material_id}/file
+POST /api/v1/app/materials/{material_id}/generate-quiz
+GET  /api/v1/app/quiz-sessions/{session_id}/status
+GET  /api/v1/app/quiz-sessions/{session_id}/questions
+POST /api/v1/app/quiz-sessions/{session_id}/submit
+GET  /api/v1/app/quiz-sessions/{session_id}/result
+GET  /api/v1/app/attempts
+GET  /api/v1/app/leaderboard
 ```
-
-Dipakai untuk:
-
-- Profil user.
-- Katalog kursus.
-- Detail lesson.
-- PDF material untuk learner.
-- Generate soal AI dari PDF.
-- Regenerate soal.
-- Learning session.
-- Submit jawaban.
-- Attempt history.
-- Dashboard.
-- Leaderboard.
-
-### Admin Curriculum
-
-Base path:
-
-```http
-/api/v1/admin/curriculum/*
-```
-
-Dipakai untuk:
-
-- Mengelola level.
-- Mengelola course.
-- Mengelola unit.
-- Mengelola lesson.
-- Mengelola lesson section.
-- Publish, unpublish, archive, restore resource curriculum.
 
 ### Admin Materials
 
-Base path:
-
 ```http
-/api/v1/admin/materials/*
+POST   /api/v1/admin/materials/pdf
+GET    /api/v1/admin/materials
+GET    /api/v1/admin/materials/{material_id}
+PATCH  /api/v1/admin/materials/{material_id}
+GET    /api/v1/admin/materials/{material_id}/preview
+POST   /api/v1/admin/materials/{material_id}/publish
+POST   /api/v1/admin/materials/{material_id}/unpublish
+DELETE /api/v1/admin/materials/{material_id}
 ```
-
-Dipakai untuk:
-
-- Upload PDF material.
-- List material per lesson.
-- Detail material.
-- Preview teks hasil ekstraksi PDF.
-- Publish/unpublish PDF material.
-- Generate soal dari PDF untuk kebutuhan admin.
 
 ### Admin Users
 
-Base path:
-
 ```http
-/api/v1/admin/users/*
+GET    /api/v1/admin/users
+POST   /api/v1/admin/users
+GET    /api/v1/admin/users/{user_id}
+PATCH  /api/v1/admin/users/{user_id}
+DELETE /api/v1/admin/users/{user_id}
 ```
 
-Dipakai untuk:
+## Disembunyikan Dari Swagger Utama
 
-- List user.
-- Detail user.
-- Ubah role user.
-- Ubah status aktif/nonaktif user.
+Endpoint berikut tidak perlu dipakai frontend MVP baru:
 
-## Tetap Disembunyikan Dari Swagger
+```http
+/api/v1/admin/curriculum/*
+/api/v1/app/catalog
+/api/v1/app/lessons/*
+/api/v1/app/ai-question-jobs/*
+/api/v1/app/sessions/*
+```
 
-Endpoint berikut masih ada di backend, tetapi bukan kontrak fitur frontend.
-
-### System / Operational
+Endpoint operasional juga tetap disembunyikan:
 
 ```http
 GET /health
@@ -98,20 +84,8 @@ GET /ready
 GET /metrics
 ```
 
-Dipakai untuk health check, readiness check, dan monitoring.
+## Catatan
 
-## Endpoint Internal Yang Sudah Dihapus
-
-Endpoint berikut sudah dihapus karena sudah digantikan oleh `/api/v1/app/*`:
-
-```http
-/api/v1/curriculum/*
-/api/v1/learning-sessions/*
-/api/v1/users/*
-```
-
-## Rekomendasi Pemakaian
-
-- Frontend learner/mobile/web user memakai `Auth` dan `/api/v1/app/*`.
-- Frontend admin/back-office memakai `/api/v1/admin/*`.
-- Endpoint operasional yang disembunyikan tidak perlu dipakai frontend.
+Endpoint curriculum dan endpoint lesson/job/session lama sudah tidak muncul di
+Swagger utama. Jika frontend membutuhkan daftar endpoint aktual, gunakan
+`backend/docs/ENDPOINTS.md` atau `/docs` saat server berjalan.

@@ -1,19 +1,30 @@
-# Material PDF Workflow
+# Material PDF Workflow - Target MVP
 
-Alur utama project:
+## Alur Utama
 
-1. Admin membuat struktur kursus:
-   `Level -> Course -> Unit -> Lesson`.
-2. Admin upload PDF ke lesson.
-3. Backend menyimpan file PDF asli, mengekstrak teks PDF, dan menyimpannya sebagai `MaterialDocument`.
-4. User melihat daftar PDF yang tersedia di lesson.
-5. User membuat AI question job dari PDF pilihan.
-6. Worker AI membuat soal private untuk user/job tersebut, lalu user memulai sesi dari hasil job.
-7. User mengerjakan soal, jawaban divalidasi, dan jika skor mencapai KKM lesson, XP bertambah, lesson completed, lesson berikutnya unlocked, leaderboard naik.
+Alur project direvisi menjadi material-first:
 
-## Endpoint Admin
+```text
+Admin upload PDF
+Backend extract text
+Admin publish material
+User membuka material
+User memilih difficulty
+User generate quiz
+AI membuat soal dari PDF
+User mengerjakan
+Backend validasi
+Jika lulus: EXP diberikan dan materi berikutnya unlock
+Jika gagal: EXP 0 dan materi berikutnya tetap locked
+```
 
-Upload PDF:
+## Admin Workflow
+
+Admin tidak perlu membuat course, unit, atau lesson.
+
+Admin cukup membuat material PDF.
+
+### Upload PDF
 
 ```http
 POST /api/v1/admin/materials/pdf
@@ -21,93 +32,170 @@ Authorization: Bearer <admin_access_token>
 Content-Type: multipart/form-data
 
 file=<material.pdf>
-lesson_id=<lesson_id>
-title=<optional title>
+title=<material title>
+description=<optional description>
+level=N5
+category=reading
+sequence=1
+passing_score=70
+is_published=true
 ```
 
-Generate soal dari PDF oleh admin tetap tersedia untuk back-office:
+Backend menyimpan:
 
-```http
-POST /api/v1/admin/materials/{material_id}/question-jobs
-Authorization: Bearer <admin_access_token>
-Content-Type: application/json
+- file PDF asli
+- teks hasil ekstraksi PDF
+- metadata material
+- status publish
+- urutan material
+- passing score
 
-{
-  "question_count": 10,
-  "question_type": "MULTIPLE_CHOICE",
-  "skill": "READING",
-  "difficulty": 1,
-  "additional_notes": "Buat soal untuk pemula JLPT N5."
-}
-```
-
-List material:
-
-```http
-GET /api/v1/admin/materials?lesson_id=<lesson_id>
-```
-
-Preview teks hasil ekstraksi PDF:
+### Preview PDF Text
 
 ```http
 GET /api/v1/admin/materials/{material_id}/preview
 ```
 
-Publish/unpublish material:
+Dipakai admin untuk memastikan PDF terbaca.
+
+### Publish/Unpublish
 
 ```http
 POST /api/v1/admin/materials/{material_id}/publish
 POST /api/v1/admin/materials/{material_id}/unpublish
 ```
 
-## Endpoint User
-
-Frontend user tetap memakai endpoint sederhana:
+### Edit Metadata
 
 ```http
-GET /api/v1/app/catalog
-GET /api/v1/app/lessons/{lesson_id}
-GET /api/v1/app/lessons/{lesson_id}/materials
-GET /api/v1/app/materials/{material_id}/file
-POST /api/v1/app/materials/{material_id}/ai-question-jobs
-GET /api/v1/app/ai-question-jobs/{job_id}
-POST /api/v1/app/ai-question-jobs/{job_id}/regenerate
-POST /api/v1/app/ai-question-jobs/{job_id}/sessions
-GET /api/v1/app/sessions/{session_id}/questions
-POST /api/v1/app/sessions/{session_id}/answers
-POST /api/v1/app/sessions/{session_id}/complete
-GET /api/v1/app/dashboard
-GET /api/v1/app/attempts
-GET /api/v1/app/lessons/{lesson_id}/progress
-GET /api/v1/app/leaderboard
+PATCH /api/v1/admin/materials/{material_id}
 ```
 
-Alur utama user dari PDF:
+Field yang boleh diedit:
 
-1. Ambil materi PDF lesson:
-   `GET /api/v1/app/lessons/{lesson_id}/materials`
-2. Buka PDF viewer dari `file_url`:
-   `GET /api/v1/app/materials/{material_id}/file`
-3. Generate soal dari PDF:
-   `POST /api/v1/app/materials/{material_id}/ai-question-jobs`
-4. Poll sampai job `COMPLETED`:
-   `GET /api/v1/app/ai-question-jobs/{job_id}`
-5. Jika perlu, regenerate dari job lama:
-   `POST /api/v1/app/ai-question-jobs/{job_id}/regenerate`
-6. Mulai sesi dari soal hasil AI:
-   `POST /api/v1/app/ai-question-jobs/{job_id}/sessions`
-7. Ambil soal, submit jawaban, lalu complete session.
-8. Cek dashboard, riwayat attempt, progress lesson, dan ranking leaderboard.
+- `title`
+- `description`
+- `level`
+- `category`
+- `sequence`
+- `passing_score`
 
-User tidak memakai endpoint admin, tetapi user memang melihat daftar PDF/materi yang sudah di-upload admin.
+### Delete/Archive
 
-## Catatan
+```http
+DELETE /api/v1/admin/materials/{material_id}
+```
 
-- PDF harus berbasis teks. PDF hasil scan gambar belum didukung karena butuh OCR.
-- AI hanya diinstruksikan memakai teks hasil ekstraksi PDF sebagai sumber soal.
-- Soal hasil job user di MVP ini private untuk user/job, bukan bank soal global.
-- XP utama dibuat saat session complete dan skor memenuhi KKM lesson, default 70.
-- Lesson berikutnya dihitung unlocked jika lesson sebelumnya sudah completed.
-- Generate soal user dibatasi per hari dengan `AI_DAILY_GENERATION_LIMIT`.
-- Leaderboard mendukung periode `all`, `weekly`, dan `monthly`.
-- Untuk menjalankan AI sungguhan di Railway, aktifkan Redis/Celery dan set `AI_PROVIDER=gemini` serta `GEMINI_API_KEY`.
+Delete harus berupa archive/soft delete agar riwayat attempt user tidak rusak.
+
+## User Workflow
+
+### List Material
+
+```http
+GET /api/v1/app/materials
+```
+
+Backend harus mengembalikan status progress user:
+
+- `locked`
+- `unlocked`
+- `completed`
+
+Materi pertama selalu unlocked.
+Materi berikutnya unlocked jika materi sebelumnya completed.
+
+### Detail Material
+
+```http
+GET /api/v1/app/materials/{material_id}
+```
+
+Jika material locked, backend mengembalikan `423 Locked`.
+
+### Stream PDF
+
+```http
+GET /api/v1/app/materials/{material_id}/file
+```
+
+### Generate Quiz
+
+```http
+POST /api/v1/app/materials/{material_id}/generate-quiz
+Content-Type: application/json
+
+{
+  "difficulty": "medium",
+  "question_count": 10
+}
+```
+
+Difficulty:
+
+- `easy`
+- `medium`
+- `hard`
+
+Backend membuat session/job khusus user tersebut.
+
+### Status Quiz
+
+```http
+GET /api/v1/app/quiz-sessions/{session_id}/status
+```
+
+### Questions
+
+```http
+GET /api/v1/app/quiz-sessions/{session_id}/questions
+```
+
+Backend tidak boleh mengirim answer key sebelum submit.
+
+### Submit
+
+```http
+POST /api/v1/app/quiz-sessions/{session_id}/submit
+```
+
+Jika score lulus:
+
+- session `is_passed = true`
+- `earned_exp > 0`
+- material progress `completed`
+- next material unlocked
+
+Jika score gagal:
+
+- session `is_passed = false`
+- `earned_exp = 0`
+- material progress tetap belum completed
+- next material tetap locked
+
+## EXP Rule
+
+EXP hanya diberikan jika user lulus.
+
+Formula MVP:
+
+```text
+easy:   round(100 * 1.0 * score / 100)
+medium: round(100 * 1.25 * score / 100)
+hard:   round(100 * 1.5 * score / 100)
+```
+
+Jika score kurang dari passing score:
+
+```text
+earned_exp = 0
+```
+
+## Catatan Teknis
+
+- PDF harus berbasis teks.
+- OCR untuk PDF scan tidak masuk MVP.
+- AI harus dibatasi agar hanya membuat soal dari extracted text PDF.
+- Generate quiz tetap boleh memakai Redis/Celery agar request frontend tidak menunggu lama.
+- Jika Redis/Celery tidak aktif, backend harus memberi status `failed` yang ramah frontend.
+- Admin generate soal manual/back-office tidak wajib untuk MVP.

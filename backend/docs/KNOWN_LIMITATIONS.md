@@ -4,7 +4,7 @@
 
 - Generator soal bisa berjalan dengan provider AI yang dikonfigurasi lewat environment.
 - Untuk mode production, set `AI_PROVIDER=gemini` dan `GEMINI_API_KEY`.
-- Jika provider belum aktif, job AI dapat gagal dan harus ditampilkan frontend sebagai status job biasa.
+- Jika provider belum aktif, backend memakai fallback generator sederhana dari teks PDF agar flow MVP tetap bisa dites.
 
 ## PDF
 
@@ -15,6 +15,8 @@
 
 Fitur berikut sengaja tidak menjadi bagian MVP saat ini:
 
+- Admin curriculum kompleks (`Level -> Course -> Unit -> Lesson`).
+- Lesson section manual.
 - Audio/TTS/listening.
 - JLPT simulation.
 - SRS/review schedule dan mistake book khusus.
@@ -22,3 +24,16 @@ Fitur berikut sengaja tidak menjadi bagian MVP saat ini:
 - Bank vocabulary/kanji/grammar terpisah.
 - Upload materi oleh learner.
 - Payment, forum, chat tutor, speaking evaluation, dan handwriting.
+
+## Aturan Progress
+
+- User hanya mendapat EXP jika skor memenuhi passing score.
+- Attempt gagal tetap disimpan, tetapi `earned_exp = 0`.
+- Materi berikutnya tetap locked jika user belum lulus materi saat ini.
+- User harus mengulang quiz pada materi yang gagal.
+
+## Catatan Backend
+
+- Endpoint course/lesson lama sudah bukan kontrak MVP.
+- Kontrak aktif mengikuti material-first MVP di `prd-revisi/01-prd-revisi-mvp.md`.
+- `ENDPOINTS.md` digenerate dari OpenAPI backend saat ini.

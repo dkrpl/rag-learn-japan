@@ -37,6 +37,7 @@ class SessionStatus(str, enum.Enum):
 
 
 class SessionSource(str, enum.Enum):
+    MATERIAL = "MATERIAL"
     LESSON = "LESSON"
 
 
@@ -51,11 +52,17 @@ class LearningSession(CustomBase):
     )
 
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    lesson_id = Column(String(36), ForeignKey("lessons.id", ondelete="CASCADE"), nullable=True)
+    material_id = Column(String(36), ForeignKey("material_documents.id", ondelete="CASCADE"), nullable=True)
+    # Legacy compatibility only. New MVP flow uses material_id.
+    lesson_id = Column(String(36), nullable=True)
 
     mode = Column(Enum(SessionMode), default=SessionMode.PRACTICE, nullable=False)
-    source = Column(Enum(SessionSource), default=SessionSource.LESSON, nullable=False)
+    source = Column(Enum(SessionSource), default=SessionSource.MATERIAL, nullable=False)
     status = Column(Enum(SessionStatus), default=SessionStatus.ACTIVE, nullable=False)
+    difficulty = Column(Integer, default=1, server_default="1", nullable=False)
+    passing_score = Column(Integer, default=70, server_default="70", nullable=False)
+    is_passed = Column(Boolean, default=False, server_default="0", nullable=False)
+    earned_exp = Column(Integer, default=0, server_default="0", nullable=False)
 
     total_questions = Column(Integer, default=0, nullable=False)
     answered_questions = Column(Integer, default=0, nullable=False)

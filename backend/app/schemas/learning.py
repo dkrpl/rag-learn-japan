@@ -15,7 +15,7 @@ JsonObject = dict[str, Any]
 
 
 class LearningSessionCreate(BaseModel):
-    lesson_id: str = Field(min_length=1, max_length=36)
+    material_id: str = Field(min_length=1, max_length=36)
     mode: SessionMode = SessionMode.PRACTICE
     question_count: int = Field(default=10, ge=1, le=50)
     skill: SkillType | None = None
@@ -58,10 +58,15 @@ class SessionQuestionResponse(BaseModel):
 class LearningSessionResponse(BaseModel):
     id: str
     user_id: str
+    material_id: str | None = None
     lesson_id: str | None = None
     mode: SessionMode
     source: SessionSource
     status: SessionStatus
+    difficulty: int
+    passing_score: int
+    is_passed: bool
+    earned_exp: int
     total_questions: int
     answered_questions: int
     correct_answers: int

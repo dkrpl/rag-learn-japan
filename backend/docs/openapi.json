@@ -1,67 +1,151 @@
 {
   "components": {
     "schemas": {
-      "AppCatalogResponse": {
+      "AdminUserCreate": {
         "properties": {
-          "courses": {
-            "items": {
-              "$ref": "#/components/schemas/AppCourseSummary"
-            },
-            "title": "Courses",
-            "type": "array"
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_email_verified": {
+            "default": true,
+            "title": "Is Email Verified",
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole",
+            "default": "learner"
+          },
+          "target_level": {
+            "default": "N5",
+            "pattern": "^N[1-5]$",
+            "title": "Target Level",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "maxLength": 50,
+            "title": "Timezone",
+            "type": "string"
           }
         },
         "required": [
-          "courses"
+          "email",
+          "password"
         ],
-        "title": "AppCatalogResponse",
+        "title": "AdminUserCreate",
         "type": "object"
       },
-      "AppCourseSummary": {
+      "AdminUserUpdate": {
+        "additionalProperties": false,
         "properties": {
-          "description": {
+          "is_active": {
             "anyOf": [
               {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Description"
+            "title": "Name"
           },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "image_url": {
+          "photo_url": {
             "anyOf": [
               {
+                "maxLength": 512,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Image Url"
+            "title": "Photo Url"
           },
-          "title": {
-            "title": "Title",
-            "type": "string"
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
-          "units": {
-            "items": {
-              "$ref": "#/components/schemas/AppUnitSummary"
-            },
-            "title": "Units",
-            "type": "array"
+          "target_level": {
+            "anyOf": [
+              {
+                "pattern": "^N[1-5]$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Level"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
           }
         },
-        "required": [
-          "id",
-          "title"
-        ],
-        "title": "AppCourseSummary",
+        "title": "AdminUserUpdate",
         "type": "object"
       },
       "AppDashboardResponse": {
@@ -82,10 +166,6 @@
             "title": "Correct Answers",
             "type": "integer"
           },
-          "course_progress_percentage": {
-            "title": "Course Progress Percentage",
-            "type": "integer"
-          },
           "current_streak": {
             "title": "Current Streak",
             "type": "integer"
@@ -101,12 +181,16 @@
             ],
             "title": "Leaderboard Rank"
           },
-          "lessons_completed": {
-            "title": "Lessons Completed",
-            "type": "integer"
-          },
           "longest_streak": {
             "title": "Longest Streak",
+            "type": "integer"
+          },
+          "material_progress_percentage": {
+            "title": "Material Progress Percentage",
+            "type": "integer"
+          },
+          "materials_completed": {
+            "title": "Materials Completed",
             "type": "integer"
           },
           "total_xp": {
@@ -118,61 +202,27 @@
           "total_xp",
           "current_streak",
           "longest_streak",
-          "lessons_completed",
+          "materials_completed",
           "answered_questions",
           "correct_answers",
           "accuracy_percentage",
-          "course_progress_percentage",
+          "material_progress_percentage",
           "ai_generations_remaining_today"
         ],
         "title": "AppDashboardResponse",
         "type": "object"
       },
-      "AppLessonSummary": {
+      "AppMaterialDetail": {
         "properties": {
           "attempts_count": {
-            "default": 0,
             "title": "Attempts Count",
             "type": "integer"
           },
           "best_score": {
-            "default": 0,
             "title": "Best Score",
             "type": "integer"
           },
-          "estimated_minutes": {
-            "title": "Estimated Minutes",
-            "type": "integer"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "is_locked": {
-            "default": true,
-            "title": "Is Locked",
-            "type": "boolean"
-          },
-          "last_score": {
-            "default": 0,
-            "title": "Last Score",
-            "type": "integer"
-          },
-          "passing_score": {
-            "default": 70,
-            "title": "Passing Score",
-            "type": "integer"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "status": {
-            "default": "locked",
-            "title": "Status",
-            "type": "string"
-          },
-          "summary": {
+          "category": {
             "anyOf": [
               {
                 "type": "string"
@@ -181,31 +231,38 @@
                 "type": "null"
               }
             ],
-            "title": "Summary"
+            "title": "Category"
           },
-          "title": {
-            "title": "Title",
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
             "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "estimated_minutes",
-          "sequence"
-        ],
-        "title": "AppLessonSummary",
-        "type": "object"
-      },
-      "AppMaterialSummary": {
-        "properties": {
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "extracted_text_char_count": {
             "title": "Extracted Text Char Count",
             "type": "integer"
           },
           "extracted_text_preview": {
-            "title": "Extracted Text Preview",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extracted Text Preview"
           },
           "file_url": {
             "title": "File Url",
@@ -215,12 +272,16 @@
             "title": "Id",
             "type": "string"
           },
-          "is_published": {
-            "title": "Is Published",
+          "is_locked": {
+            "title": "Is Locked",
             "type": "boolean"
           },
-          "lesson_id": {
-            "title": "Lesson Id",
+          "last_score": {
+            "title": "Last Score",
+            "type": "integer"
+          },
+          "level": {
+            "title": "Level",
             "type": "string"
           },
           "original_filename": {
@@ -231,42 +292,128 @@
             "title": "Page Count",
             "type": "integer"
           },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "lesson_id",
-          "title",
-          "original_filename",
-          "file_url",
-          "page_count",
-          "extracted_text_preview",
-          "extracted_text_char_count",
-          "is_published"
-        ],
-        "title": "AppMaterialSummary",
-        "type": "object"
-      },
-      "AppUnitSummary": {
-        "properties": {
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "lessons": {
-            "items": {
-              "$ref": "#/components/schemas/AppLessonSummary"
-            },
-            "title": "Lessons",
-            "type": "array"
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
           },
           "sequence": {
             "title": "Sequence",
             "type": "integer"
           },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "level",
+          "sequence",
+          "passing_score",
+          "page_count",
+          "file_url",
+          "status",
+          "is_locked",
+          "best_score",
+          "last_score",
+          "attempts_count",
+          "original_filename",
+          "extracted_text_char_count",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AppMaterialDetail",
+        "type": "object"
+      },
+      "AppMaterialSummary": {
+        "properties": {
+          "attempts_count": {
+            "title": "Attempts Count",
+            "type": "integer"
+          },
+          "best_score": {
+            "title": "Best Score",
+            "type": "integer"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "extracted_text_preview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extracted Text Preview"
+          },
+          "file_url": {
+            "title": "File Url",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_locked": {
+            "title": "Is Locked",
+            "type": "boolean"
+          },
+          "last_score": {
+            "title": "Last Score",
+            "type": "integer"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "page_count": {
+            "title": "Page Count",
+            "type": "integer"
+          },
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -275,9 +422,18 @@
         "required": [
           "id",
           "title",
-          "sequence"
+          "level",
+          "sequence",
+          "passing_score",
+          "page_count",
+          "file_url",
+          "status",
+          "is_locked",
+          "best_score",
+          "last_score",
+          "attempts_count"
         ],
-        "title": "AppUnitSummary",
+        "title": "AppMaterialSummary",
         "type": "object"
       },
       "AttemptHistoryItem": {
@@ -302,6 +458,14 @@
             "title": "Correct Answers",
             "type": "integer"
           },
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "earned_exp": {
+            "title": "Earned Exp",
+            "type": "integer"
+          },
           "final_score": {
             "title": "Final Score",
             "type": "integer"
@@ -310,7 +474,11 @@
             "title": "Id",
             "type": "string"
           },
-          "lesson_id": {
+          "is_passed": {
+            "title": "Is Passed",
+            "type": "boolean"
+          },
+          "material_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -319,9 +487,9 @@
                 "type": "null"
               }
             ],
-            "title": "Lesson Id"
+            "title": "Material Id"
           },
-          "lesson_title": {
+          "material_title": {
             "anyOf": [
               {
                 "type": "string"
@@ -330,11 +498,11 @@
                 "type": "null"
               }
             ],
-            "title": "Lesson Title"
+            "title": "Material Title"
           },
-          "mode": {
-            "title": "Mode",
-            "type": "string"
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
           },
           "started_at": {
             "format": "date-time",
@@ -348,21 +516,19 @@
           "total_questions": {
             "title": "Total Questions",
             "type": "integer"
-          },
-          "xp_earned": {
-            "title": "Xp Earned",
-            "type": "integer"
           }
         },
         "required": [
           "id",
           "status",
-          "mode",
+          "difficulty",
           "total_questions",
           "answered_questions",
           "correct_answers",
           "final_score",
-          "xp_earned",
+          "passing_score",
+          "is_passed",
+          "earned_exp",
           "started_at"
         ],
         "title": "AttemptHistoryItem",
@@ -388,43 +554,22 @@
       },
       "Body_admin-materials-upload_pdf_material-api-v1-admin-materials-pdf": {
         "properties": {
-          "file": {
-            "contentMediaType": "application/octet-stream",
-            "title": "File",
-            "type": "string"
-          },
-          "lesson_id": {
-            "title": "Lesson Id",
-            "type": "string"
-          },
-          "title": {
+          "category": {
             "anyOf": [
               {
-                "maxLength": 255,
-                "minLength": 1,
+                "maxLength": 100,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Title"
-          }
-        },
-        "required": [
-          "file",
-          "lesson_id"
-        ],
-        "title": "Body_admin-materials-upload_pdf_material-api-v1-admin-materials-pdf",
-        "type": "object"
-      },
-      "CourseCreate": {
-        "additionalProperties": false,
-        "properties": {
+            "title": "Category"
+          },
           "description": {
             "anyOf": [
               {
-                "maxLength": 20000,
+                "maxLength": 4000,
                 "type": "string"
               },
               {
@@ -433,26 +578,29 @@
             ],
             "title": "Description"
           },
-          "image_url": {
-            "anyOf": [
-              {
-                "maxLength": 512,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Url"
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
           },
           "is_published": {
-            "default": false,
+            "default": true,
             "title": "Is Published",
             "type": "boolean"
           },
-          "level_id": {
-            "title": "Level Id",
+          "level": {
+            "default": "N5",
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Level",
             "type": "string"
+          },
+          "passing_score": {
+            "default": 70,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Passing Score",
+            "type": "integer"
           },
           "sequence": {
             "default": 0,
@@ -460,216 +608,6 @@
             "title": "Sequence",
             "type": "integer"
           },
-          "slug": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "title": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "level_id",
-          "title"
-        ],
-        "title": "CourseCreate",
-        "type": "object"
-      },
-      "CourseResponse": {
-        "properties": {
-          "archived_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "image_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Url"
-          },
-          "is_archived": {
-            "title": "Is Archived",
-            "type": "boolean"
-          },
-          "is_published": {
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "level_id": {
-            "title": "Level Id",
-            "type": "string"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "level_id",
-          "title",
-          "sequence"
-        ],
-        "title": "CourseResponse",
-        "type": "object"
-      },
-      "CourseUpdate": {
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "image_url": {
-            "anyOf": [
-              {
-                "maxLength": 512,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Url"
-          },
-          "is_published": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Published"
-          },
-          "level_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level Id"
-          },
-          "sequence": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sequence"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
           "title": {
             "anyOf": [
               {
@@ -684,130 +622,79 @@
             "title": "Title"
           }
         },
-        "title": "CourseUpdate",
+        "required": [
+          "file"
+        ],
+        "title": "Body_admin-materials-upload_pdf_material-api-v1-admin-materials-pdf",
         "type": "object"
       },
-      "GenerationJobResponse": {
+      "GenerateQuizRequest": {
+        "additionalProperties": false,
         "properties": {
-          "can_retry": {
-            "title": "Can Retry",
-            "type": "boolean"
-          },
-          "celery_task_id": {
+          "difficulty": {
             "anyOf": [
               {
                 "type": "string"
               },
               {
-                "type": "null"
+                "type": "integer"
               }
             ],
-            "title": "Celery Task Id"
+            "default": "medium",
+            "title": "Difficulty"
           },
-          "completed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Completed At"
+          "question_count": {
+            "default": 10,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Question Count",
+            "type": "integer"
+          }
+        },
+        "title": "GenerateQuizRequest",
+        "type": "object"
+      },
+      "GenerateQuizResponse": {
+        "properties": {
+          "ai_generation_id": {
+            "title": "Ai Generation Id",
+            "type": "string"
           },
-          "created_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created By"
-          },
-          "created_question_count": {
-            "title": "Created Question Count",
+          "difficulty": {
+            "title": "Difficulty",
             "type": "integer"
           },
-          "error_message": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error Message"
-          },
-          "id": {
-            "title": "Id",
+          "material_id": {
+            "title": "Material Id",
             "type": "string"
           },
-          "job_type": {
-            "$ref": "#/components/schemas/JobType"
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
           },
-          "prompt_json": {
-            "title": "Prompt Json",
+          "session_id": {
+            "title": "Session Id",
             "type": "string"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
           },
           "status": {
-            "$ref": "#/components/schemas/JobStatus"
-          },
-          "status_label": {
-            "title": "Status Label",
+            "title": "Status",
             "type": "string"
           },
-          "status_message": {
-            "title": "Status Message",
-            "type": "string"
-          },
-          "target_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target Id"
-          },
-          "tokens_used": {
-            "title": "Tokens Used",
+          "total_questions": {
+            "title": "Total Questions",
             "type": "integer"
           }
         },
         "required": [
-          "id",
-          "job_type",
+          "session_id",
+          "material_id",
           "status",
-          "prompt_json",
-          "error_message",
-          "tokens_used",
-          "created_by",
-          "started_at",
-          "completed_at",
-          "status_label",
-          "status_message",
-          "can_retry",
-          "created_question_count"
+          "difficulty",
+          "passing_score",
+          "total_questions",
+          "ai_generation_id"
         ],
-        "title": "GenerationJobResponse",
+        "title": "GenerateQuizResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -822,24 +709,6 @@
         },
         "title": "HTTPValidationError",
         "type": "object"
-      },
-      "JobStatus": {
-        "enum": [
-          "PENDING",
-          "PROCESSING",
-          "COMPLETED",
-          "FAILED",
-          "CANCELLED"
-        ],
-        "title": "JobStatus",
-        "type": "string"
-      },
-      "JobType": {
-        "enum": [
-          "QUESTION_GENERATION"
-        ],
-        "title": "JobType",
-        "type": "string"
       },
       "LeaderboardEntry": {
         "properties": {
@@ -873,1054 +742,6 @@
           "total_xp"
         ],
         "title": "LeaderboardEntry",
-        "type": "object"
-      },
-      "LearningSessionResponse": {
-        "properties": {
-          "answered_questions": {
-            "title": "Answered Questions",
-            "type": "integer"
-          },
-          "completed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Completed At"
-          },
-          "correct_answers": {
-            "title": "Correct Answers",
-            "type": "integer"
-          },
-          "expires_at": {
-            "format": "date-time",
-            "title": "Expires At",
-            "type": "string"
-          },
-          "final_score": {
-            "title": "Final Score",
-            "type": "integer"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "lesson_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lesson Id"
-          },
-          "mode": {
-            "$ref": "#/components/schemas/SessionMode"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SessionSource"
-          },
-          "started_at": {
-            "format": "date-time",
-            "title": "Started At",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/SessionStatus"
-          },
-          "total_questions": {
-            "title": "Total Questions",
-            "type": "integer"
-          },
-          "user_id": {
-            "title": "User Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "user_id",
-          "mode",
-          "source",
-          "status",
-          "total_questions",
-          "answered_questions",
-          "correct_answers",
-          "final_score",
-          "started_at",
-          "expires_at"
-        ],
-        "title": "LearningSessionResponse",
-        "type": "object"
-      },
-      "LessonContentResponse": {
-        "properties": {
-          "lesson": {
-            "$ref": "#/components/schemas/LessonResponse"
-          },
-          "sections": {
-            "items": {
-              "$ref": "#/components/schemas/LessonSectionResponse"
-            },
-            "title": "Sections",
-            "type": "array"
-          }
-        },
-        "required": [
-          "lesson"
-        ],
-        "title": "LessonContentResponse",
-        "type": "object"
-      },
-      "LessonCreate": {
-        "additionalProperties": false,
-        "properties": {
-          "estimated_minutes": {
-            "default": 15,
-            "maximum": 600.0,
-            "minimum": 1.0,
-            "title": "Estimated Minutes",
-            "type": "integer"
-          },
-          "is_published": {
-            "default": false,
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "learning_objective": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Learning Objective"
-          },
-          "passing_score": {
-            "default": 70,
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Passing Score",
-            "type": "integer"
-          },
-          "sequence": {
-            "default": 0,
-            "minimum": 0.0,
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "summary": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Summary"
-          },
-          "title": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Title",
-            "type": "string"
-          },
-          "unit_id": {
-            "title": "Unit Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "unit_id",
-          "title"
-        ],
-        "title": "LessonCreate",
-        "type": "object"
-      },
-      "LessonDetailResponse": {
-        "properties": {
-          "archived_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "estimated_minutes": {
-            "title": "Estimated Minutes",
-            "type": "integer"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "is_archived": {
-            "title": "Is Archived",
-            "type": "boolean"
-          },
-          "is_published": {
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "learning_objective": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Learning Objective"
-          },
-          "passing_score": {
-            "title": "Passing Score",
-            "type": "integer"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "sections": {
-            "items": {
-              "$ref": "#/components/schemas/LessonSectionResponse"
-            },
-            "title": "Sections",
-            "type": "array"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "summary": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Summary"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "unit_id": {
-            "title": "Unit Id",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "unit_id",
-          "title",
-          "estimated_minutes",
-          "passing_score",
-          "sequence"
-        ],
-        "title": "LessonDetailResponse",
-        "type": "object"
-      },
-      "LessonProgressDetail": {
-        "properties": {
-          "attempts_count": {
-            "title": "Attempts Count",
-            "type": "integer"
-          },
-          "best_score": {
-            "title": "Best Score",
-            "type": "integer"
-          },
-          "is_completed": {
-            "title": "Is Completed",
-            "type": "boolean"
-          },
-          "last_attempt_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Attempt At"
-          },
-          "last_score": {
-            "title": "Last Score",
-            "type": "integer"
-          },
-          "lesson_id": {
-            "title": "Lesson Id",
-            "type": "string"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "lesson_id",
-          "status",
-          "attempts_count",
-          "best_score",
-          "last_score",
-          "is_completed"
-        ],
-        "title": "LessonProgressDetail",
-        "type": "object"
-      },
-      "LessonResponse": {
-        "properties": {
-          "archived_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "estimated_minutes": {
-            "title": "Estimated Minutes",
-            "type": "integer"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "is_archived": {
-            "title": "Is Archived",
-            "type": "boolean"
-          },
-          "is_published": {
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "learning_objective": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Learning Objective"
-          },
-          "passing_score": {
-            "title": "Passing Score",
-            "type": "integer"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "summary": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Summary"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "unit_id": {
-            "title": "Unit Id",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "unit_id",
-          "title",
-          "estimated_minutes",
-          "passing_score",
-          "sequence"
-        ],
-        "title": "LessonResponse",
-        "type": "object"
-      },
-      "LessonSectionCreate": {
-        "additionalProperties": false,
-        "properties": {
-          "content": {
-            "anyOf": [
-              {
-                "maxLength": 100000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Content"
-          },
-          "is_published": {
-            "default": false,
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "lesson_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lesson Id"
-          },
-          "section_type": {
-            "default": "article",
-            "maxLength": 32,
-            "minLength": 1,
-            "title": "Section Type",
-            "type": "string"
-          },
-          "sequence": {
-            "default": 0,
-            "minimum": 0.0,
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "title": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "title"
-        ],
-        "title": "LessonSectionCreate",
-        "type": "object"
-      },
-      "LessonSectionResponse": {
-        "properties": {
-          "archived_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "content": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Content"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "is_archived": {
-            "title": "Is Archived",
-            "type": "boolean"
-          },
-          "is_published": {
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "lesson_id": {
-            "title": "Lesson Id",
-            "type": "string"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "section_type": {
-            "title": "Section Type",
-            "type": "string"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "lesson_id",
-          "section_type",
-          "title",
-          "sequence"
-        ],
-        "title": "LessonSectionResponse",
-        "type": "object"
-      },
-      "LessonSectionUpdate": {
-        "additionalProperties": false,
-        "properties": {
-          "content": {
-            "anyOf": [
-              {
-                "maxLength": 100000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Content"
-          },
-          "is_published": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Published"
-          },
-          "section_type": {
-            "anyOf": [
-              {
-                "maxLength": 32,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Section Type"
-          },
-          "sequence": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sequence"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          }
-        },
-        "title": "LessonSectionUpdate",
-        "type": "object"
-      },
-      "LessonUpdate": {
-        "additionalProperties": false,
-        "properties": {
-          "estimated_minutes": {
-            "anyOf": [
-              {
-                "maximum": 600.0,
-                "minimum": 1.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Estimated Minutes"
-          },
-          "is_published": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Published"
-          },
-          "learning_objective": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Learning Objective"
-          },
-          "passing_score": {
-            "anyOf": [
-              {
-                "maximum": 100.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Passing Score"
-          },
-          "sequence": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sequence"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "summary": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Summary"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "unit_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit Id"
-          }
-        },
-        "title": "LessonUpdate",
-        "type": "object"
-      },
-      "LevelCreate": {
-        "additionalProperties": false,
-        "properties": {
-          "code": {
-            "anyOf": [
-              {
-                "maxLength": 16,
-                "minLength": 1,
-                "pattern": "^[A-Za-z0-9_-]+$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Code"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "maxLength": 10000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "is_published": {
-            "default": false,
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "name": {
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "sequence": {
-            "default": 0,
-            "minimum": 0.0,
-            "title": "Sequence",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "title": "LevelCreate",
-        "type": "object"
-      },
-      "LevelResponse": {
-        "properties": {
-          "archived_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Code"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "is_archived": {
-            "title": "Is Archived",
-            "type": "boolean"
-          },
-          "is_published": {
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "name",
-          "sequence"
-        ],
-        "title": "LevelResponse",
-        "type": "object"
-      },
-      "LevelUpdate": {
-        "additionalProperties": false,
-        "properties": {
-          "code": {
-            "anyOf": [
-              {
-                "maxLength": 16,
-                "minLength": 1,
-                "pattern": "^[A-Za-z0-9_-]+$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Code"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "maxLength": 10000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "is_published": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Published"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "maxLength": 50,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "sequence": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sequence"
-          }
-        },
-        "title": "LevelUpdate",
-        "type": "object"
-      },
-      "LifecycleActionResponse": {
-        "properties": {
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "resource_type": {
-            "title": "Resource Type",
-            "type": "string"
-          },
-          "state": {
-            "title": "State",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "resource_type",
-          "state"
-        ],
-        "title": "LifecycleActionResponse",
         "type": "object"
       },
       "LoginRequest": {
@@ -1957,41 +778,19 @@
         "title": "LoginRequest",
         "type": "object"
       },
-      "MaterialAiQuestionJobCreate": {
-        "additionalProperties": false,
+      "MaterialDocumentResponse": {
         "properties": {
-          "difficulty": {
-            "default": 1,
-            "maximum": 5.0,
-            "minimum": 1.0,
-            "title": "Difficulty",
-            "type": "integer"
-          },
-          "prompt": {
+          "category": {
             "anyOf": [
               {
-                "maxLength": 4000,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Prompt"
+            "title": "Category"
           },
-          "question_count": {
-            "default": 10,
-            "maximum": 30.0,
-            "minimum": 1.0,
-            "title": "Question Count",
-            "type": "integer"
-          }
-        },
-        "title": "MaterialAiQuestionJobCreate",
-        "type": "object"
-      },
-      "MaterialDocumentResponse": {
-        "properties": {
           "checksum": {
             "title": "Checksum",
             "type": "string"
@@ -2016,6 +815,17 @@
             ],
             "title": "Created By Id"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "extracted_text_char_count": {
             "title": "Extracted Text Char Count",
             "type": "integer"
@@ -2036,12 +846,27 @@
             "title": "Id",
             "type": "string"
           },
+          "is_archived": {
+            "title": "Is Archived",
+            "type": "boolean"
+          },
           "is_published": {
             "title": "Is Published",
             "type": "boolean"
           },
           "lesson_id": {
-            "title": "Lesson Id",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "level": {
+            "title": "Level",
             "type": "string"
           },
           "original_filename": {
@@ -2050,6 +875,14 @@
           },
           "page_count": {
             "title": "Page Count",
+            "type": "integer"
+          },
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
+          },
+          "sequence": {
+            "title": "Sequence",
             "type": "integer"
           },
           "title": {
@@ -2064,8 +897,10 @@
         },
         "required": [
           "id",
-          "lesson_id",
           "title",
+          "level",
+          "sequence",
+          "passing_score",
           "original_filename",
           "content_type",
           "file_size_bytes",
@@ -2075,6 +910,7 @@
           "extracted_text_preview",
           "extracted_text_char_count",
           "is_published",
+          "is_archived",
           "created_at",
           "updated_at"
         ],
@@ -2119,10 +955,22 @@
         "title": "MaterialPreviewResponse",
         "type": "object"
       },
-      "MaterialQuestionJobCreate": {
+      "MaterialUpdateRequest": {
         "additionalProperties": false,
         "properties": {
-          "additional_notes": {
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "description": {
             "anyOf": [
               {
                 "maxLength": 4000,
@@ -2132,32 +980,61 @@
                 "type": "null"
               }
             ],
-            "title": "Additional Notes"
+            "title": "Description"
           },
-          "difficulty": {
-            "default": 1,
-            "maximum": 5.0,
-            "minimum": 1.0,
-            "title": "Difficulty",
-            "type": "integer"
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
-          "question_count": {
-            "default": 10,
-            "maximum": 30.0,
-            "minimum": 1.0,
-            "title": "Question Count",
-            "type": "integer"
+          "passing_score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passing Score"
           },
-          "question_type": {
-            "$ref": "#/components/schemas/QuestionType",
-            "default": "MULTIPLE_CHOICE"
+          "sequence": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
           },
-          "skill": {
-            "$ref": "#/components/schemas/SkillType",
-            "default": "READING"
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           }
         },
-        "title": "MaterialQuestionJobCreate",
+        "title": "MaterialUpdateRequest",
         "type": "object"
       },
       "QuestionResponseLearner": {
@@ -2173,8 +1050,26 @@
             "type": "string"
           },
           "lesson_id": {
-            "title": "Lesson Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "material_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Id"
           },
           "prompt_json": {
             "additionalProperties": true,
@@ -2190,7 +1085,6 @@
         },
         "required": [
           "id",
-          "lesson_id",
           "question_type",
           "skill",
           "difficulty",
@@ -2207,6 +1101,144 @@
         "title": "QuestionType",
         "type": "string"
       },
+      "QuizResultResponse": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "correct_answers": {
+            "title": "Correct Answers",
+            "type": "integer"
+          },
+          "earned_exp": {
+            "title": "Earned Exp",
+            "type": "integer"
+          },
+          "is_passed": {
+            "title": "Is Passed",
+            "type": "boolean"
+          },
+          "material_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Id"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "total_questions": {
+            "title": "Total Questions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "session_id",
+          "material_id",
+          "score",
+          "passing_score",
+          "is_passed",
+          "earned_exp",
+          "correct_answers",
+          "total_questions",
+          "completed_at",
+          "message"
+        ],
+        "title": "QuizResultResponse",
+        "type": "object"
+      },
+      "QuizSessionStatusResponse": {
+        "properties": {
+          "answered_questions": {
+            "title": "Answered Questions",
+            "type": "integer"
+          },
+          "earned_exp": {
+            "title": "Earned Exp",
+            "type": "integer"
+          },
+          "final_score": {
+            "title": "Final Score",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_passed": {
+            "title": "Is Passed",
+            "type": "boolean"
+          },
+          "is_ready": {
+            "title": "Is Ready",
+            "type": "boolean"
+          },
+          "material_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Id"
+          },
+          "passing_score": {
+            "title": "Passing Score",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total_questions": {
+            "title": "Total Questions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "material_id",
+          "status",
+          "is_ready",
+          "answered_questions",
+          "total_questions",
+          "final_score",
+          "passing_score",
+          "is_passed",
+          "earned_exp"
+        ],
+        "title": "QuizSessionStatusResponse",
+        "type": "object"
+      },
       "RefreshRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2222,33 +1254,6 @@
         ],
         "title": "RefreshRequest",
         "type": "object"
-      },
-      "RegenerateJobRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "prompt": {
-            "anyOf": [
-              {
-                "maxLength": 4000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Prompt"
-          }
-        },
-        "title": "RegenerateJobRequest",
-        "type": "object"
-      },
-      "SessionMode": {
-        "enum": [
-          "PRACTICE",
-          "EXAM"
-        ],
-        "title": "SessionMode",
-        "type": "string"
       },
       "SessionQuestionResponse": {
         "properties": {
@@ -2346,23 +1351,6 @@
         "title": "SessionQuestionResponse",
         "type": "object"
       },
-      "SessionSource": {
-        "enum": [
-          "LESSON"
-        ],
-        "title": "SessionSource",
-        "type": "string"
-      },
-      "SessionStatus": {
-        "enum": [
-          "ACTIVE",
-          "COMPLETED",
-          "CANCELLED",
-          "EXPIRED"
-        ],
-        "title": "SessionStatus",
-        "type": "string"
-      },
       "SkillType": {
         "enum": [
           "READING"
@@ -2370,19 +1358,7 @@
         "title": "SkillType",
         "type": "string"
       },
-      "StartJobSessionRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "mode": {
-            "$ref": "#/components/schemas/SessionMode",
-            "default": "PRACTICE"
-          }
-        },
-        "title": "StartJobSessionRequest",
-        "type": "object"
-      },
-      "SubmitAnswerRequest": {
-        "additionalProperties": false,
+      "SubmitQuizAnswerItem": {
         "properties": {
           "answer_json": {
             "additionalProperties": true,
@@ -2397,97 +1373,35 @@
             "type": "integer"
           },
           "session_question_id": {
-            "anyOf": [
-              {
-                "maxLength": 36,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Session Question Id"
-          }
-        },
-        "required": [
-          "answer_json"
-        ],
-        "title": "SubmitAnswerRequest",
-        "type": "object"
-      },
-      "SubmitAnswerResponse": {
-        "properties": {
-          "accepted": {
-            "default": true,
-            "title": "Accepted",
-            "type": "boolean"
-          },
-          "correct_answer_json": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct Answer Json"
-          },
-          "explanation_json": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Explanation Json"
-          },
-          "feedback_notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Feedback Notes"
-          },
-          "is_correct": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Correct"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "session_question_id": {
+            "maxLength": 36,
+            "minLength": 1,
             "title": "Session Question Id",
             "type": "string"
           }
         },
         "required": [
-          "session_question_id"
+          "session_question_id",
+          "answer_json"
         ],
-        "title": "SubmitAnswerResponse",
+        "title": "SubmitQuizAnswerItem",
+        "type": "object"
+      },
+      "SubmitQuizRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/SubmitQuizAnswerItem"
+            },
+            "minItems": 1,
+            "title": "Answers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "title": "SubmitQuizRequest",
         "type": "object"
       },
       "TokenResponse": {
@@ -2521,240 +1435,6 @@
           "refresh_expires_in"
         ],
         "title": "TokenResponse",
-        "type": "object"
-      },
-      "UnitCreate": {
-        "additionalProperties": false,
-        "properties": {
-          "course_id": {
-            "title": "Course Id",
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "is_published": {
-            "default": false,
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "sequence": {
-            "default": 0,
-            "minimum": 0.0,
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "title": {
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "course_id",
-          "title"
-        ],
-        "title": "UnitCreate",
-        "type": "object"
-      },
-      "UnitResponse": {
-        "properties": {
-          "archived_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Archived At"
-          },
-          "course_id": {
-            "title": "Course Id",
-            "type": "string"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "is_archived": {
-            "title": "Is Archived",
-            "type": "boolean"
-          },
-          "is_published": {
-            "title": "Is Published",
-            "type": "boolean"
-          },
-          "published_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published At"
-          },
-          "sequence": {
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "is_published",
-          "is_archived",
-          "created_at",
-          "updated_at",
-          "id",
-          "course_id",
-          "title",
-          "sequence"
-        ],
-        "title": "UnitResponse",
-        "type": "object"
-      },
-      "UnitUpdate": {
-        "additionalProperties": false,
-        "properties": {
-          "course_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Course Id"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "maxLength": 20000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "is_published": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Published"
-          },
-          "sequence": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sequence"
-          },
-          "slug": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slug"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          }
-        },
-        "title": "UnitUpdate",
         "type": "object"
       },
       "UserCreate": {
@@ -3052,2717 +1732,13 @@
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/v1/admin/curriculum/courses": {
-      "get": {
-        "operationId": "admin-curriculum-list_courses-api-v1-admin-curriculum-courses",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "level_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Level Id"
-            }
-          },
-          {
-            "in": "query",
-            "name": "include_archived",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Archived",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "is_published",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Is Published"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 500,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/CourseResponse"
-                  },
-                  "title": "Response Admin-Curriculum-List Courses-Api-V1-Admin-Curriculum-Courses",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "List Courses",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "post": {
-        "operationId": "admin-curriculum-create_course-api-v1-admin-curriculum-courses",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CourseCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourseResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Create Course",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/courses/{resource_id}": {
-      "delete": {
-        "operationId": "admin-curriculum-delete_archives_courses-api-v1-admin-curriculum-courses-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Delete Archives Courses",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "get": {
-        "operationId": "admin-curriculum-get_course-api-v1-admin-curriculum-courses-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourseResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get Course",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "patch": {
-        "operationId": "admin-curriculum-update_course-api-v1-admin-curriculum-courses-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CourseUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourseResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Update Course",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "put": {
-        "operationId": "admin-curriculum-replace_course-api-v1-admin-curriculum-courses-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CourseUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourseResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Replace Course",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/courses/{resource_id}/archive": {
-      "post": {
-        "operationId": "admin-curriculum-archive_courses-api-v1-admin-curriculum-courses-resource_id-archive",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Archive Courses",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/courses/{resource_id}/publish": {
-      "post": {
-        "operationId": "admin-curriculum-publish_courses-api-v1-admin-curriculum-courses-resource_id-publish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Publish Courses",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/courses/{resource_id}/restore": {
-      "post": {
-        "operationId": "admin-curriculum-restore_courses-api-v1-admin-curriculum-courses-resource_id-restore",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Restore Courses",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/courses/{resource_id}/unpublish": {
-      "post": {
-        "operationId": "admin-curriculum-unpublish_courses-api-v1-admin-curriculum-courses-resource_id-unpublish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Unpublish Courses",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lesson-sections": {
-      "get": {
-        "operationId": "admin-curriculum-list_lesson_sections-api-v1-admin-curriculum-lesson-sections",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "lesson_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Lesson Id"
-            }
-          },
-          {
-            "in": "query",
-            "name": "include_archived",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Archived",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "is_published",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Is Published"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 500,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/LessonSectionResponse"
-                  },
-                  "title": "Response Admin-Curriculum-List Lesson Sections-Api-V1-Admin-Curriculum-Lesson-Sections",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "List Lesson Sections",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lesson-sections/{resource_id}": {
-      "delete": {
-        "operationId": "admin-curriculum-delete_archives_lesson-sections-api-v1-admin-curriculum-lesson-sections-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Delete Archives Lesson-Sections",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "get": {
-        "operationId": "admin-curriculum-get_lesson_section-api-v1-admin-curriculum-lesson-sections-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonSectionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get Lesson Section",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "patch": {
-        "operationId": "admin-curriculum-update_lesson_section-api-v1-admin-curriculum-lesson-sections-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonSectionUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonSectionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Update Lesson Section",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lesson-sections/{resource_id}/archive": {
-      "post": {
-        "operationId": "admin-curriculum-archive_lesson-sections-api-v1-admin-curriculum-lesson-sections-resource_id-archive",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Archive Lesson-Sections",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lesson-sections/{resource_id}/publish": {
-      "post": {
-        "operationId": "admin-curriculum-publish_lesson-sections-api-v1-admin-curriculum-lesson-sections-resource_id-publish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Publish Lesson-Sections",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lesson-sections/{resource_id}/restore": {
-      "post": {
-        "operationId": "admin-curriculum-restore_lesson-sections-api-v1-admin-curriculum-lesson-sections-resource_id-restore",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Restore Lesson-Sections",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lesson-sections/{resource_id}/unpublish": {
-      "post": {
-        "operationId": "admin-curriculum-unpublish_lesson-sections-api-v1-admin-curriculum-lesson-sections-resource_id-unpublish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Unpublish Lesson-Sections",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons": {
-      "get": {
-        "operationId": "admin-curriculum-list_lessons-api-v1-admin-curriculum-lessons",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "unit_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Unit Id"
-            }
-          },
-          {
-            "in": "query",
-            "name": "include_archived",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Archived",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "is_published",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Is Published"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 500,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/LessonResponse"
-                  },
-                  "title": "Response Admin-Curriculum-List Lessons-Api-V1-Admin-Curriculum-Lessons",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "List Lessons",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "post": {
-        "operationId": "admin-curriculum-create_lesson-api-v1-admin-curriculum-lessons",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Create Lesson",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/sections/{resource_id}": {
-      "put": {
-        "operationId": "admin-curriculum-replace_lesson_section-api-v1-admin-curriculum-lessons-sections-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonSectionUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonSectionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Replace Lesson Section",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/{lesson_id}/sections": {
-      "post": {
-        "operationId": "admin-curriculum-create_lesson_section-api-v1-admin-curriculum-lessons-lesson_id-sections",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "lesson_id",
-            "required": true,
-            "schema": {
-              "title": "Lesson Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonSectionCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonSectionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Create Lesson Section",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/{resource_id}": {
-      "delete": {
-        "operationId": "admin-curriculum-delete_archives_lessons-api-v1-admin-curriculum-lessons-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Delete Archives Lessons",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "get": {
-        "operationId": "admin-curriculum-get_lesson-api-v1-admin-curriculum-lessons-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonDetailResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get Lesson",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "patch": {
-        "operationId": "admin-curriculum-update_lesson-api-v1-admin-curriculum-lessons-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Update Lesson",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "put": {
-        "operationId": "admin-curriculum-replace_lesson-api-v1-admin-curriculum-lessons-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Replace Lesson",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/{resource_id}/archive": {
-      "post": {
-        "operationId": "admin-curriculum-archive_lessons-api-v1-admin-curriculum-lessons-resource_id-archive",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Archive Lessons",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/{resource_id}/publish": {
-      "post": {
-        "operationId": "admin-curriculum-publish_lessons-api-v1-admin-curriculum-lessons-resource_id-publish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Publish Lessons",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/{resource_id}/restore": {
-      "post": {
-        "operationId": "admin-curriculum-restore_lessons-api-v1-admin-curriculum-lessons-resource_id-restore",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Restore Lessons",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/lessons/{resource_id}/unpublish": {
-      "post": {
-        "operationId": "admin-curriculum-unpublish_lessons-api-v1-admin-curriculum-lessons-resource_id-unpublish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Unpublish Lessons",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/levels": {
-      "get": {
-        "operationId": "admin-curriculum-list_levels-api-v1-admin-curriculum-levels",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "include_archived",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Archived",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "is_published",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Is Published"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 500,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/LevelResponse"
-                  },
-                  "title": "Response Admin-Curriculum-List Levels-Api-V1-Admin-Curriculum-Levels",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "List Levels",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "post": {
-        "operationId": "admin-curriculum-create_level-api-v1-admin-curriculum-levels",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LevelCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LevelResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Create Level",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/levels/{resource_id}": {
-      "delete": {
-        "operationId": "admin-curriculum-delete_archives_levels-api-v1-admin-curriculum-levels-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Delete Archives Levels",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "get": {
-        "operationId": "admin-curriculum-get_level-api-v1-admin-curriculum-levels-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LevelResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get Level",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "patch": {
-        "operationId": "admin-curriculum-update_level-api-v1-admin-curriculum-levels-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LevelUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LevelResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Update Level",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "put": {
-        "operationId": "admin-curriculum-replace_level-api-v1-admin-curriculum-levels-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LevelUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LevelResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Replace Level",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/levels/{resource_id}/archive": {
-      "post": {
-        "operationId": "admin-curriculum-archive_levels-api-v1-admin-curriculum-levels-resource_id-archive",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Archive Levels",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/levels/{resource_id}/publish": {
-      "post": {
-        "operationId": "admin-curriculum-publish_levels-api-v1-admin-curriculum-levels-resource_id-publish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Publish Levels",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/levels/{resource_id}/restore": {
-      "post": {
-        "operationId": "admin-curriculum-restore_levels-api-v1-admin-curriculum-levels-resource_id-restore",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Restore Levels",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/levels/{resource_id}/unpublish": {
-      "post": {
-        "operationId": "admin-curriculum-unpublish_levels-api-v1-admin-curriculum-levels-resource_id-unpublish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Unpublish Levels",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/units": {
-      "get": {
-        "operationId": "admin-curriculum-list_units-api-v1-admin-curriculum-units",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "course_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Course Id"
-            }
-          },
-          {
-            "in": "query",
-            "name": "include_archived",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Archived",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "is_published",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Is Published"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 500,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/UnitResponse"
-                  },
-                  "title": "Response Admin-Curriculum-List Units-Api-V1-Admin-Curriculum-Units",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "List Units",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "post": {
-        "operationId": "admin-curriculum-create_unit-api-v1-admin-curriculum-units",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UnitCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnitResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Create Unit",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/units/{resource_id}": {
-      "delete": {
-        "operationId": "admin-curriculum-delete_archives_units-api-v1-admin-curriculum-units-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Delete Archives Units",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "get": {
-        "operationId": "admin-curriculum-get_unit-api-v1-admin-curriculum-units-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnitResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get Unit",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "patch": {
-        "operationId": "admin-curriculum-update_unit-api-v1-admin-curriculum-units-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UnitUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnitResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Update Unit",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      },
-      "put": {
-        "operationId": "admin-curriculum-replace_unit-api-v1-admin-curriculum-units-resource_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UnitUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnitResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Replace Unit",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/units/{resource_id}/archive": {
-      "post": {
-        "operationId": "admin-curriculum-archive_units-api-v1-admin-curriculum-units-resource_id-archive",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Archive Units",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/units/{resource_id}/publish": {
-      "post": {
-        "operationId": "admin-curriculum-publish_units-api-v1-admin-curriculum-units-resource_id-publish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Publish Units",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/units/{resource_id}/restore": {
-      "post": {
-        "operationId": "admin-curriculum-restore_units-api-v1-admin-curriculum-units-resource_id-restore",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Restore Units",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
-    "/api/v1/admin/curriculum/units/{resource_id}/unpublish": {
-      "post": {
-        "operationId": "admin-curriculum-unpublish_units-api-v1-admin-curriculum-units-resource_id-unpublish",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "required": true,
-            "schema": {
-              "title": "Resource Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LifecycleActionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Unpublish Units",
-        "tags": [
-          "Admin Curriculum"
-        ]
-      }
-    },
     "/api/v1/admin/materials": {
       "get": {
         "operationId": "admin-materials-list_materials-api-v1-admin-materials",
         "parameters": [
           {
             "in": "query",
-            "name": "lesson_id",
+            "name": "level",
             "required": false,
             "schema": {
               "anyOf": [
@@ -5773,7 +1749,33 @@
                   "type": "null"
                 }
               ],
-              "title": "Lesson Id"
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_archived",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Archived",
+              "type": "boolean"
             }
           },
           {
@@ -5877,13 +1879,58 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Upload a PDF source material for a lesson",
+        "summary": "Upload a PDF source material",
         "tags": [
           "Admin Materials"
         ]
       }
     },
     "/api/v1/admin/materials/{material_id}": {
+      "delete": {
+        "operationId": "admin-materials-archive_material-api-v1-admin-materials-material_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDocumentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Archive a PDF material",
+        "tags": [
+          "Admin Materials"
+        ]
+      },
       "get": {
         "operationId": "admin-materials-get_material-api-v1-admin-materials-material_id",
         "parameters": [
@@ -5925,6 +1972,61 @@
           }
         ],
         "summary": "Get one uploaded source material",
+        "tags": [
+          "Admin Materials"
+        ]
+      },
+      "patch": {
+        "operationId": "admin-materials-update_material-api-v1-admin-materials-material_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDocumentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Edit material metadata",
         "tags": [
           "Admin Materials"
         ]
@@ -6019,63 +2121,6 @@
           }
         ],
         "summary": "Publish a PDF material",
-        "tags": [
-          "Admin Materials"
-        ]
-      }
-    },
-    "/api/v1/admin/materials/{material_id}/question-jobs": {
-      "post": {
-        "operationId": "admin-materials-create_material_question_job-api-v1-admin-materials-material_id-question-jobs",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "material_id",
-            "required": true,
-            "schema": {
-              "title": "Material Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MaterialQuestionJobCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Generate questions from an uploaded PDF material",
         "tags": [
           "Admin Materials"
         ]
@@ -6187,9 +2232,98 @@
         "tags": [
           "Admin Users"
         ]
+      },
+      "post": {
+        "operationId": "admin-users-create_user-api-v1-admin-users",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create a user",
+        "tags": [
+          "Admin Users"
+        ]
       }
     },
     "/api/v1/admin/users/{user_id}": {
+      "delete": {
+        "operationId": "admin-users-delete_user-api-v1-admin-users-user_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Deactivate a user",
+        "tags": [
+          "Admin Users"
+        ]
+      },
       "get": {
         "operationId": "admin-users-get_user-api-v1-admin-users-user_id",
         "parameters": [
@@ -6231,6 +2365,61 @@
           }
         ],
         "summary": "Get a user",
+        "tags": [
+          "Admin Users"
+        ]
+      },
+      "patch": {
+        "operationId": "admin-users-update_user-api-v1-admin-users-user_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update a user",
         "tags": [
           "Admin Users"
         ]
@@ -6350,188 +2539,13 @@
         ]
       }
     },
-    "/api/v1/app/ai-question-jobs/{job_id}": {
-      "get": {
-        "operationId": "frontend-get_ai_question_job-api-v1-app-ai-question-jobs-job_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "job_id",
-            "required": true,
-            "schema": {
-              "title": "Job Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get an owned AI question job",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/ai-question-jobs/{job_id}/regenerate": {
-      "post": {
-        "operationId": "frontend-regenerate_ai_question_job-api-v1-app-ai-question-jobs-job_id-regenerate",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "job_id",
-            "required": true,
-            "schema": {
-              "title": "Job Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/RegenerateJobRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Regenerate questions from the same PDF material",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/ai-question-jobs/{job_id}/sessions": {
-      "post": {
-        "operationId": "frontend-start_ai_job_session-api-v1-app-ai-question-jobs-job_id-sessions",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "job_id",
-            "required": true,
-            "schema": {
-              "title": "Job Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/StartJobSessionRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Start a session from questions created by an AI job",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
     "/api/v1/app/attempts": {
       "get": {
         "operationId": "frontend-get_attempt_history-api-v1-app-attempts",
         "parameters": [
           {
             "in": "query",
-            "name": "lesson_id",
+            "name": "material_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -6542,7 +2556,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Lesson Id"
+              "title": "Material Id"
             }
           },
           {
@@ -6606,32 +2620,6 @@
         ]
       }
     },
-    "/api/v1/app/catalog": {
-      "get": {
-        "operationId": "frontend-get_catalog-api-v1-app-catalog",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppCatalogResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get published course catalog",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
     "/api/v1/app/dashboard": {
       "get": {
         "operationId": "frontend-get_dashboard-api-v1-app-dashboard",
@@ -6652,7 +2640,7 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Get learner MVP dashboard",
+        "summary": "Get learner dashboard",
         "tags": [
           "Frontend"
         ]
@@ -6723,67 +2711,9 @@
         ]
       }
     },
-    "/api/v1/app/lessons/{lesson_id}": {
+    "/api/v1/app/materials": {
       "get": {
-        "operationId": "frontend-get_lesson-api-v1-app-lessons-lesson_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "lesson_id",
-            "required": true,
-            "schema": {
-              "title": "Lesson Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonContentResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get one lesson with content",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/lessons/{lesson_id}/materials": {
-      "get": {
-        "operationId": "frontend-get_lesson_materials-api-v1-app-lessons-lesson_id-materials",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "lesson_id",
-            "required": true,
-            "schema": {
-              "title": "Lesson Id",
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "frontend-list_materials-api-v1-app-materials",
         "responses": {
           "200": {
             "content": {
@@ -6792,22 +2722,12 @@
                   "items": {
                     "$ref": "#/components/schemas/AppMaterialSummary"
                   },
-                  "title": "Response Frontend-Get Lesson Materials-Api-V1-App-Lessons-Lesson Id-Materials",
+                  "title": "Response Frontend-List Materials-Api-V1-App-Materials",
                   "type": "array"
                 }
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [
@@ -6815,62 +2735,15 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Get PDFs uploaded by admin for a lesson",
+        "summary": "Get published materials",
         "tags": [
           "Frontend"
         ]
       }
     },
-    "/api/v1/app/lessons/{lesson_id}/progress": {
+    "/api/v1/app/materials/{material_id}": {
       "get": {
-        "operationId": "frontend-get_lesson_progress-api-v1-app-lessons-lesson_id-progress",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "lesson_id",
-            "required": true,
-            "schema": {
-              "title": "Lesson Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LessonProgressDetail"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get detailed progress for one lesson",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/materials/{material_id}/ai-question-jobs": {
-      "post": {
-        "operationId": "frontend-create_material_ai_question_job-api-v1-app-materials-material_id-ai-question-jobs",
+        "operationId": "frontend-get_material-api-v1-app-materials-material_id",
         "parameters": [
           {
             "in": "path",
@@ -6882,22 +2755,12 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MaterialAiQuestionJobCreate"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "202": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GenerationJobResponse"
+                  "$ref": "#/components/schemas/AppMaterialDetail"
                 }
               }
             },
@@ -6919,7 +2782,7 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Generate questions from an admin-uploaded PDF",
+        "summary": "Get one material",
         "tags": [
           "Frontend"
         ]
@@ -6959,7 +2822,64 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Stream an admin-uploaded PDF for the lesson viewer",
+        "summary": "Stream an admin-uploaded PDF",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/materials/{material_id}/generate-quiz": {
+      "post": {
+        "operationId": "frontend-generate_material_quiz-api-v1-app-materials-material_id-generate-quiz",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateQuizRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateQuizResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Generate a quiz from a PDF material",
         "tags": [
           "Frontend"
         ]
@@ -6991,160 +2911,9 @@
         ]
       }
     },
-    "/api/v1/app/sessions/{session_id}": {
+    "/api/v1/app/quiz-sessions/{session_id}/questions": {
       "get": {
-        "operationId": "frontend-get_session-api-v1-app-sessions-session_id",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "session_id",
-            "required": true,
-            "schema": {
-              "title": "Session Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Get an owned practice session",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/sessions/{session_id}/answers": {
-      "post": {
-        "operationId": "frontend-submit_session_answer-api-v1-app-sessions-session_id-answers",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "session_id",
-            "required": true,
-            "schema": {
-              "title": "Session Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitAnswerRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubmitAnswerResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Submit an answer",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/sessions/{session_id}/complete": {
-      "post": {
-        "operationId": "frontend-complete_session-api-v1-app-sessions-session_id-complete",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "session_id",
-            "required": true,
-            "schema": {
-              "title": "Session Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LearningSessionResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "summary": "Complete a fully answered session",
-        "tags": [
-          "Frontend"
-        ]
-      }
-    },
-    "/api/v1/app/sessions/{session_id}/questions": {
-      "get": {
-        "operationId": "frontend-get_session_questions-api-v1-app-sessions-session_id-questions",
+        "operationId": "frontend-get_quiz_session_questions-api-v1-app-quiz-sessions-session_id-questions",
         "parameters": [
           {
             "in": "path",
@@ -7164,7 +2933,7 @@
                   "items": {
                     "$ref": "#/components/schemas/SessionQuestionResponse"
                   },
-                  "title": "Response Frontend-Get Session Questions-Api-V1-App-Sessions-Session Id-Questions",
+                  "title": "Response Frontend-Get Quiz Session Questions-Api-V1-App-Quiz-Sessions-Session Id-Questions",
                   "type": "array"
                 }
               }
@@ -7187,7 +2956,158 @@
             "BearerAuth": []
           }
         ],
-        "summary": "Get learner-safe session questions",
+        "summary": "Get learner-safe quiz questions",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/quiz-sessions/{session_id}/result": {
+      "get": {
+        "operationId": "frontend-get_quiz_session_result-api-v1-app-quiz-sessions-session_id-result",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get quiz result",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/quiz-sessions/{session_id}/status": {
+      "get": {
+        "operationId": "frontend-get_quiz_session_status-api-v1-app-quiz-sessions-session_id-status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizSessionStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get quiz session status",
+        "tags": [
+          "Frontend"
+        ]
+      }
+    },
+    "/api/v1/app/quiz-sessions/{session_id}/submit": {
+      "post": {
+        "operationId": "frontend-submit_quiz_session-api-v1-app-quiz-sessions-session_id-submit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitQuizRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Submit quiz answers and calculate result",
         "tags": [
           "Frontend"
         ]

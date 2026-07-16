@@ -1,4 +1,4 @@
-"""Seed local demo data for the PDF reading-comprehension MVP.
+"""Seed local demo data for the material-first PDF quiz MVP.
 
 Usage:
     python scripts/seed_dummy_data.py
@@ -17,7 +17,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.core import security  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
-from app.models.curriculum import Course, Lesson, LessonSection, Level, Unit  # noqa: E402
 from app.models.material import MaterialDocument  # noqa: E402
 from app.models.user import User, UserRole  # noqa: E402
 from app.services.pdf_material import store_pdf_material  # noqa: E402
@@ -73,95 +72,98 @@ def _upsert_user(db, *, email: str, role: UserRole, name: str) -> User:
     return user
 
 
+def _upsert_material(
+    db,
+    *,
+    admin: User,
+    title: str,
+    description: str,
+    category: str,
+    sequence: int,
+    text: str,
+) -> MaterialDocument:
+    pdf_bytes = _text_pdf_bytes(text)
+    checksum = hashlib.sha256(pdf_bytes).hexdigest()
+    material = db.query(MaterialDocument).filter(MaterialDocument.checksum == checksum).first()
+    values = {
+        "title": title,
+        "description": description,
+        "level": "N5",
+        "category": category,
+        "sequence": sequence,
+        "passing_score": 70,
+        "original_filename": f"demo-{sequence}-{title.lower().replace(' ', '-')}.pdf"[:255],
+        "content_type": "application/pdf",
+        "file_size_bytes": len(pdf_bytes),
+        "checksum": checksum,
+        "storage_key": store_pdf_material(pdf_bytes, checksum),
+        "page_count": 1,
+        "extracted_text": text,
+        "is_published": True,
+        "is_archived": False,
+        "published_at": datetime.now(timezone.utc),
+        "archived_at": None,
+        "created_by_id": admin.id,
+    }
+    if material is None:
+        material = MaterialDocument(**values)
+        db.add(material)
+    else:
+        for field, value in values.items():
+            setattr(material, field, value)
+    db.flush()
+    return material
+
+
 def seed_dummy_data() -> dict[str, int]:
     db = SessionLocal()
     try:
         admin = _upsert_user(db, email="admin@example.com", role=UserRole.ADMINISTRATOR, name="Demo Admin")
         _upsert_user(db, email="learner@example.com", role=UserRole.LEARNER, name="Demo Learner")
 
-        level = db.query(Level).filter(Level.code == "N5").first()
-        if level is None:
-            level = Level(code="N5", name="JLPT N5", sequence=1)
-            db.add(level)
-        level.is_published = True
-        level.is_archived = False
-        level.published_at = datetime.now(timezone.utc)
-        db.flush()
-
-        course = db.query(Course).filter(Course.level_id == level.id, Course.title == "Dokkai N5").first()
-        if course is None:
-            course = Course(level_id=level.id, title="Dokkai N5", sequence=1)
-            db.add(course)
-        course.description = "Kursus pemahaman membaca bahasa Jepang berbasis PDF."
-        course.is_published = True
-        course.is_archived = False
-        course.published_at = datetime.now(timezone.utc)
-        db.flush()
-
-        unit = db.query(Unit).filter(Unit.course_id == course.id, Unit.title == "Salam Dasar").first()
-        if unit is None:
-            unit = Unit(course_id=course.id, title="Salam Dasar", sequence=1)
-            db.add(unit)
-        unit.is_published = True
-        unit.is_archived = False
-        unit.published_at = datetime.now(timezone.utc)
-        db.flush()
-
-        lesson = db.query(Lesson).filter(Lesson.unit_id == unit.id, Lesson.title == "Membaca Salam Dasar").first()
-        if lesson is None:
-            lesson = Lesson(unit_id=unit.id, title="Membaca Salam Dasar", sequence=1)
-            db.add(lesson)
-        lesson.summary = "Baca materi PDF singkat, lalu uji pemahaman dengan quiz AI."
-        lesson.learning_objective = "Learner memahami arti salam dasar bahasa Jepang dari materi bacaan."
-        lesson.passing_score = 70
-        lesson.is_published = True
-        lesson.is_archived = False
-        lesson.published_at = datetime.now(timezone.utc)
-        db.flush()
-
-        section = (
-            db.query(LessonSection)
-            .filter(LessonSection.lesson_id == lesson.id, LessonSection.sequence == 1)
-            .first()
-        )
-        if section is None:
-            section = LessonSection(lesson_id=lesson.id, title="Instruksi", sequence=1)
-            db.add(section)
-        section.content = "Baca PDF materi, lalu tekan tombol Uji Pemahaman Saya."
-        section.is_published = True
-        section.is_archived = False
-        section.published_at = datetime.now(timezone.utc)
-
-        extracted_text = (
-            "Materi Salam Dasar N5. Konnichiwa berarti halo atau selamat siang. "
-            "Ohayou gozaimasu berarti selamat pagi. Konbanwa berarti selamat malam. "
-            "Arigatou gozaimasu berarti terima kasih. Gunakan salam sesuai waktu dan situasi."
-        )
-        pdf_bytes = _text_pdf_bytes(extracted_text)
-        checksum = hashlib.sha256(pdf_bytes).hexdigest()
-        material = db.query(MaterialDocument).filter(MaterialDocument.checksum == checksum).first()
-        values = {
-            "lesson_id": lesson.id,
-            "title": "Demo PDF Salam Dasar",
-            "original_filename": "demo-salam-dasar.pdf",
-            "content_type": "application/pdf",
-            "file_size_bytes": len(pdf_bytes),
-            "checksum": checksum,
-            "storage_key": store_pdf_material(pdf_bytes, checksum),
-            "page_count": 1,
-            "extracted_text": extracted_text,
-            "is_published": True,
-            "published_at": datetime.now(timezone.utc),
-            "created_by_id": admin.id,
-        }
-        if material is None:
-            db.add(MaterialDocument(**values))
-        else:
-            for field, value in values.items():
-                setattr(material, field, value)
+        materials = [
+            _upsert_material(
+                db,
+                admin=admin,
+                title="Salam Dasar",
+                description="Materi awal tentang salam sehari-hari bahasa Jepang.",
+                category="greetings",
+                sequence=1,
+                text=(
+                    "Materi Salam Dasar N5. Konnichiwa berarti halo atau selamat siang. "
+                    "Ohayou gozaimasu berarti selamat pagi. Konbanwa berarti selamat malam. "
+                    "Arigatou gozaimasu berarti terima kasih. Gunakan salam sesuai waktu dan situasi."
+                ),
+            ),
+            _upsert_material(
+                db,
+                admin=admin,
+                title="Partikel Wa dan Desu",
+                description="Materi pengenalan pola kalimat sederhana.",
+                category="grammar",
+                sequence=2,
+                text=(
+                    "Partikel wa menandai topik kalimat. Watashi wa gakusei desu berarti saya adalah pelajar. "
+                    "Desu membuat kalimat terdengar sopan. Dalam percakapan dasar, pola A wa B desu sering digunakan."
+                ),
+            ),
+            _upsert_material(
+                db,
+                admin=admin,
+                title="Angka dan Waktu",
+                description="Materi membaca angka dasar dan waktu sederhana.",
+                category="vocabulary",
+                sequence=3,
+                text=(
+                    "Ichi berarti satu, ni berarti dua, san berarti tiga, dan yon berarti empat. "
+                    "Ji digunakan untuk menyebut jam, misalnya san-ji berarti jam tiga. "
+                    "Han berarti setengah, sehingga san-ji han berarti pukul setengah empat."
+                ),
+            ),
+        ]
 
         db.commit()
-        return {"users": 2, "levels": 1, "courses": 1, "units": 1, "lessons": 1, "materials": 1}
+        return {"users": 2, "materials": len(materials)}
     finally:
         db.close()
 

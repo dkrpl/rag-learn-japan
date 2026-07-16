@@ -94,6 +94,7 @@ def snapshot_question(db: Session, question: Question, *, actor_id: str | None) 
     revision = QuestionRevision(
         question_id=question.id,
         version_number=question.version_number,
+        material_id=question.material_id,
         lesson_id=question.lesson_id,
         question_type=question.question_type,
         skill=question.skill,

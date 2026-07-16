@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import RoleChecker, get_current_user
 from app.db.session import get_db
 from app.models.user import User, UserRole
 from app.schemas.user import (
+    AdminUserCreate,
+    AdminUserUpdate,
     UserListResponse,
     UserResponse,
     UserRoleUpdate,
@@ -33,10 +35,61 @@ def get_users(
     return UserListResponse(items=items, total=total, offset=offset, limit=limit)
 
 
+@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED, summary="Create a user")
+def create_user(
+    request_in: AdminUserCreate,
+    db: Session = Depends(get_db),
+    administrator: User = Depends(get_current_user),
+) -> User:
+    try:
+        return AuthService(db).create_user_by_admin(
+            actor=administrator,
+            email=str(request_in.email),
+            password=request_in.password,
+            profile=request_in.model_dump(
+                exclude={"email", "password", "role", "is_active", "is_email_verified"},
+            ),
+            role=request_in.role,
+            is_active=request_in.is_active,
+            is_email_verified=request_in.is_email_verified,
+        )
+    except AuthServiceError as exc:
+        _raise_service_error(exc)
+
+
 @router.get("/{user_id}", response_model=UserResponse, summary="Get a user")
 def get_user(user_id: str, db: Session = Depends(get_db)) -> User:
     try:
         return AuthService(db).get_user(user_id=user_id)
+    except AuthServiceError as exc:
+        _raise_service_error(exc)
+
+
+@router.patch("/{user_id}", response_model=UserResponse, summary="Update a user")
+def update_user(
+    user_id: str,
+    request_in: AdminUserUpdate,
+    db: Session = Depends(get_db),
+    administrator: User = Depends(get_current_user),
+) -> User:
+    try:
+        return AuthService(db).update_user_by_admin(
+            actor=administrator,
+            user_id=user_id,
+            changes=request_in.model_dump(exclude_unset=True),
+        )
+    except AuthServiceError as exc:
+        _raise_service_error(exc)
+
+
+@router.delete("/{user_id}", response_model=UserResponse, summary="Deactivate a user")
+def delete_user(
+    user_id: str,
+    db: Session = Depends(get_db),
+    administrator: User = Depends(get_current_user),
+) -> User:
+    try:
+        return AuthService(db).delete_user_by_admin(actor=administrator, user_id=user_id)
     except AuthServiceError as exc:
         _raise_service_error(exc)
 

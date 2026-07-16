@@ -2,6 +2,9 @@
 
 Sumber utama: `prd_belajar_bahasa_jepang.md`
 
+> Catatan revisi 2026-07-16:
+> Folder `prd/` adalah arsip PRD backend lama. Sumber kebenaran produk terbaru untuk MVP sekarang adalah [`../prd-revisi/01-prd-revisi-mvp.md`](../prd-revisi/01-prd-revisi-mvp.md), dengan alur material-first: admin upload PDF, user pilih materi dan difficulty, AI generate soal, user mengerjakan, lulus mendapat EXP dan unlock, gagal wajib mengulang tanpa EXP.
+
 Dokumen di folder ini adalah pecahan PRD backend dan engine untuk platform belajar Bahasa Jepang berbasis AI. Scope tetap backend: API, database, auth, content engine, question bank, learning engine, progress/SRS, AI generator, audio/TTS, simulasi JLPT, dokumentasi API, testing, dan deployment backend.
 
 Frontend belum dikembangkan pada tahap ini. Dokumentasi frontend yang disebut di PRD berarti kontrak API, OpenAPI, Postman, dan panduan integrasi agar tim frontend bisa memakai backend nanti.

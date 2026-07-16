@@ -64,6 +64,17 @@ class UserUpdate(BaseModel):
         return str(HttpUrl(value))
 
 
+class AdminUserCreate(UserCreate):
+    role: UserRole = UserRole.LEARNER
+    is_active: bool = True
+    is_email_verified: bool = True
+
+
+class AdminUserUpdate(UserUpdate):
+    role: UserRole | None = None
+    is_active: bool | None = None
+
+
 class UserPasswordUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

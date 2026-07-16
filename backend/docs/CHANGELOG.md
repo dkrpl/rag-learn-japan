@@ -4,6 +4,16 @@ Semua perubahan penting pada proyek Nihongo Learn Backend API akan didokumentasi
 
 Format changelog ini merujuk pada prinsip [Keep a Changelog](https://keepachangelog.com/id/1.0.0/), dan proyek ini menganut [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-07-16
+
+### Changed
+- Revisi total arah MVP menjadi alur material-first: admin upload PDF, user pilih materi dan tingkat kesulitan, AI generate soal, user mengerjakan, backend validasi, lalu sistem menentukan pass/fail.
+- Aturan progress diperjelas: jika nilai di bawah passing score, user tidak mendapat EXP, materi berikutnya tetap terkunci, dan user wajib mengulang.
+- Dokumentasi frontend, workflow PDF, API overview, Swagger visibility, asset management, dan PRD revisi diselaraskan ke kontrak material-first.
+
+### Removed
+- Alur admin curriculum kompleks berbasis `Level -> Course -> Unit -> Lesson` dihapus dari kontrak backend MVP.
+
 ## [1.0.0-MVP] - 2026-07-11
 
 Rilis utama pertama untuk Nihongo Learn MVP.

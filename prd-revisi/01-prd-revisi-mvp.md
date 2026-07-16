@@ -1,121 +1,451 @@
-# Product Requirements Document (PRD) - Revisi MVP (Minimum Viable Product)
+# Product Requirements Document (PRD) - Revisi Total MVP
 
-## 1. Visi & Objektif Produk
-Membangun platform kursus Bahasa Jepang (Nihongo-Learn) interaktif yang berfokus pada **Pemahaman Membaca (*Reading Comprehension / Dokkai*)**. Platform ini menggunakan AI secara ekstensif untuk mengotomatisasi pembuatan ujian berdasarkan materi PDF yang disediakan instruktur, digabungkan dengan sistem progresi terstruktur layaknya sebuah kursus profesional.
+## 1. Visi Produk
 
-**Tujuan Utama Revisi:**
-Memangkas fitur-fitur kompleks yang tidak sejalan dengan alur belajar linier (Course), guna mempercepat rilis aplikasi (*time-to-market*) dengan hanya berfokus pada satu *Killer Feature* yang solid.
+Nihongo Learn adalah platform evaluasi pemahaman Bahasa Jepang berbasis PDF dan AI.
+Fokus MVP bukan manajemen kursus yang rumit, tetapi alur sederhana:
 
----
+```text
+Admin upload PDF
+User pilih materi
+User pilih tingkat kesulitan
+AI generate soal
+User mengerjakan
+Backend validasi jawaban
+Jika lulus: dapat EXP dan lanjut materi berikutnya
+Jika tidak lulus: wajib mengulang dan tidak mendapat EXP
+```
 
-## 2. Target Pengguna (User Personas)
-1.  **Admin (Instruktur/Guru):** Mengatur silabus kursus dan menyediakan materi bacaan berkualitas tinggi (PDF).
-2.  **Learner (Murid):** Mengikuti kursus secara berurutan, membaca materi, dan diuji kemampuannya secara dinamis oleh AI untuk mendapatkan poin.
+Tujuan utama revisi ini adalah menghapus kerumitan `Level -> Course -> Unit -> Lesson`
+dari MVP. Materi PDF menjadi pusat sistem.
 
----
+## 2. Persona Pengguna
 
-## 3. Alur Utama (The "Killer" Workflow)
+### Admin
 
-Alur ini adalah inti dari aplikasi dan **harus** berjalan dengan sempurna:
+Admin bertugas menyediakan materi belajar.
 
-### A. Sisi Admin (Course Preparation)
-1.  Admin membuat struktur kurikulum: **Course ➡️ Unit ➡️ Lesson**.
-2.  Pada sebuah **Lesson** (misal: "Cerita Rakyat: Momotaro"), Admin mengunggah dokumen/materi **PDF**.
-3.  *(Selesai)* Admin tidak perlu membuat bank soal atau mengetik kunci jawaban.
+Admin tidak perlu:
 
-### B. Sisi Murid (Learning & Evaluation)
-1.  **Membaca (Learn):** Murid masuk ke dalam *Lesson* dan disajikan *PDF viewer* untuk membaca dokumen.
-2.  **Generate Ujian (Challenge):** Setelah membaca, murid menekan tombol "Uji Pemahaman Saya". Sistem memanggil *backend* AI (Celery Worker) untuk membedah PDF tersebut dan membuat 5-10 soal Pilihan Ganda secara *real-time*.
-3.  **Evaluasi (Test):** Murid mengerjakan kuis AI. Jika jawaban salah, sistem menampilkan penjelasan berdasarkan teks PDF.
-4.  **Progresi (Reward & Unlock):** Jika murid mencapai KKM (misal >70% benar):
-    *   Mendapatkan **XP (Experience Points)**.
-    *   Status *Lesson* berubah menjadi **Selesai (Completed)**.
-    *   *Lesson* berikutnya **Terbuka (Unlocked)**.
-5.  **Kompetisi (Leaderboard):** XP yang didapat akan mengakumulasi peringkat murid di *Leaderboard* global.
+- Membuat course, unit, lesson secara manual.
+- Membuat soal manual.
+- Membuat kunci jawaban manual.
+- Mengatur struktur kurikulum yang panjang.
 
----
+Admin cukup:
 
-## 4. Ruang Lingkup MVP (In-Scope)
+- Upload PDF.
+- Mengisi judul, deskripsi, level, kategori, dan urutan materi.
+- Publish/unpublish materi.
+- Melihat preview hasil ekstraksi teks PDF.
 
-Fitur-fitur yang **WAJIB** ada di Frontend dan dijaga di Backend untuk versi awal:
+### User
 
-*   **Autentikasi:** Login/Register User & Admin.
-*   **Katalog Kursus:** Tampilan daftar Course, Unit, dan Lesson yang bersifat *Locked/Unlocked*.
-*   **PDF Viewer:** Integrasi penampil PDF di dalam halaman *Lesson*.
-*   **AI Quiz Engine:** UI untuk mengerjakan soal pilihan ganda hasil *generate* AI.
-*   **Dashboard Gamifikasi:** Halaman profil yang menunjukkan Total XP dan Halaman Leaderboard.
+User belajar dari materi PDF yang sudah dipublish admin.
 
----
+User dapat:
 
-## 5. Fitur yang Dibuang / Ditunda (Out of Scope / Deprecated)
+- Melihat daftar materi.
+- Membuka PDF.
+- Memilih tingkat kesulitan soal.
+- Generate soal dari PDF.
+- Mengerjakan soal.
+- Melihat hasil, feedback, dan penjelasan.
+- Mendapat EXP hanya jika skor memenuhi batas lulus.
+- Lanjut ke materi berikutnya hanya jika materi sebelumnya lulus.
 
-Berdasarkan revisi MVP, fitur-fitur berikut yang sebelumnya ada di rencana awal atau sudah terlanjur dibuat di *backend*, **TIDAK AKAN DITAMPILKAN / DIBUANG** dari UI *Frontend* saat ini:
+## 3. Prinsip Produk
 
-1.  **Sistem Hafalan Cerdas (Spaced Repetition System / SRS):**
-    *   *Alasan:* Merusak fokus belajar linier (*Course flow*). Membangun UI *flashcard* memakan waktu besar.
-2.  **Input Soal Manual oleh Admin:**
-    *   *Alasan:* Redundan. Kekuatan utama platform ini adalah AI yang membuat soal otomatis dari PDF.
-3.  **Ujian Simulasi Adaptif / Bebas (JLPT Simulations):**
-    *   *Alasan:* Bertentangan dengan konsep *Course* yang harus diselesaikan bab per bab secara berurutan.
-4.  **Text-to-Speech (TTS / Audio):**
-    *   *Alasan:* Fokus aplikasi direvisi menjadi Pemahaman Membaca (Dokumen visual/PDF). Penggunaan API suara menguras biaya tanpa relevansi tinggi untuk *Dokkai*.
+1. Material-first, bukan course-first.
+2. Admin workflow harus pendek.
+3. AI menghasilkan soal dari PDF, bukan dari bank soal manual.
+4. User tidak bisa lanjut jika belum lulus.
+5. EXP hanya diberikan saat lulus.
+6. Attempt gagal tetap disimpan sebagai riwayat, tetapi tidak memberi EXP.
+7. Leaderboard dihitung dari EXP valid, bukan dari total attempt.
 
----
+## 4. Alur Admin
 
-## 6. Persyaratan Teknis (Technical Requirements)
+### 4.1 Upload Materi
 
-*   **Backend:** Tetap menggunakan arsitektur yang sudah ada (FastAPI + SQLAlchemy). Semua model utama (`Course`, `Lesson`, `MaterialDocument`, `GenerationJob`, `XPTransaction`) sudah mendukung visi revisi ini.
-*   **Background Jobs:** Penggunaan Celery + Redis WAJIB dipertahankan khusus untuk tugas *AI Question Generation* agar tidak memblokir antarmuka pengguna saat proses *parsing* PDF yang berat.
-*   **Database:** Tetap menyimpan riwayat `Question` yang di-*generate* AI untuk keperluan analitik, namun tidak difokuskan sebagai "Bank Soal Manual" untuk Admin.
+Admin membuka halaman Materials dan upload PDF.
 
----
+Input minimal:
 
-## 7. Saran Pengembangan Berikutnya (Post-MVP)
+- `title`
+- `description` optional
+- `level` misalnya `N5`, `N4`, `N3`, `N2`, `N1`
+- `category` misalnya `reading`, `grammar`, `vocabulary`
+- `sequence` untuk urutan materi
+- `file` PDF
 
-Fitur berikut tidak wajib untuk rilis MVP pertama, tetapi disarankan sebagai prioritas lanjutan karena masih selaras dengan alur utama: **Admin upload PDF -> User generate soal -> User mengerjakan -> XP -> Leaderboard**.
+Backend melakukan:
 
-### Prioritas Tinggi
+- Validasi file PDF.
+- Simpan file.
+- Ekstrak teks PDF.
+- Simpan metadata dan `extracted_text`.
+- Default status: draft atau published sesuai pilihan admin.
 
-1.  **Riwayat Attempt User**
-    *   User dapat melihat sesi yang pernah dikerjakan: tanggal, lesson, skor, jumlah benar, XP yang didapat, dan status lulus/tidak.
-    *   Manfaat: user merasa progresnya nyata dan frontend punya halaman "aktivitas belajar" yang jelas.
+### 4.2 Kelola Materi
 
-2.  **Feedback Per Soal**
-    *   Setelah user menjawab, sistem menampilkan penjelasan singkat berdasarkan isi PDF.
-    *   Manfaat: aplikasi tidak hanya memberi nilai, tetapi benar-benar membantu evaluasi pemahaman bahasa.
+Admin dapat:
 
-3.  **Batas Generate AI Per User**
-    *   Batasi jumlah generate soal per hari atau per lesson, misalnya 3-5 kali per hari untuk user biasa.
-    *   Manfaat: mengontrol biaya AI dan mencegah spam job.
+- List materi.
+- Detail materi.
+- Edit metadata.
+- Preview teks hasil ekstraksi.
+- Publish materi.
+- Unpublish materi.
+- Delete/archive materi.
 
-### Prioritas Menengah
+Delete disarankan soft delete/archive agar attempt user lama tidak rusak.
 
-4.  **Preview Hasil Ekstraksi PDF Untuk Admin**
-    *   Setelah upload PDF, admin bisa melihat cuplikan teks hasil ekstraksi.
-    *   Manfaat: admin bisa memastikan PDF terbaca dengan benar sebelum dipakai AI.
+## 5. Alur User
 
-5.  **Publish/Unpublish PDF Material**
-    *   Admin bisa menyembunyikan PDF yang belum siap tanpa menghapus file.
-    *   Manfaat: materi bisa disiapkan bertahap tanpa langsung terlihat oleh user.
+### 5.1 Lihat Materi
 
-6.  **Regenerate Soal**
-    *   User atau admin dapat membuat ulang soal dari PDF yang sama jika hasil AI kurang baik.
-    *   Manfaat: menjaga kualitas pengalaman belajar tanpa perlu upload ulang materi.
+User melihat daftar materi yang sudah published.
 
-7.  **Status AI Job Yang Lebih Informatif**
-    *   Status tetap sederhana (`PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`), tetapi pesan error dibuat ramah frontend.
-    *   Manfaat: user tahu apakah harus menunggu, mencoba lagi, atau menghubungi admin.
+Daftar materi harus menampilkan:
 
-### Prioritas Rendah / Future Enhancement
+- Judul.
+- Level.
+- Kategori.
+- Status lock/unlock.
+- Best score.
+- Attempt count.
+- Passing score.
 
-8.  **OCR Untuk PDF Scan**
-    *   Mendukung PDF berbasis gambar melalui OCR.
-    *   Manfaat: memperluas jenis materi yang bisa digunakan, tetapi tidak wajib untuk MVP karena menambah kompleksitas dan biaya.
+Materi pertama terbuka secara default.
+Materi berikutnya hanya terbuka jika materi sebelumnya sudah lulus.
 
-9.  **Progress Per Lesson Lebih Detail**
-    *   Tambahkan statistik seperti best score, last score, total attempt, dan waktu terakhir belajar.
-    *   Manfaat: dashboard menjadi lebih informatif tanpa mengubah alur utama.
+### 5.2 Buka PDF
 
-10. **Leaderboard Mingguan/Bulanan**
-    *   Selain leaderboard total XP, tampilkan ranking periodik.
-    *   Manfaat: user baru tetap punya peluang bersaing meskipun total XP masih kecil.
+User membuka detail materi dan melihat PDF viewer.
+
+User membaca materi terlebih dahulu sebelum generate soal.
+
+### 5.3 Pilih Tingkat Kesulitan
+
+Sebelum generate soal, user memilih difficulty:
+
+- `easy`
+- `medium`
+- `hard`
+
+Atau representasi angka:
+
+- `1` easy
+- `2` medium
+- `3` hard
+
+Frontend boleh menampilkan label sederhana, backend menyimpan nilai difficulty.
+
+### 5.4 Generate Soal
+
+User menekan tombol generate.
+
+Backend membuat AI job berdasarkan:
+
+- `material_id`
+- `difficulty`
+- `question_count`
+- teks hasil ekstraksi PDF
+- user yang meminta generate
+
+Soal yang dibuat bersifat session/user scoped, bukan bank soal global untuk admin.
+
+### 5.5 Mengerjakan Soal
+
+User mengerjakan soal pilihan ganda.
+
+MVP hanya wajib mendukung:
+
+- Multiple choice.
+- Reading comprehension.
+- Feedback setelah submit.
+
+### 5.6 Submit Dan Validasi
+
+Backend menghitung:
+
+- Total soal.
+- Jawaban benar.
+- Jawaban salah.
+- Score persentase.
+- Status lulus/gagal.
+
+Passing score default:
+
+```text
+70
+```
+
+Passing score bisa dibuat configurable per material, tetapi MVP boleh memakai default global.
+
+### 5.7 Reward Dan Locking
+
+Jika `score >= passing_score`:
+
+- Attempt status: `passed`.
+- User mendapat EXP.
+- Progress material menjadi `completed`.
+- Materi berikutnya terbuka.
+- Leaderboard naik.
+
+Jika `score < passing_score`:
+
+- Attempt status: `failed`.
+- User tidak mendapat EXP.
+- Progress material belum completed.
+- Materi berikutnya tetap locked.
+- User harus generate/mengerjakan ulang.
+
+## 6. Gamifikasi
+
+### 6.1 EXP
+
+EXP hanya diberikan untuk attempt yang lulus.
+
+Formula MVP:
+
+```text
+base_exp = 100
+difficulty_multiplier:
+  easy = 1.0
+  medium = 1.25
+  hard = 1.5
+
+earned_exp = round(base_exp * difficulty_multiplier * (score / 100))
+```
+
+Jika gagal:
+
+```text
+earned_exp = 0
+```
+
+### 6.2 Leaderboard
+
+Leaderboard dihitung dari total EXP valid.
+
+Mode MVP:
+
+- Global leaderboard.
+
+Post-MVP:
+
+- Weekly leaderboard.
+- Monthly leaderboard.
+
+## 7. Data Model Target
+
+Model utama MVP:
+
+### `materials`
+
+Menyimpan PDF yang diupload admin.
+
+Field target:
+
+- `id`
+- `title`
+- `description`
+- `level`
+- `category`
+- `sequence`
+- `original_filename`
+- `content_type`
+- `file_size_bytes`
+- `checksum`
+- `storage_key`
+- `page_count`
+- `extracted_text`
+- `is_published`
+- `is_archived`
+- `passing_score`
+- `created_by_id`
+- `created_at`
+- `updated_at`
+
+### `question_jobs`
+
+Menyimpan proses generate AI.
+
+Field target:
+
+- `id`
+- `material_id`
+- `user_id`
+- `difficulty`
+- `question_count`
+- `status`
+- `error_message`
+- `raw_response`
+- `created_question_count`
+- `created_at`
+- `completed_at`
+
+### `questions`
+
+Menyimpan soal hasil AI.
+
+Field target:
+
+- `id`
+- `job_id`
+- `material_id`
+- `user_id`
+- `question_type`
+- `prompt_json`
+- `answer_key_json`
+- `explanation_json`
+- `difficulty`
+
+### `practice_sessions`
+
+Menyimpan sesi pengerjaan user.
+
+Field target:
+
+- `id`
+- `user_id`
+- `material_id`
+- `job_id`
+- `difficulty`
+- `status`
+- `total_questions`
+- `answered_questions`
+- `correct_answers`
+- `final_score`
+- `passing_score`
+- `is_passed`
+- `earned_exp`
+- `started_at`
+- `completed_at`
+
+### `answers`
+
+Menyimpan jawaban user.
+
+Field target:
+
+- `id`
+- `session_id`
+- `question_id`
+- `user_answer_json`
+- `is_correct`
+- `score`
+- `feedback`
+- `answered_at`
+
+### `user_material_progress`
+
+Menyimpan progress per user per materi.
+
+Field target:
+
+- `id`
+- `user_id`
+- `material_id`
+- `status`: `locked`, `unlocked`, `completed`
+- `best_score`
+- `last_score`
+- `attempt_count`
+- `completed_at`
+
+### `xp_transactions`
+
+Menyimpan riwayat EXP.
+
+Field target:
+
+- `id`
+- `user_id`
+- `material_id`
+- `session_id`
+- `amount`
+- `reason`
+- `created_at`
+
+## 8. Endpoint Target MVP
+
+### Auth
+
+```http
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+```
+
+### Admin Materials
+
+```http
+POST   /api/v1/admin/materials/pdf
+GET    /api/v1/admin/materials
+GET    /api/v1/admin/materials/{material_id}
+PATCH  /api/v1/admin/materials/{material_id}
+GET    /api/v1/admin/materials/{material_id}/preview
+POST   /api/v1/admin/materials/{material_id}/publish
+POST   /api/v1/admin/materials/{material_id}/unpublish
+DELETE /api/v1/admin/materials/{material_id}
+```
+
+### Admin Users
+
+```http
+GET    /api/v1/admin/users
+POST   /api/v1/admin/users
+GET    /api/v1/admin/users/{user_id}
+PATCH  /api/v1/admin/users/{user_id}
+DELETE /api/v1/admin/users/{user_id}
+```
+
+### User App
+
+```http
+GET  /api/v1/app/me
+GET  /api/v1/app/dashboard
+GET  /api/v1/app/materials
+GET  /api/v1/app/materials/{material_id}
+GET  /api/v1/app/materials/{material_id}/file
+POST /api/v1/app/materials/{material_id}/generate-quiz
+GET  /api/v1/app/quiz-sessions/{session_id}/status
+GET  /api/v1/app/quiz-sessions/{session_id}/questions
+POST /api/v1/app/quiz-sessions/{session_id}/submit
+GET  /api/v1/app/quiz-sessions/{session_id}/result
+GET  /api/v1/app/attempts
+GET  /api/v1/app/leaderboard
+```
+
+## 9. Out Of Scope MVP
+
+Fitur berikut tidak masuk MVP:
+
+- Course, unit, lesson management kompleks.
+- Lesson section manual.
+- Bank soal manual admin.
+- Review soal manual admin.
+- SRS/spaced repetition.
+- TTS/listening.
+- Writing/handwriting.
+- JLPT simulation bebas.
+- Upload PDF oleh user.
+- Payment/forum/chat tutor.
+
+## 10. Catatan Rombak Backend
+
+Backend saat ini masih course-first.
+Rombak berikutnya harus mengubah kontrak menjadi material-first.
+
+Prioritas rombak:
+
+1. Jadikan `MaterialDocument` tidak wajib terkait `lesson_id`.
+2. Tambahkan metadata material: `level`, `category`, `sequence`, `passing_score`, `is_archived`.
+3. Ganti `/app/catalog` menjadi `/app/materials`.
+4. Ganti flow lesson-based menjadi material-based.
+5. Pastikan EXP hanya diberikan jika session passed.
+6. Pastikan unlock materi berikutnya dihitung dari `user_material_progress`.
+7. Sembunyikan atau hapus endpoint admin curriculum dari Swagger dan frontend.

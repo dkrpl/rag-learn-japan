@@ -1,21 +1,28 @@
 # Pengelolaan Materi PDF
 
-Materi utama MVP adalah PDF yang di-upload oleh admin/content editor ke lesson. User tidak meng-upload materi; user hanya memilih PDF yang tersedia, meminta AI membuat soal dari PDF tersebut, lalu mengerjakan sesi soal.
+Materi utama MVP adalah PDF yang di-upload oleh admin/content editor.
+User tidak meng-upload materi.
 
 ## Materi Yang Didukung
 
-- Level, course, unit, lesson, dan lesson section.
-- PDF lesson melalui `MaterialDocument`.
+- PDF material berbasis teks.
+- Metadata material: title, description, level, category, sequence, passing score.
+- Preview hasil ekstraksi teks PDF.
 - Soal pilihan ganda reading yang dibuat AI dari teks PDF.
-- Progress lesson, XP, dan leaderboard.
+- Progress material, EXP, attempt history, dan leaderboard.
 
 ## Lifecycle
 
-1. Admin membuat struktur kursus.
-2. Admin upload PDF ke lesson.
-3. Backend menyimpan file PDF, mengekstrak teks, dan menyimpan metadata material.
-4. Lesson dipublish jika sudah punya objective dan section atau PDF material.
-5. User membuka PDF, generate soal, mengerjakan, lalu mendapatkan XP jika lulus KKM.
+1. Admin upload PDF material.
+2. Backend menyimpan file PDF.
+3. Backend mengekstrak teks PDF.
+4. Admin preview hasil ekstraksi.
+5. Admin publish material.
+6. User membuka material dan PDF.
+7. User memilih difficulty lalu generate quiz.
+8. User submit jawaban.
+9. Jika score memenuhi passing score, user mendapat EXP dan material berikutnya terbuka.
+10. Jika score kurang, EXP tetap 0 dan user harus mengulang.
 
 ## Storage
 
@@ -29,4 +36,5 @@ Jangan memakai filesystem container ephemeral untuk file PDF production jika API
 
 ## Hak Cipta Dan Lisensi
 
-Jangan memasukkan PDF buku, soal ujian resmi, atau dataset pihak lain tanpa izin redistribusi. Simpan informasi sumber dan lisensi di proses operasional admin.
+Jangan memasukkan PDF buku, soal ujian resmi, atau dataset pihak lain tanpa izin redistribusi.
+Simpan informasi sumber dan lisensi di proses operasional admin.

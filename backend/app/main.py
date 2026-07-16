@@ -43,18 +43,12 @@ async def lifespan(_: FastAPI):
 
 def register_routers(app: FastAPI) -> None:
     from app.api.v1 import auth, frontend, system
-    from app.api.v1.admin import curriculum as admin_curriculum
     from app.api.v1.admin import materials as admin_materials
     from app.api.v1.admin import users as admin_users
 
     app.include_router(system.router, prefix="/api/v1", tags=["System"], include_in_schema=False)
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
     app.include_router(frontend.router, prefix="/api/v1/app", tags=["Frontend"])
-    app.include_router(
-        admin_curriculum.router,
-        prefix="/api/v1/admin/curriculum",
-        tags=["Admin Curriculum"],
-    )
     app.include_router(
         admin_materials.router,
         prefix="/api/v1/admin/materials",

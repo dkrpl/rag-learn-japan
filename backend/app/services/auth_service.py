@@ -652,6 +652,51 @@ class AuthService:
         items = self.db.query(User).order_by(User.created_at.desc()).offset(offset).limit(limit).all()
         return items, int(total)
 
+    def create_user_by_admin(
+        self,
+        *,
+        actor: User,
+        email: str,
+        password: str,
+        profile: dict,
+        role: UserRole,
+        is_active: bool,
+        is_email_verified: bool,
+    ) -> User:
+        canonical_email = normalize_email(email)
+        existing = self.db.query(User.id).filter(func.lower(User.email) == canonical_email).first()
+        if existing:
+            raise UserConflictError()
+
+        now = utcnow()
+        user = User(
+            email=canonical_email,
+            password_hash=security.get_password_hash(password),
+            name=profile.get("name"),
+            photo_url=profile.get("photo_url"),
+            timezone=profile.get("timezone") or "UTC",
+            target_level=profile.get("target_level") or "N5",
+            role=UserRole.from_value(role),
+            is_active=is_active,
+            email_verified_at=now if is_email_verified else None,
+            deactivated_at=None if is_active else now,
+        )
+        self.db.add(user)
+        try:
+            self.db.flush()
+            self._audit(
+                actor_id=actor.id,
+                action="CREATE_USER",
+                target_id=user.id,
+                details={"email": user.email, "role": user.role.value, "is_active": user.is_active},
+            )
+            self.db.commit()
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise UserConflictError() from exc
+        self.db.refresh(user)
+        return user
+
     def get_user(self, *, user_id: str, for_update: bool = False) -> User:
         query = self.db.query(User).filter(User.id == user_id)
         if for_update:
@@ -679,6 +724,60 @@ class AuthService:
             action="UPDATE_USER_STATUS",
             target_id=user.id,
             details={"old_is_active": old_status, "new_is_active": is_active},
+        )
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def update_user_by_admin(self, *, actor: User, user_id: str, changes: dict) -> User:
+        user = self.get_user(user_id=user_id, for_update=True)
+        old_role = user.role
+        old_status = user.is_active
+
+        requested_role = changes.pop("role", None)
+        requested_status = changes.pop("is_active", None)
+        if requested_role is not None:
+            new_role = UserRole.from_value(requested_role)
+            if user.role == UserRole.ADMINISTRATOR and user.is_active and new_role != UserRole.ADMINISTRATOR:
+                self._assert_not_last_active_administrator(user.id)
+            user.role = new_role
+        if requested_status is not None:
+            is_active = bool(requested_status)
+            if user.role == UserRole.ADMINISTRATOR and user.is_active and not is_active:
+                self._assert_not_last_active_administrator(user.id)
+            if user.is_active != is_active:
+                user.is_active = is_active
+                user.deactivated_at = None if is_active else utcnow()
+                if not is_active:
+                    self._revoke_all_without_commit(user.id, reason="deactivated_by_admin")
+
+        allowed_fields = {"name", "photo_url", "timezone", "target_level"}
+        for field, value in changes.items():
+            if field in allowed_fields:
+                setattr(user, field, value)
+
+        self._audit(
+            actor_id=actor.id,
+            action="UPDATE_USER",
+            target_id=user.id,
+            details={
+                "old_role": old_role.value,
+                "new_role": user.role.value,
+                "old_is_active": old_status,
+                "new_is_active": user.is_active,
+            },
+        )
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def delete_user_by_admin(self, *, actor: User, user_id: str) -> User:
+        user = self.set_user_status(actor=actor, user_id=user_id, is_active=False)
+        self._audit(
+            actor_id=actor.id,
+            action="DELETE_USER_SOFT",
+            target_id=user.id,
+            details={"is_active": False},
         )
         self.db.commit()
         self.db.refresh(user)
