@@ -43,6 +43,7 @@ async def lifespan(_: FastAPI):
 
 def register_routers(app: FastAPI) -> None:
     from app.api.v1 import auth, frontend, system
+    from app.api.v1.admin import audit as admin_audit
     from app.api.v1.admin import materials as admin_materials
     from app.api.v1.admin import users as admin_users
 
@@ -54,6 +55,7 @@ def register_routers(app: FastAPI) -> None:
         prefix="/api/v1/admin/materials",
         tags=["Admin Materials"],
     )
+    app.include_router(admin_audit.router, prefix="/api/v1/admin/audit-logs", tags=["Admin Audit"])
     app.include_router(admin_users.router, prefix="/api/v1/admin/users", tags=["Admin Users"])
 
     # Operational aliases follow the PRD and stay outside the versioned contract.

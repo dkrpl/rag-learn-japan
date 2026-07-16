@@ -38,6 +38,8 @@ Daftar generated lengkap tersedia di `backend/docs/ENDPOINTS.md`.
 | GET | `/api/v1/admin/materials/{material_id}` | Admin | Detail material |
 | PATCH | `/api/v1/admin/materials/{material_id}` | Admin | Edit metadata material |
 | GET | `/api/v1/admin/materials/{material_id}/preview` | Admin | Preview extracted text |
+| GET | `/api/v1/admin/materials/{material_id}/analytics` | Admin | Statistik attempt, pass rate, average score |
+| GET | `/api/v1/admin/materials/{material_id}/analytics.csv` | Admin | Export analytics material sebagai CSV |
 | POST | `/api/v1/admin/materials/{material_id}/publish` | Admin | Publish material |
 | POST | `/api/v1/admin/materials/{material_id}/unpublish` | Admin | Unpublish material |
 | DELETE | `/api/v1/admin/materials/{material_id}` | Admin | Archive material |
@@ -51,6 +53,12 @@ Daftar generated lengkap tersedia di `backend/docs/ENDPOINTS.md`.
 | GET | `/api/v1/admin/users/{user_id}` | Admin | Detail user |
 | PATCH | `/api/v1/admin/users/{user_id}` | Admin | Edit user |
 | DELETE | `/api/v1/admin/users/{user_id}` | Admin | Deactivate user |
+
+## Admin Audit
+
+| Method | Path | Auth | Keterangan |
+|:---|:---|:---|:---|
+| GET | `/api/v1/admin/audit-logs` | Admin | Riwayat tindakan admin untuk upload, edit, publish, unpublish, dan archive material |
 
 ## Endpoint Lama Yang Sudah Tidak Dipakai MVP Baru
 

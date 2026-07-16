@@ -6,6 +6,12 @@ API version: **1.0.0**
 
 Authentication uses `Authorization: Bearer <access_token>` unless an endpoint is marked Public.
 
+## Admin Audit
+
+| Method | Path | Auth | Summary |
+|:---|:---|:---|:---|
+| `GET` | `/api/v1/admin/audit-logs` | Bearer | List admin audit logs |
+
 ## Admin Materials
 
 | Method | Path | Auth | Summary |
@@ -15,6 +21,8 @@ Authentication uses `Authorization: Bearer <access_token>` unless an endpoint is
 | `GET` | `/api/v1/admin/materials/{material_id}` | Bearer | Get one uploaded source material |
 | `PATCH` | `/api/v1/admin/materials/{material_id}` | Bearer | Edit material metadata |
 | `DELETE` | `/api/v1/admin/materials/{material_id}` | Bearer | Archive a PDF material |
+| `GET` | `/api/v1/admin/materials/{material_id}/analytics` | Bearer | Get production analytics for one PDF material |
+| `GET` | `/api/v1/admin/materials/{material_id}/analytics.csv` | Bearer | Export production analytics for one PDF material as CSV |
 | `GET` | `/api/v1/admin/materials/{material_id}/preview` | Bearer | Preview extracted PDF text before it is used by AI |
 | `POST` | `/api/v1/admin/materials/{material_id}/publish` | Bearer | Publish a PDF material |
 | `POST` | `/api/v1/admin/materials/{material_id}/unpublish` | Bearer | Unpublish a PDF material |

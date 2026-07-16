@@ -50,6 +50,37 @@ class MaterialPreviewResponse(BaseModel):
     is_published: bool
 
 
+class MaterialAnalyticsBucket(BaseModel):
+    label: str
+    count: int
+    percentage: int
+
+
+class MaterialAnalyticsAttempt(BaseModel):
+    session_id: str
+    learner_name: str | None = None
+    final_score: int
+    is_passed: bool
+    difficulty: int
+    earned_exp: int
+    completed_at: datetime | None = None
+
+
+class MaterialAnalyticsResponse(BaseModel):
+    material_id: str
+    title: str
+    total_attempts: int
+    completed_learners: int
+    average_score: int
+    pass_rate: int
+    most_used_difficulty: int | None = None
+    failed_attempts: int
+    passed_attempts: int
+    difficulty_breakdown: list[MaterialAnalyticsBucket] = Field(default_factory=list)
+    score_buckets: list[MaterialAnalyticsBucket] = Field(default_factory=list)
+    recent_attempts: list[MaterialAnalyticsAttempt] = Field(default_factory=list)
+
+
 class MaterialUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=4000)

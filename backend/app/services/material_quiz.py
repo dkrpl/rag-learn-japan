@@ -24,6 +24,10 @@ DIFFICULTY_LABELS = {
 }
 
 
+class MaterialQuizGenerationError(ValueError):
+    """Raised when AI output cannot be turned into safe learner questions."""
+
+
 def normalize_difficulty(value: int | str) -> int:
     if isinstance(value, str):
         normalized = value.strip().lower()
@@ -64,7 +68,7 @@ def _fallback_questions(material: MaterialDocument, *, count: int, difficulty: i
                 "skill": SkillType.READING.value,
                 "difficulty": difficulty,
                 "prompt_json": {
-                    "text": f"Apa informasi yang paling sesuai dengan materi '{material.title}'?",
+                    "text": f"Apa informasi yang paling sesuai dengan kutipan {index + 1} dari materi '{material.title}'?",
                     "options": [
                         {"id": "a", "text": excerpt},
                         {"id": "b", "text": "Pernyataan ini tidak terdapat pada materi."},
@@ -115,14 +119,87 @@ MATERI:
 """.strip()
 
 
-def _coerce_questions(raw_content: str, material: MaterialDocument, *, count: int, difficulty: int) -> list[dict[str, Any]]:
+def _coerce_questions(
+    raw_content: str,
+    material: MaterialDocument,
+    *,
+    count: int,
+    difficulty: int,
+    allow_fallback: bool,
+) -> list[dict[str, Any]]:
     try:
         parsed = json.loads(raw_content)
     except json.JSONDecodeError:
-        return _fallback_questions(material, count=count, difficulty=difficulty)
+        if allow_fallback:
+            return _fallback_questions(material, count=count, difficulty=difficulty)
+        raise MaterialQuizGenerationError("AI returned invalid JSON. Please try generating again.")
     if not isinstance(parsed, list):
-        return _fallback_questions(material, count=count, difficulty=difficulty)
+        if allow_fallback:
+            return _fallback_questions(material, count=count, difficulty=difficulty)
+        raise MaterialQuizGenerationError("AI response must be a JSON array of questions.")
     return [item for item in parsed if isinstance(item, dict)][:count]
+
+
+def _string_value(value: Any) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+
+def _material_tokens(material: MaterialDocument) -> set[str]:
+    text = f"{material.title} {material.extracted_text}".lower()
+    return {token for token in re.findall(r"[\w\u3040-\u30ff\u4e00-\u9fff]+", text) if len(token) >= 3}
+
+
+def _validate_ai_question_safety(item: dict[str, Any], material: MaterialDocument, *, index: int) -> None:
+    prompt_json = item.get("prompt_json") or item.get("prompt")
+    answer_key_json = item.get("answer_key_json") or item.get("answer_key")
+    explanation_json = item.get("explanation_json") or item.get("explanation")
+    if isinstance(explanation_json, str):
+        explanation_json = {"text": explanation_json}
+        item["explanation_json"] = explanation_json
+
+    if not isinstance(prompt_json, dict):
+        raise MaterialQuizGenerationError(f"Question {index} prompt_json is invalid.")
+    question_text = _string_value(prompt_json.get("text") or prompt_json.get("question"))
+    if not question_text:
+        raise MaterialQuizGenerationError(f"Question {index} prompt text is empty.")
+
+    options = prompt_json.get("options")
+    if not isinstance(options, list) or len(options) != 4:
+        raise MaterialQuizGenerationError(f"Question {index} must have exactly 4 options.")
+    option_ids: list[str] = []
+    option_texts: list[str] = []
+    for option in options:
+        if not isinstance(option, dict):
+            raise MaterialQuizGenerationError(f"Question {index} contains an invalid option.")
+        option_id = _string_value(option.get("id")).lower()
+        option_text = _string_value(option.get("text"))
+        if option_id not in {"a", "b", "c", "d"} or not option_text:
+            raise MaterialQuizGenerationError(f"Question {index} options must use ids a, b, c, d with text.")
+        option_ids.append(option_id)
+        option_texts.append(" ".join(option_text.lower().split()))
+    if sorted(option_ids) != ["a", "b", "c", "d"]:
+        raise MaterialQuizGenerationError(f"Question {index} options must include a, b, c, and d.")
+    if len(set(option_texts)) != len(option_texts):
+        raise MaterialQuizGenerationError(f"Question {index} contains duplicate option text.")
+
+    if not isinstance(answer_key_json, dict):
+        raise MaterialQuizGenerationError(f"Question {index} answer_key_json is invalid.")
+    correct_option = _string_value(answer_key_json.get("correct_option_id")).lower()
+    if correct_option not in option_ids:
+        raise MaterialQuizGenerationError(f"Question {index} correct option is not present in options.")
+    answer_key_json["correct_option_id"] = correct_option
+
+    explanation_text = ""
+    if isinstance(explanation_json, dict):
+        explanation_text = _string_value(explanation_json.get("text") or explanation_json.get("explanation"))
+    if not explanation_text:
+        raise MaterialQuizGenerationError(f"Question {index} explanation is required.")
+
+    material_tokens = _material_tokens(material)
+    combined = f"{question_text} {' '.join(option_texts)} {explanation_text}".lower()
+    generated_tokens = {token for token in re.findall(r"[\w\u3040-\u30ff\u4e00-\u9fff]+", combined) if len(token) >= 3}
+    if material_tokens and generated_tokens and material_tokens.isdisjoint(generated_tokens):
+        raise MaterialQuizGenerationError(f"Question {index} does not appear grounded in the PDF material.")
 
 
 def create_generation_job(
@@ -167,18 +244,35 @@ def generate_questions_for_material(
     job = create_generation_job(db, user=user, material=material, count=count, difficulty=difficulty)
     tokens_used = 0
     try:
+        raw_ai_response: str
         if settings.AI_PROVIDER == "disabled":
             questions_data = _fallback_questions(material, count=count, difficulty=difficulty)
+            raw_ai_response = json.dumps(questions_data, ensure_ascii=False)
         else:
             content, metadata = get_ai_provider().generate_questions(
                 _generation_prompt(material, count=count, difficulty=difficulty)
             )
             tokens_used = int(metadata.get("tokens_used", 0) or 0)
-            questions_data = _coerce_questions(content, material, count=count, difficulty=difficulty)
+            raw_ai_response = content
+            questions_data = _coerce_questions(
+                content,
+                material,
+                count=count,
+                difficulty=difficulty,
+                allow_fallback=False,
+            )
 
         created: list[Question] = []
-        for item in questions_data[:count]:
+        seen_question_texts: set[str] = set()
+        for index, item in enumerate(questions_data[:count], start=1):
+            _validate_ai_question_safety(item, material, index=index)
             prompt_json = item.get("prompt_json") or item.get("prompt")
+            question_text = " ".join(
+                str(prompt_json.get("text") or prompt_json.get("question") or "").lower().split()
+            )
+            if question_text in seen_question_texts:
+                raise MaterialQuizGenerationError(f"Question {index} duplicates another generated prompt.")
+            seen_question_texts.add(question_text)
             answer_key_json = item.get("answer_key_json") or item.get("answer_key")
             explanation_json = item.get("explanation_json") or item.get("explanation")
             if isinstance(explanation_json, str):
@@ -217,7 +311,7 @@ def generate_questions_for_material(
             raise ValueError("No valid questions were generated")
         job.status = JobStatus.COMPLETED
         job.raw_response = json.dumps(
-            {"created_question_ids": [question.id for question in created]},
+            {"created_question_ids": [question.id for question in created], "raw_ai_response": raw_ai_response},
             ensure_ascii=False,
             separators=(",", ":"),
         )
@@ -226,7 +320,7 @@ def generate_questions_for_material(
         job.error_message = None
         db.flush()
         return job, created
-    except (QuestionWorkflowError, ValueError, RuntimeError) as exc:
+    except (QuestionWorkflowError, ValueError, RuntimeError, MaterialQuizGenerationError) as exc:
         job.status = JobStatus.FAILED
         job.error_message = str(exc)
         job.completed_at = datetime.now(timezone.utc)

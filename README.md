@@ -121,6 +121,7 @@ Silakan baca urutan berikut agar Anda paham cara berinteraksi dengan API ini:
 3. **[Gambaran Umum API (Arsitektur)](backend/docs/API_OVERVIEW.md)**: Ringkasan endpoint MVP, auth, dan batas kontrak frontend.
 4. **[Swagger Visibility Guide](backend/docs/SWAGGER_VISIBILITY.md)**: Daftar endpoint yang tampil di Swagger dan endpoint admin/internal yang sengaja disembunyikan.
 5. **[Endpoint Material-First](backend/docs/TARGET_ENDPOINTS_MATERIAL_FIRST.md)**: Daftar endpoint MVP material-first yang dipakai frontend.
+6. **[Production Readiness Roadmap](backend/docs/PRODUCTION_READINESS_ROADMAP.md)**: Prioritas stabilisasi sebelum production: quiz review, leaderboard, analytics admin, anti EXP farming, security, deploy, dan test minimum.
 6. **[Cara Autentikasi JWT](backend/docs/AUTHENTICATION.md)**: Pelajari cara mendapatkan Token saat Login, dan cara menyematkannya di *Header Authorization*.
 7. **[Question Types Schema](backend/docs/QUESTION_TYPES.md)**: Bentuk JSON soal pilihan ganda reading dan payload submit jawaban.
 8. **[Standarisasi Kode Error](backend/docs/ERROR_CODES.md)**: Daftar makna status HTTP (*400, 401, 403, 404*) yang dikembalikan sistem.

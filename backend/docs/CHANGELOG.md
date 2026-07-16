@@ -10,6 +10,15 @@ Format changelog ini merujuk pada prinsip [Keep a Changelog](https://keepachange
 - Revisi total arah MVP menjadi alur material-first: admin upload PDF, user pilih materi dan tingkat kesulitan, AI generate soal, user mengerjakan, backend validasi, lalu sistem menentukan pass/fail.
 - Aturan progress diperjelas: jika nilai di bawah passing score, user tidak mendapat EXP, materi berikutnya tetap terkunci, dan user wajib mengulang.
 - Dokumentasi frontend, workflow PDF, API overview, Swagger visibility, asset management, dan PRD revisi diselaraskan ke kontrak material-first.
+- Roadmap production readiness ditambahkan: review hasil quiz, leaderboard periodik, analytics admin, anti EXP farming, AI quality guard, security deploy, dan test minimum.
+- Frontend integration guide diperjelas dengan UX production notes untuk answer review, kuota generate AI, leaderboard periodik, dan admin PDF workflow.
+- Endpoint admin material analytics ditambahkan.
+- Endpoint export CSV analytics dan audit log admin ditambahkan.
+- Result quiz diperkaya dengan review per soal setelah submit.
+- Anti EXP farming diterapkan untuk attempt ulang pada material yang sudah lulus.
+- Guard AI generator diperketat untuk JSON, opsi, duplikasi, correct option, grounding sederhana, dan raw response audit.
+- Script smoke test production ditambahkan di `backend/scripts/smoke_test.py`.
+- Script backup database, retention cleanup, dan workflow CI ditambahkan sebagai fondasi production operations.
 
 ### Removed
 - Alur admin curriculum kompleks berbasis `Level -> Course -> Unit -> Lesson` dihapus dari kontrak backend MVP.

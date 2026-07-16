@@ -46,11 +46,13 @@ class XPTransaction(CustomBase):
     __tablename__ = "xp_transactions"
     __table_args__ = (
         UniqueConstraint("session_id", name="uq_xp_transaction_session"),
+        UniqueConstraint("user_id", "material_id", "reason", name="uq_xp_transaction_material_reward"),
         CheckConstraint("amount >= 0", name="ck_xp_transaction_amount"),
         Index("ix_xp_transactions_user_created", "user_id", "created_at"),
     )
 
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    material_id = Column(String(36), ForeignKey("material_documents.id", ondelete="CASCADE"), nullable=True)
     amount = Column(Integer, nullable=False)
     reason = Column(String(255), nullable=False)
     session_id = Column(String(36), ForeignKey("learning_sessions.id", ondelete="SET NULL"), nullable=True)

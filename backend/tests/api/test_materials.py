@@ -63,6 +63,13 @@ def test_admin_uploads_and_manages_material_without_course(client, admin_token_h
     assert material["file_url"] == f"/api/v1/app/materials/{material['id']}/file"
     assert "Konnichiwa" in material["extracted_text_preview"]
 
+    audit = client.get(
+        f"/api/v1/admin/audit-logs?entity_name=MaterialDocument&entity_id={material['id']}",
+        headers=admin_token_headers,
+    )
+    assert audit.status_code == 200, audit.text
+    assert audit.json()[0]["action"] == "material.upload"
+
     patched = client.patch(
         f"/api/v1/admin/materials/{material['id']}",
         headers=admin_token_headers,
@@ -83,6 +90,17 @@ def test_admin_uploads_and_manages_material_without_course(client, admin_token_h
     published = client.post(f"/api/v1/admin/materials/{material['id']}/publish", headers=admin_token_headers)
     assert published.status_code == 200, published.text
     assert published.json()["is_published"] is True
+
+    audit_after = client.get(
+        f"/api/v1/admin/audit-logs?entity_name=MaterialDocument&entity_id={material['id']}",
+        headers=admin_token_headers,
+    ).json()
+    assert {row["action"] for row in audit_after} >= {
+        "material.upload",
+        "material.update",
+        "material.unpublish",
+        "material.publish",
+    }
 
 
 def test_material_quiz_pass_unlocks_next_material_and_awards_exp(
@@ -138,6 +156,8 @@ def test_material_quiz_pass_unlocks_next_material_and_awards_exp(
     assert result.status_code == 200, result.text
     assert result.json()["is_passed"] is True
     assert result.json()["earned_exp"] == 100
+    assert result.json()["review"][0]["is_correct"] is True
+    assert result.json()["review"][0]["correct_answer_json"]["correct_option_id"] == "a"
 
     materials_after = client.get("/api/v1/app/materials", headers=learner_token_headers)
     assert [item["status"] for item in materials_after.json()] == ["completed", "unlocked"]
@@ -147,9 +167,25 @@ def test_material_quiz_pass_unlocks_next_material_and_awards_exp(
     assert dashboard.json()["materials_completed"] == 1
     assert dashboard.json()["material_progress_percentage"] == 50
 
+    analytics = client.get(f"/api/v1/admin/materials/{first['id']}/analytics", headers=admin_token_headers)
+    assert analytics.status_code == 200, analytics.text
+    assert analytics.json()["total_attempts"] == 1
+    assert analytics.json()["passed_attempts"] == 1
+    assert analytics.json()["pass_rate"] == 100
+    assert analytics.json()["difficulty_breakdown"] == [{"label": "easy", "count": 1, "percentage": 100}]
+    assert analytics.json()["score_buckets"][-1]["label"] == "85-100"
+    assert analytics.json()["score_buckets"][-1]["count"] == 1
+    assert analytics.json()["recent_attempts"][0]["is_passed"] is True
+
+    csv_response = client.get(f"/api/v1/admin/materials/{first['id']}/analytics.csv", headers=admin_token_headers)
+    assert csv_response.status_code == 200, csv_response.text
+    assert "total_attempts,1" in csv_response.text
+    assert "score_bucket,count,percentage" in csv_response.text
+
 
 def test_material_quiz_fail_keeps_next_material_locked_and_exp_zero(
     client,
+    db,
     admin_token_headers,
     learner_token_headers,
 ):
@@ -193,9 +229,66 @@ def test_material_quiz_fail_keeps_next_material_locked_and_exp_zero(
     assert result.status_code == 200, result.text
     assert result.json()["is_passed"] is False
     assert result.json()["earned_exp"] == 0
+    assert result.json()["review"][0]["is_correct"] is False
 
     materials = client.get("/api/v1/app/materials", headers=learner_token_headers).json()
     assert [item["status"] for item in materials] == ["unlocked", "locked"]
+
+    learner = db.query(User).filter(User.email == "learner_test_fixture@example.com").one()
+    assert db.query(XPTransaction).filter(XPTransaction.user_id == learner.id).count() == 0
+
+    analytics = client.get(f"/api/v1/admin/materials/{first['id']}/analytics", headers=admin_token_headers)
+    assert analytics.status_code == 200, analytics.text
+    assert analytics.json()["total_attempts"] == 1
+    assert analytics.json()["failed_attempts"] == 1
+    assert analytics.json()["pass_rate"] == 0
+    assert analytics.json()["score_buckets"][0]["count"] == 1
+    assert analytics.json()["recent_attempts"][0]["is_passed"] is False
+
+
+def test_repeating_passed_material_does_not_farm_exp(client, db, admin_token_headers, learner_token_headers):
+    material = _upload_material(
+        client,
+        admin_token_headers,
+        title="Anti Farming",
+        sequence=1,
+        text="Konnichiwa berarti halo. Ohayou berarti selamat pagi.",
+    ).json()
+
+    earned_values = []
+    for _ in range(2):
+        generated = client.post(
+            f"/api/v1/app/materials/{material['id']}/generate-quiz",
+            headers=learner_token_headers,
+            json={"difficulty": "easy", "question_count": 1},
+        )
+        assert generated.status_code == 201, generated.text
+        session_id = generated.json()["session_id"]
+        session_question = client.get(
+            f"/api/v1/app/quiz-sessions/{session_id}/questions",
+            headers=learner_token_headers,
+        ).json()[0]
+        result = client.post(
+            f"/api/v1/app/quiz-sessions/{session_id}/submit",
+            headers=learner_token_headers,
+            json={
+                "answers": [
+                    {
+                        "session_question_id": session_question["id"],
+                        "answer_json": {"selected_option_id": "a"},
+                    }
+                ]
+            },
+        )
+        assert result.status_code == 200, result.text
+        earned_values.append(result.json()["earned_exp"])
+
+    assert earned_values == [100, 0]
+    learner = db.query(User).filter(User.email == "learner_test_fixture@example.com").one()
+    xp_rows = db.query(XPTransaction).filter(XPTransaction.user_id == learner.id).all()
+    assert len(xp_rows) == 1
+    assert xp_rows[0].material_id == material["id"]
+    assert xp_rows[0].amount == 100
 
 
 def test_frontend_leaderboard_orders_by_total_xp(client, db, learner_token_headers):

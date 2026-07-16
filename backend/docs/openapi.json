@@ -534,6 +534,62 @@
         "title": "AttemptHistoryItem",
         "type": "object"
       },
+      "AuditLogResponse": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "entity_id": {
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "entity_name": {
+            "title": "Entity Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "entity_name",
+          "entity_id",
+          "created_at"
+        ],
+        "title": "AuditLogResponse",
+        "type": "object"
+      },
       "AuthMessageResponse": {
         "properties": {
           "message": {
@@ -776,6 +832,165 @@
           "password"
         ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "MaterialAnalyticsAttempt": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "earned_exp": {
+            "title": "Earned Exp",
+            "type": "integer"
+          },
+          "final_score": {
+            "title": "Final Score",
+            "type": "integer"
+          },
+          "is_passed": {
+            "title": "Is Passed",
+            "type": "boolean"
+          },
+          "learner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learner Name"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "final_score",
+          "is_passed",
+          "difficulty",
+          "earned_exp"
+        ],
+        "title": "MaterialAnalyticsAttempt",
+        "type": "object"
+      },
+      "MaterialAnalyticsBucket": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "percentage": {
+            "title": "Percentage",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "label",
+          "count",
+          "percentage"
+        ],
+        "title": "MaterialAnalyticsBucket",
+        "type": "object"
+      },
+      "MaterialAnalyticsResponse": {
+        "properties": {
+          "average_score": {
+            "title": "Average Score",
+            "type": "integer"
+          },
+          "completed_learners": {
+            "title": "Completed Learners",
+            "type": "integer"
+          },
+          "difficulty_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialAnalyticsBucket"
+            },
+            "title": "Difficulty Breakdown",
+            "type": "array"
+          },
+          "failed_attempts": {
+            "title": "Failed Attempts",
+            "type": "integer"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "most_used_difficulty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Most Used Difficulty"
+          },
+          "pass_rate": {
+            "title": "Pass Rate",
+            "type": "integer"
+          },
+          "passed_attempts": {
+            "title": "Passed Attempts",
+            "type": "integer"
+          },
+          "recent_attempts": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialAnalyticsAttempt"
+            },
+            "title": "Recent Attempts",
+            "type": "array"
+          },
+          "score_buckets": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialAnalyticsBucket"
+            },
+            "title": "Score Buckets",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_attempts": {
+            "title": "Total Attempts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "material_id",
+          "title",
+          "total_attempts",
+          "completed_learners",
+          "average_score",
+          "pass_rate",
+          "failed_attempts",
+          "passed_attempts"
+        ],
+        "title": "MaterialAnalyticsResponse",
         "type": "object"
       },
       "MaterialDocumentResponse": {
@@ -1101,6 +1316,104 @@
         "title": "QuestionType",
         "type": "string"
       },
+      "QuizQuestionReview": {
+        "properties": {
+          "correct_answer_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer Json"
+          },
+          "explanation_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation Json"
+          },
+          "feedback_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Notes"
+          },
+          "is_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Correct"
+          },
+          "order_number": {
+            "title": "Order Number",
+            "type": "integer"
+          },
+          "prompt_json": {
+            "additionalProperties": true,
+            "title": "Prompt Json",
+            "type": "object"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "session_question_id": {
+            "title": "Session Question Id",
+            "type": "string"
+          },
+          "user_answer_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Answer Json"
+          }
+        },
+        "required": [
+          "session_question_id",
+          "order_number",
+          "question_id",
+          "prompt_json"
+        ],
+        "title": "QuizQuestionReview",
+        "type": "object"
+      },
       "QuizResultResponse": {
         "properties": {
           "completed_at": {
@@ -1145,6 +1458,13 @@
           "passing_score": {
             "title": "Passing Score",
             "type": "integer"
+          },
+          "review": {
+            "items": {
+              "$ref": "#/components/schemas/QuizQuestionReview"
+            },
+            "title": "Review",
+            "type": "array"
           },
           "score": {
             "title": "Score",
@@ -1732,6 +2052,105 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "admin-audit-list_audit_logs-api-v1-admin-audit-logs",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "entity_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 36,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLogResponse"
+                  },
+                  "title": "Response Admin-Audit-List Audit Logs-Api-V1-Admin-Audit-Logs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List admin audit logs",
+        "tags": [
+          "Admin Audit"
+        ]
+      }
+    },
     "/api/v1/admin/materials": {
       "get": {
         "operationId": "admin-materials-list_materials-api-v1-admin-materials",
@@ -2027,6 +2446,93 @@
           }
         ],
         "summary": "Edit material metadata",
+        "tags": [
+          "Admin Materials"
+        ]
+      }
+    },
+    "/api/v1/admin/materials/{material_id}/analytics": {
+      "get": {
+        "operationId": "admin-materials-material_analytics-api-v1-admin-materials-material_id-analytics",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialAnalyticsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get production analytics for one PDF material",
+        "tags": [
+          "Admin Materials"
+        ]
+      }
+    },
+    "/api/v1/admin/materials/{material_id}/analytics.csv": {
+      "get": {
+        "operationId": "admin-materials-material_analytics_csv-api-v1-admin-materials-material_id-analytics.csv",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Export production analytics for one PDF material as CSV",
         "tags": [
           "Admin Materials"
         ]

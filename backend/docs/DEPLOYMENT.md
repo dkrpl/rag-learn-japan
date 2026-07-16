@@ -64,13 +64,63 @@ docker compose -f docker-compose.production.yml exec -T db \
 
 Backup wajib dienkripsi, mempunyai retention policy, dan diuji melalui restore rehearsal berkala. Volume material PDF harus dibackup terpisah.
 
+Script backup aplikasi:
+
+```bash
+DATABASE_URL=mysql+pymysql://user:password@host:3306/dbname \
+BACKUP_DIR=./backups \
+python scripts/backup_database.py
+```
+
+Script ini membutuhkan `mysqldump` tersedia di environment yang menjalankannya.
+
+## Retention Data
+
+Raw response AI boleh disimpan untuk audit jangka pendek, tetapi jangan disimpan
+selamanya tanpa alasan operasional.
+
+Dry-run cleanup:
+
+```bash
+python scripts/retention_cleanup.py
+```
+
+Apply cleanup:
+
+```bash
+APPLY_RETENTION=true RAW_AI_RESPONSE_RETENTION_DAYS=90 python scripts/retention_cleanup.py
+```
+
+Pastikan backup sudah tersedia sebelum menjalankan cleanup permanen.
+
+## CI/CD
+
+Workflow GitHub Actions tersedia di:
+
+```text
+.github/workflows/ci.yml
+```
+
+Pipeline menjalankan backend test suite serta frontend lint/build. Railway tetap
+menjalankan migration dan smoke test sesuai proses deploy.
+
 ## Rollback
 
 1. Hentikan traffic ke image baru.
 2. Jalankan image aplikasi sebelumnya.
 3. Gunakan `alembic downgrade <revision>` hanya jika migration tersebut secara eksplisit dinyatakan reversible dan backup tersedia.
 4. Restore backup jika rollback schema tidak aman.
-5. Verifikasi `/health`, `/ready`, auth, curriculum, material PDF, learning, dan leaderboard sebelum membuka traffic.
+5. Verifikasi `/health`, `/ready`, auth, material PDF, quiz session, learning progress, dan leaderboard sebelum membuka traffic.
+6. Jalankan smoke test production bila akun admin/learner sudah tersedia:
+
+```bash
+API_BASE_URL=https://<backend-production-url> \
+ADMIN_EMAIL=<admin-email> \
+ADMIN_PASSWORD=<admin-password> \
+LEARNER_EMAIL=<learner-email> \
+LEARNER_PASSWORD=<learner-password> \
+python scripts/smoke_test.py
+```
 
 ## Scaling
 

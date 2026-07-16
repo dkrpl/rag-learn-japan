@@ -97,6 +97,19 @@ class SubmitQuizRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class QuizQuestionReview(BaseModel):
+    session_question_id: str
+    order_number: int
+    question_id: str
+    prompt_json: dict[str, Any]
+    user_answer_json: dict[str, Any] | None = None
+    is_correct: bool | None = None
+    score: int | None = None
+    correct_answer_json: dict[str, Any] | None = None
+    explanation_json: dict[str, Any] | None = None
+    feedback_notes: str | None = None
+
+
 class QuizResultResponse(BaseModel):
     session_id: str
     material_id: str | None
@@ -108,6 +121,7 @@ class QuizResultResponse(BaseModel):
     total_questions: int
     completed_at: datetime | None
     message: str
+    review: list[QuizQuestionReview] = Field(default_factory=list)
 
 
 class LeaderboardEntry(BaseModel):
@@ -326,6 +340,27 @@ def _quiz_status(session: LearningSession) -> QuizSessionStatusResponse:
     )
 
 
+def _quiz_review(session: LearningSession) -> list[QuizQuestionReview]:
+    if session.status != SessionStatus.COMPLETED:
+        return []
+    rows = learning_service.serialize_session_questions(session)
+    return [
+        QuizQuestionReview(
+            session_question_id=item.id,
+            order_number=item.order_number,
+            question_id=item.question.id,
+            prompt_json=item.question.prompt_json,
+            user_answer_json=item.user_answer_json,
+            is_correct=item.is_correct,
+            score=item.score,
+            correct_answer_json=item.correct_answer_json,
+            explanation_json=item.explanation_json,
+            feedback_notes=item.feedback_notes,
+        )
+        for item in rows
+    ]
+
+
 def _quiz_result(session: LearningSession) -> QuizResultResponse:
     is_completed = session.status == SessionStatus.COMPLETED
     passed = bool(session.is_passed and is_completed)
@@ -344,6 +379,7 @@ def _quiz_result(session: LearningSession) -> QuizResultResponse:
             if passed
             else "Nilai belum cukup. Kamu harus mengulang materi ini untuk membuka materi berikutnya."
         ),
+        review=_quiz_review(session),
     )
 
 

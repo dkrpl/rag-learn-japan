@@ -98,6 +98,7 @@ def record_session_completion(
     earned_exp = 0
     if session.material_id:
         material_progress = _material_progress(db, user_id=user.id, material_id=session.material_id)
+        was_completed = material_progress.status == MaterialProgressStatus.COMPLETED
         material_progress.attempts_count += 1
         material_progress.last_score = session.final_score
         material_progress.best_score = max(material_progress.best_score, session.final_score)
@@ -105,23 +106,35 @@ def record_session_completion(
         session.is_passed = session.final_score >= session.passing_score
         if session.is_passed:
             material_progress.status = MaterialProgressStatus.COMPLETED
-            earned_exp = calculate_earned_exp(
-                score=session.final_score,
-                passing_score=session.passing_score,
-                difficulty=session.difficulty,
+            already_rewarded = (
+                db.query(XPTransaction.id)
+                .filter(
+                    XPTransaction.user_id == user.id,
+                    XPTransaction.material_id == session.material_id,
+                    XPTransaction.reason == "MATERIAL_QUIZ_PASSED",
+                )
+                .first()
             )
+            if not was_completed and not already_rewarded:
+                earned_exp = calculate_earned_exp(
+                    score=session.final_score,
+                    passing_score=session.passing_score,
+                    difficulty=session.difficulty,
+                )
         elif material_progress.status != MaterialProgressStatus.COMPLETED:
             material_progress.status = MaterialProgressStatus.IN_PROGRESS
 
     session.earned_exp = earned_exp
-    db.add(
-        XPTransaction(
-            user_id=user.id,
-            amount=earned_exp,
-            reason="MATERIAL_QUIZ_PASSED" if earned_exp else "MATERIAL_QUIZ_FAILED",
-            session_id=session.id,
+    if earned_exp > 0:
+        db.add(
+            XPTransaction(
+                user_id=user.id,
+                material_id=session.material_id,
+                amount=earned_exp,
+                reason="MATERIAL_QUIZ_PASSED",
+                session_id=session.id,
+            )
         )
-    )
     session.progress_processed_at = now
     db.flush()
 
